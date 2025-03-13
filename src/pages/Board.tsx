@@ -88,7 +88,7 @@ const Board = () => {
   }, [columns, startupsByStatusQueries]);
   
   // Get a startup by ID from any status
-  const getStartupById = (id: string): Startup | undefined => {
+  const getStartupById = (id: string): any | undefined => {
     for (const columnId in startupsByStatusQueries) {
       const query = startupsByStatusQueries[columnId];
       const startup = query?.data?.find(s => s.id === id);
@@ -101,7 +101,7 @@ const Board = () => {
   const updateStartupMutation = useUpdateStartupMutation();
   
   // Handle card click
-  const handleCardClick = (startup: Startup) => {
+  const handleCardClick = (startup: any) => {
     toast({
       title: "Startup details",
       description: `Opening details for ${startup.name}`,
@@ -352,7 +352,7 @@ const Board = () => {
                       if (!startup) return null;
                       
                       // Convert Supabase startup to the format expected by StartupCard
-                      const cardStartup: any = {
+                      const cardStartup: Startup = {
                         id: startup.id,
                         createdAt: startup.created_at ? new Date(startup.created_at) : new Date(),
                         updatedAt: startup.updated_at ? new Date(startup.updated_at) : new Date(),
