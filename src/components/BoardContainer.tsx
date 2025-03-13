@@ -78,13 +78,15 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
               data: []
             };
             
+            const startups = Array.isArray(query.data) ? query.data : [];
+            
             return (
               <BoardColumn
                 key={column.id}
                 id={column.id}
                 title={column.title}
                 color={status?.color || '#e2e8f0'}
-                startups={query?.data || []}
+                startups={startups}
                 startupIds={column.startupIds || []}
                 isLoading={query?.isLoading || false}
                 isError={query?.isError || false}
