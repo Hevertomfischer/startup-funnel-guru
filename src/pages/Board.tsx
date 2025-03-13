@@ -177,10 +177,21 @@ const Board = () => {
   const handleAddStartup = (statusId: string) => {
     // In a real app, this would open a form to create a new startup
     // For now, we'll create a simple startup with default values
+    // Fix: Adding all the required fields with default values
     createStartupMutation.mutate({
       name: `New Startup ${Date.now()}`,
       status_id: statusId,
-      priority: 'medium'
+      priority: 'medium',
+      description: null,
+      problem_solved: null,
+      sector: null,
+      business_model: null,
+      website: null,
+      mrr: null,
+      client_count: null,
+      assigned_to: null,
+      due_date: null,
+      time_tracking: 0
     });
   };
   
