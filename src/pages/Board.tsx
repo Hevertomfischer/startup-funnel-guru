@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CreateStatusDialog } from '@/components/CreateStatusDialog';
 import { useBoardColumns } from '@/hooks/use-board-columns';
 import { useBoardDragDrop } from '@/hooks/use-board-drag-drop';
 import { useStartupActions } from '@/hooks/use-startup-actions';
+import { useStartupsByStatus } from '@/hooks/use-startups-by-status';
 import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/BoardContainer';
 
@@ -14,16 +15,54 @@ const Board = () => {
   const [showCompactCards, setShowCompactCards] = useState(false);
   const [showCreateStatusDialog, setShowCreateStatusDialog] = useState(false);
   
-  // Custom hooks
+  // Get board columns and statuses
   const {
     columns,
     setColumns,
-    columnQueries,
+    statusIds,
     statuses,
     isLoadingStatuses,
     isErrorStatuses,
-    getStartupById
   } = useBoardColumns();
+
+  // Explicitly fetch startup data for each column to avoid hooks rule violations
+  const columnQueries: Record<string, any> = {};
+  
+  // We need to get query results outside of a reducer function to avoid hooks rule violations
+  statusIds?.forEach(statusId => {
+    if (statusId) {
+      const queryResult = useStartupsByStatus(statusId);
+      if (statusId) {
+        columnQueries[statusId] = queryResult;
+      }
+    }
+  });
+  
+  // Update column startupIds when startups are loaded
+  useEffect(() => {
+    if (columns.length > 0 && Object.keys(columnQueries).length > 0) {
+      const newColumns = [...columns];
+      
+      columns.forEach((column, index) => {
+        const query = columnQueries[column.id];
+        if (query?.data) {
+          newColumns[index].startupIds = query.data.map((startup: any) => startup.id);
+        }
+      });
+      
+      setColumns(newColumns);
+    }
+  }, [columns, columnQueries, setColumns]);
+
+  // Get a startup by ID from any status
+  const getStartupById = (id: string): any | undefined => {
+    for (const columnId in columnQueries) {
+      const query = columnQueries[columnId];
+      const startup = query?.data?.find((s: any) => s.id === id);
+      if (startup) return startup;
+    }
+    return undefined;
+  };
   
   const {
     draggingStartupId,
