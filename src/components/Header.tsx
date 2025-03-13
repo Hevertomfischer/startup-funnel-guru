@@ -15,15 +15,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import ViewToggle from './ViewToggle';
+import { ViewMode } from '@/types';
 
 interface HeaderProps {
-  view: 'board' | 'list';
-  setView: (view: 'board' | 'list') => void;
+  view: ViewMode;
+  setView: (view: ViewMode) => void;
   onSearch: (searchTerm: string) => void;
+  children?: React.ReactNode;
 }
 
-const Header: React.FC<HeaderProps> = ({ view, setView, onSearch }) => {
+const Header: React.FC<HeaderProps> = ({ view, setView, onSearch, children }) => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -88,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, onSearch }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <ViewToggle view={view} setView={setView} />
+          {children}
           
           <Button 
             onClick={handleAddNew}
