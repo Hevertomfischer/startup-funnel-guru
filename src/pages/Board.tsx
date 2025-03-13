@@ -30,10 +30,10 @@ const Board = () => {
     isErrorStatuses,
   } = useBoardColumns();
 
-  // Explicitly fetch startup data for each column to avoid hooks rule violations
+  // Explicitly fetch startup data for each column
   const columnQueries: Record<string, any> = {};
   
-  // We need to get query results outside of a reducer function to avoid hooks rule violations
+  // We need to get query results outside of hooks to avoid hooks rule violations
   statusIds?.forEach(statusId => {
     if (statusId) {
       const queryResult = useStartupsByStatus(statusId);
