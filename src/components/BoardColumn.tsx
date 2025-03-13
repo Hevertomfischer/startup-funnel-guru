@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Startup } from '@/types';
 import StartupCard from '@/components/StartupCard';
@@ -26,6 +26,7 @@ interface BoardColumnProps {
   showCompactCards: boolean;
   statuses: any[];
   users: any;
+  onEditColumn?: () => void;
 }
 
 const BoardColumn: React.FC<BoardColumnProps> = ({
@@ -47,7 +48,8 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   onCardClick,
   showCompactCards,
   statuses,
-  users
+  users,
+  onEditColumn
 }) => {
   return (
     <div 
@@ -71,19 +73,31 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
             {startupIds.length}
           </div>
         </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-7 w-7 p-0" 
-          onClick={() => onAddStartup(id)}
-          disabled={isPendingAdd}
-        >
-          {isPendingAdd && id === pendingAddStatusId ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
+        <div className="flex items-center gap-1">
+          {onEditColumn && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-7 w-7 p-0" 
+              onClick={onEditColumn}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
           )}
-        </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-7 w-7 p-0" 
+            onClick={() => onAddStartup(id)}
+            disabled={isPendingAdd}
+          >
+            {isPendingAdd && id === pendingAddStatusId ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
       
       <div 
