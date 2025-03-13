@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -20,16 +20,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import StartupCard from '@/components/StartupCard';
 import { CreateStatusDialog } from '@/components/CreateStatusDialog';
 import { 
   useStatusesQuery, 
-  useStartupsByStatusQuery,
   useCreateStartupMutation,
   useUpdateStartupMutation
 } from '@/hooks/use-supabase-query';
+import { useStartupsByStatus } from '@/hooks/use-startups-by-status';
 import { useQueryClient } from '@tanstack/react-query';
 import { USERS } from '@/data/mockData'; // We'll keep using mock users for now
+import BoardColumn from '@/components/BoardColumn';
 
 // Helper interface for our board columns
 interface Column {
@@ -67,36 +67,20 @@ const Board = () => {
     }
   }, [statuses]);
   
-  // Create a properly memoized dictionary for query results
-  // Important: We define the queries OUTSIDE the useEffect to avoid React hook violations
-  const startupsByStatusQueries = useMemo(() => {
-    if (columns.length === 0) return {};
-    
-    return Object.fromEntries(
-      columns.map(column => [
-        column.id,
-        { data: [], isLoading: false, isError: false } // Default value initially
-      ])
-    );
-  }, [columns]);
-  
-  // For each column, create separate queries using individual useEffect hooks
-  columns.forEach(column => {
-    const { data, isLoading, isError } = useStartupsByStatusQuery(column.id);
-    
-    // Update the query results in our memoized object
-    if (startupsByStatusQueries[column.id]) {
-      startupsByStatusQueries[column.id] = { data, isLoading, isError };
-    }
-  });
+  // Create an object to store our query results per column
+  const columnQueries = columns.reduce((acc, column) => {
+    const { data, isLoading, isError } = useStartupsByStatus(column.id);
+    acc[column.id] = { data, isLoading, isError };
+    return acc;
+  }, {} as Record<string, { data: any[], isLoading: boolean, isError: boolean }>);
   
   // Update column startupIds when startups are loaded
   useEffect(() => {
-    if (columns.length > 0) {
+    if (columns.length > 0 && Object.keys(columnQueries).length > 0) {
       const newColumns = [...columns];
       
       columns.forEach((column, index) => {
-        const query = startupsByStatusQueries[column.id];
+        const query = columnQueries[column.id];
         if (query?.data) {
           newColumns[index].startupIds = query.data.map(startup => startup.id);
         }
@@ -104,12 +88,12 @@ const Board = () => {
       
       setColumns(newColumns);
     }
-  }, [columns, startupsByStatusQueries]);
+  }, [columns, columnQueries]);
   
   // Get a startup by ID from any status
   const getStartupById = (id: string): any | undefined => {
-    for (const columnId in startupsByStatusQueries) {
-      const query = startupsByStatusQueries[columnId];
+    for (const columnId in columnQueries) {
+      const query = columnQueries[columnId];
       const startup = query?.data?.find(s => s.id === id);
       if (startup) return startup;
     }
@@ -324,126 +308,35 @@ const Board = () => {
             <div className="flex h-full gap-4 pt-4">
               {columns.map(column => {
                 const status = statuses.find(s => s.id === column.id);
-                const { isLoading, isError, data } = startupsByStatusQueries[column.id] || { 
+                const { isLoading, isError, data = [] } = columnQueries[column.id] || { 
                   isLoading: false, 
                   isError: false,
                   data: []
                 };
                 
                 return (
-                  <div 
+                  <BoardColumn
                     key={column.id}
-                    className="flex flex-col h-full bg-accent/50 backdrop-blur-sm rounded-xl min-w-[280px] w-[280px] shadow-sm border"
+                    id={column.id}
+                    title={column.title}
+                    color={status?.color || '#e2e8f0'}
+                    startups={data}
+                    startupIds={column.startupIds}
+                    isLoading={isLoading}
+                    isError={isError}
+                    onDrop={handleDrop}
                     onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, column.id)}
-                  >
-                    <div 
-                      className="p-3 flex items-center justify-between"
-                      style={{ 
-                        borderBottom: `1px solid ${status?.color}40` 
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="h-3 w-3 rounded-full" 
-                          style={{ backgroundColor: status?.color || '#e2e8f0' }}
-                        />
-                        <h3 className="font-medium">{column.title}</h3>
-                        <div className="flex items-center justify-center rounded-full bg-muted w-6 h-6 text-xs font-medium">
-                          {column.startupIds.length}
-                        </div>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0" 
-                        onClick={() => handleAddStartup(column.id)}
-                        disabled={createStartupMutation.isPending}
-                      >
-                        {createStartupMutation.isPending && column.id === createStartupMutation.variables?.status_id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Plus className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                    
-                    <div 
-                      className="flex-1 p-2 overflow-y-auto space-y-3"
-                      style={{ 
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: `${status?.color}20 transparent`
-                      }}
-                    >
-                      {isLoading && (
-                        <div className="h-20 flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        </div>
-                      )}
-                      
-                      {isError && (
-                        <div className="h-20 flex items-center justify-center text-destructive text-sm">
-                          Failed to load startups
-                        </div>
-                      )}
-                      
-                      {!isLoading && !isError && column.startupIds.map(startupId => {
-                        const startup = getStartupById(startupId);
-                        
-                        if (!startup) return null;
-                        
-                        // Convert Supabase startup to the format expected by StartupCard
-                        const cardStartup: Startup = {
-                          id: startup.id,
-                          createdAt: startup.created_at ? new Date(startup.created_at) : new Date(),
-                          updatedAt: startup.updated_at ? new Date(startup.updated_at) : new Date(),
-                          statusId: startup.status_id || '',
-                          values: {
-                            Startup: startup.name,
-                            'Problema que Resolve': startup.problem_solved,
-                            Setor: startup.sector,
-                            'Modelo de Negócio': startup.business_model,
-                            'Site da Startup': startup.website,
-                            MRR: startup.mrr,
-                            'Quantidade de Clientes': startup.client_count
-                          },
-                          labels: [], // We'll fetch labels separately in a real implementation
-                          priority: startup.priority as 'low' | 'medium' | 'high',
-                          assignedTo: startup.assigned_to,
-                          dueDate: startup.due_date ? new Date(startup.due_date) : undefined,
-                          timeTracking: startup.time_tracking,
-                          attachments: [] // We'll fetch attachments separately in a real implementation
-                        };
-                        
-                        return (
-                          <div
-                            key={startupId}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, startupId)}
-                            onDragEnd={handleDragEnd}
-                            className={cn(
-                              "transition-opacity duration-200",
-                              draggingStartupId === startupId ? "opacity-50" : "opacity-100"
-                            )}
-                          >
-                            <StartupCard 
-                              startup={cardStartup} 
-                              statuses={statuses.map(s => ({ id: s.id, name: s.name, color: s.color }))} 
-                              users={USERS}
-                              onClick={() => handleCardClick(startup)}
-                              compact={showCompactCards}
-                            />
-                          </div>
-                        );
-                      })}
-                      
-                      {!isLoading && !isError && column.startupIds.length === 0 && (
-                        <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
-                          Drop startups here
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    draggingStartupId={draggingStartupId}
+                    onAddStartup={handleAddStartup}
+                    isPendingAdd={createStartupMutation.isPending}
+                    pendingAddStatusId={createStartupMutation.isPending ? createStartupMutation.variables?.status_id : null}
+                    onCardClick={handleCardClick}
+                    showCompactCards={showCompactCards}
+                    statuses={statuses.map(s => ({ id: s.id, name: s.name, color: s.color }))}
+                    users={USERS}
+                  />
                 );
               })}
               
