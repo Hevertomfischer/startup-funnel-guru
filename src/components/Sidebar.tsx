@@ -86,7 +86,9 @@ const Sidebar = () => {
                 variant="ghost"
                 className={cn(
                   "w-full justify-start gap-2 px-3",
-                  location.pathname === item.path && "bg-accent text-accent-foreground font-medium"
+                  (location.pathname === item.path || 
+                   (location.pathname === '/' && item.path === '/')) && 
+                   "bg-accent text-accent-foreground font-medium"
                 )}
               >
                 <item.icon className="h-4 w-4" />
