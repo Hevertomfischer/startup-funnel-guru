@@ -67,13 +67,15 @@ const Board = () => {
     }
   }, [statuses]);
   
-  // Fetch startups for each status
-  const startupsByStatusQueries = Object.fromEntries(
-    columns.map(column => [
-      column.id,
-      useStartupsByStatusQuery(column.id)
-    ])
-  );
+  // Create a memoized object to store query results
+  const startupsByStatusQueries = React.useMemo(() => {
+    return Object.fromEntries(
+      columns.map(column => [
+        column.id,
+        useStartupsByStatusQuery(column.id)
+      ])
+    );
+  }, [columns]); // Only recreate when columns change
   
   // Update column startupIds when startups are loaded
   useEffect(() => {
