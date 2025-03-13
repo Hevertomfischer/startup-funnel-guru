@@ -28,6 +28,7 @@ import {
   useCreateStartupMutation,
   useUpdateStartupMutation
 } from '@/hooks/use-supabase-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { USERS } from '@/data/mockData'; // We'll keep using mock users for now
 
 // Helper interface for our board columns
@@ -38,6 +39,7 @@ interface Column {
 }
 
 const Board = () => {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [draggingStartupId, setDraggingStartupId] = useState<string | null>(null);
   const [showCompactCards, setShowCompactCards] = useState(false);
@@ -172,10 +174,7 @@ const Board = () => {
   
   const handleStatusCreated = () => {
     // Invalidate statuses query to refresh the columns
-    const statusesQueryClient = useStatusesQuery().queryClient;
-    if (statusesQueryClient) {
-      statusesQueryClient.invalidateQueries({ queryKey: ['statuses'] });
-    }
+    queryClient.invalidateQueries({ queryKey: ['statuses'] });
     
     toast({
       title: "Column added",
