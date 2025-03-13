@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   ChevronLeft, 
@@ -21,6 +20,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import StartupCard from '@/components/StartupCard';
+import { CreateStatusDialog } from '@/components/CreateStatusDialog';
 import { 
   useStatusesQuery, 
   useStartupsByStatusQuery,
@@ -40,6 +40,7 @@ const Board = () => {
   const { toast } = useToast();
   const [draggingStartupId, setDraggingStartupId] = useState<string | null>(null);
   const [showCompactCards, setShowCompactCards] = useState(false);
+  const [showCreateStatusDialog, setShowCreateStatusDialog] = useState(false);
   
   // Fetch statuses from Supabase
   const { 
@@ -165,9 +166,19 @@ const Board = () => {
   };
   
   const addNewColumn = () => {
+    setShowCreateStatusDialog(true);
+  };
+  
+  const handleStatusCreated = () => {
+    // Invalidate statuses query to refresh the columns
+    const statusesQueryClient = useStatusesQuery().queryClient;
+    if (statusesQueryClient) {
+      statusesQueryClient.invalidateQueries({ queryKey: ['statuses'] });
+    }
+    
     toast({
-      title: "Adding new column",
-      description: "This would open a new column creation dialog",
+      title: "Column added",
+      description: "New column has been added to the board",
     });
   };
   
@@ -442,6 +453,12 @@ const Board = () => {
         </div>
       </div>
     </div>
+    
+    <CreateStatusDialog
+      open={showCreateStatusDialog}
+      onOpenChange={setShowCreateStatusDialog}
+      onStatusCreated={handleStatusCreated}
+    />
   );
 };
 
