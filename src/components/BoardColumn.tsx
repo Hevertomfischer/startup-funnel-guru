@@ -51,6 +51,32 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   users,
   onEditColumn
 }) => {
+  // Filter startups to only include those in this column
+  const columnStartups = startups || [];
+  
+  // Map startup data to the format expected by StartupCard
+  const mapStartupToCardFormat = (startup: any): Startup => ({
+    id: startup.id,
+    createdAt: startup.created_at ? new Date(startup.created_at) : new Date(),
+    updatedAt: startup.updated_at ? new Date(startup.updated_at) : new Date(),
+    statusId: startup.status_id || '',
+    values: {
+      Startup: startup.name,
+      'Problema que Resolve': startup.problem_solved,
+      Setor: startup.sector,
+      'Modelo de Negócio': startup.business_model,
+      'Site da Startup': startup.website,
+      MRR: startup.mrr,
+      'Quantidade de Clientes': startup.client_count
+    },
+    labels: [],
+    priority: startup.priority as 'low' | 'medium' | 'high',
+    assignedTo: startup.assigned_to,
+    dueDate: startup.due_date ? new Date(startup.due_date) : undefined,
+    timeTracking: startup.time_tracking,
+    attachments: []
+  });
+
   return (
     <div 
       className="flex flex-col h-full bg-accent/50 backdrop-blur-sm rounded-xl min-w-[280px] w-[280px] shadow-sm border"
@@ -70,7 +96,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
           />
           <h3 className="font-medium">{title}</h3>
           <div className="flex items-center justify-center rounded-full bg-muted w-6 h-6 text-xs font-medium">
-            {startupIds.length}
+            {startupIds?.length || 0}
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -119,33 +145,12 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
           </div>
         )}
         
-        {!isLoading && !isError && startupIds.map(startupId => {
-          const startup = startups.find(s => s.id === startupId);
+        {!isLoading && !isError && startupIds && startupIds.length > 0 && startupIds.map(startupId => {
+          const startup = columnStartups.find((s: any) => s.id === startupId);
           
           if (!startup) return null;
           
-          // Convert Supabase startup to the format expected by StartupCard
-          const cardStartup: Startup = {
-            id: startup.id,
-            createdAt: startup.created_at ? new Date(startup.created_at) : new Date(),
-            updatedAt: startup.updated_at ? new Date(startup.updated_at) : new Date(),
-            statusId: startup.status_id || '',
-            values: {
-              Startup: startup.name,
-              'Problema que Resolve': startup.problem_solved,
-              Setor: startup.sector,
-              'Modelo de Negócio': startup.business_model,
-              'Site da Startup': startup.website,
-              MRR: startup.mrr,
-              'Quantidade de Clientes': startup.client_count
-            },
-            labels: [], // We'll fetch labels separately in a real implementation
-            priority: startup.priority as 'low' | 'medium' | 'high',
-            assignedTo: startup.assigned_to,
-            dueDate: startup.due_date ? new Date(startup.due_date) : undefined,
-            timeTracking: startup.time_tracking,
-            attachments: [] // We'll fetch attachments separately in a real implementation
-          };
+          const cardStartup = mapStartupToCardFormat(startup);
           
           return (
             <div
@@ -169,7 +174,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
           );
         })}
         
-        {!isLoading && !isError && startupIds.length === 0 && (
+        {!isLoading && !isError && (!startupIds || startupIds.length === 0) && (
           <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
             Drop startups here
           </div>

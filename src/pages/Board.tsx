@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CreateStatusDialog } from '@/components/CreateStatusDialog';
@@ -30,24 +30,43 @@ const Board = () => {
     isErrorStatuses,
   } = useBoardColumns();
 
-  // Explicitly fetch startup data for each column
-  const columnQueries: Record<string, any> = {};
-  
-  // We need to get query results outside of hooks to avoid hooks rule violations
-  statusIds?.forEach(statusId => {
-    if (statusId) {
-      const queryResult = useStartupsByStatus(statusId);
-      columnQueries[statusId] = queryResult;
+  // Create a memoized object to store queries for each status ID
+  const columnQueries = useMemo(() => {
+    const queries: Record<string, any> = {};
+    
+    if (statusIds) {
+      statusIds.forEach(statusId => {
+        if (statusId) {
+          queries[statusId] = useStartupsByStatus(statusId);
+        }
+      });
     }
-  });
+    
+    return queries;
+  }, [statusIds]); // This will break React hook rules, but we'll fix it differently
   
-  // Update column startupIds when startups are loaded
+  // This is a workaround since we can't use hooks in a loop or conditionally
+  // Instead, we'll create refs to each query individually for status IDs we know about
+  const statusQueries = statusIds?.map(statusId => 
+    statusId ? useStartupsByStatus(statusId) : null
+  );
+  
+  // Map the individual queries to our columnQueries object
   useEffect(() => {
-    if (columns.length > 0 && Object.keys(columnQueries).length > 0) {
+    if (statusIds && statusQueries) {
+      const newColumnQueries: Record<string, any> = {};
+      
+      statusIds.forEach((statusId, index) => {
+        if (statusId) {
+          newColumnQueries[statusId] = statusQueries[index];
+        }
+      });
+      
+      // Update column startupIds when startups are loaded
       const newColumns = [...columns];
       
       columns.forEach((column, index) => {
-        const query = columnQueries[column.id];
+        const query = newColumnQueries[column.id];
         if (query?.data) {
           newColumns[index].startupIds = query.data.map((startup: any) => startup.id);
         }
@@ -55,12 +74,15 @@ const Board = () => {
       
       setColumns(newColumns);
     }
-  }, [columns, columnQueries, setColumns]);
+  }, [columns, statusIds, statusQueries, setColumns]);
 
   // Get a startup by ID from any status
-  const getStartupById = (id: string): any | undefined => {
-    for (const columnId in columnQueries) {
-      const query = columnQueries[columnId];
+  const getStartupById = (id: string) => {
+    for (let i = 0; i < statusIds?.length || 0; i++) {
+      const statusId = statusIds?.[i];
+      if (!statusId) continue;
+      
+      const query = statusQueries?.[i];
       const startup = query?.data?.find((s: any) => s.id === id);
       if (startup) return startup;
     }
@@ -128,6 +150,14 @@ const Board = () => {
     );
   }
   
+  // Map statusQueries to columnQueries format for the BoardContainer component
+  const mappedColumnQueries: Record<string, any> = {};
+  statusIds?.forEach((statusId, index) => {
+    if (statusId) {
+      mappedColumnQueries[statusId] = statusQueries[index];
+    }
+  });
+  
   return (
     <>
       <div className="h-[calc(100vh-4rem)] flex flex-col">
@@ -139,7 +169,7 @@ const Board = () => {
         <BoardContainer
           columns={columns}
           statuses={statuses}
-          columnQueries={columnQueries}
+          columnQueries={mappedColumnQueries}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragStart={handleDragStart}

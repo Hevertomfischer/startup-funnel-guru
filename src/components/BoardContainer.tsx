@@ -49,6 +49,9 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
     }
   };
 
+  console.log('BoardContainer rendering with columns:', columns);
+  console.log('columnQueries:', columnQueries);
+
   return (
     <div className="relative flex-1 overflow-hidden">
       <div className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10">
@@ -67,9 +70,9 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
         className="h-full overflow-x-auto overflow-y-hidden px-4 pb-4"
       >
         <div className="flex h-full gap-4 pt-4">
-          {columns.map(column => {
+          {columns && columns.length > 0 ? columns.map(column => {
             const status = statuses.find(s => s.id === column.id);
-            const { isLoading, isError, data = [] } = columnQueries[column.id] || { 
+            const query = columnQueries[column.id] || { 
               isLoading: false, 
               isError: false,
               data: []
@@ -81,10 +84,10 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                 id={column.id}
                 title={column.title}
                 color={status?.color || '#e2e8f0'}
-                startups={data}
-                startupIds={column.startupIds}
-                isLoading={isLoading}
-                isError={isError}
+                startups={query?.data || []}
+                startupIds={column.startupIds || []}
+                isLoading={query?.isLoading || false}
+                isError={query?.isError || false}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onDragStart={onDragStart}
@@ -100,7 +103,11 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                 onEditColumn={status ? () => onEditColumn(status) : undefined}
               />
             );
-          })}
+          }) : (
+            <div className="flex items-center justify-center w-full h-32 text-muted-foreground">
+              No columns found. Add a column to get started.
+            </div>
+          )}
           
           <div className="h-full min-w-[280px] flex items-start pt-4">
             <Button 

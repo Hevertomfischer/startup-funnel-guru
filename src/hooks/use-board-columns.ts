@@ -26,8 +26,11 @@ export function useBoardColumns() {
     }
   }, [statuses]);
   
-  // Pre-fetch all startup data by status outside of the reducer
-  const statusIds = useMemo(() => statuses.map(status => status.id), [statuses]);
+  // Get status IDs for queries
+  const statusIds = useMemo(() => 
+    statuses.map(status => status.id),
+    [statuses]
+  );
   
   return {
     columns,
