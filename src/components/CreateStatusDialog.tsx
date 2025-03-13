@@ -23,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { createStatus } from '@/services/supabase';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Status name is required'),
@@ -58,11 +58,12 @@ export function CreateStatusDialog({
     setIsCreating(true);
     
     try {
-      const { error } = await supabase
-        .from('statuses')
-        .insert([{ name: data.name, color: data.color }]);
+      const result = await createStatus({
+        name: data.name,
+        color: data.color
+      });
       
-      if (error) throw error;
+      if (!result) throw new Error('Failed to create status');
       
       toast({
         title: "Status created",
