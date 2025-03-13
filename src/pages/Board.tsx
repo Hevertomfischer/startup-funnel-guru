@@ -1,13 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
   Plus, 
   Filter,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Loader2
 } from 'lucide-react';
-import { Startup, Column, Status } from '@/types';
+import { Startup } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,30 +20,91 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
 import StartupCard from '@/components/StartupCard';
 import { 
-  MOCK_STARTUPS, 
-  INITIAL_COLUMNS, 
-  STATUSES, 
-  USERS
-} from '@/data/mockData';
+  useStatusesQuery, 
+  useStartupsByStatusQuery,
+  useCreateStartupMutation,
+  useUpdateStartupMutation
+} from '@/hooks/use-supabase-query';
+import { USERS } from '@/data/mockData'; // We'll keep using mock users for now
+
+// Helper interface for our board columns
+interface Column {
+  id: string;
+  title: string;
+  startupIds: string[];
+}
 
 const Board = () => {
   const { toast } = useToast();
-  const [columns, setColumns] = useState<Column[]>(INITIAL_COLUMNS);
-  const [startups] = useState<Startup[]>(MOCK_STARTUPS);
   const [draggingStartupId, setDraggingStartupId] = useState<string | null>(null);
   const [showCompactCards, setShowCompactCards] = useState(false);
   
-  // Find a startup by ID
-  const getStartupById = (id: string) => startups.find(s => s.id === id);
+  // Fetch statuses from Supabase
+  const { 
+    data: statuses = [], 
+    isLoading: isLoadingStatuses,
+    isError: isErrorStatuses
+  } = useStatusesQuery();
+  
+  // Create columns based on statuses
+  const [columns, setColumns] = useState<Column[]>([]);
+  
+  // Update columns when statuses are loaded
+  useEffect(() => {
+    if (statuses.length > 0) {
+      const newColumns = statuses.map(status => ({
+        id: status.id,
+        title: status.name,
+        startupIds: []
+      }));
+      setColumns(newColumns);
+    }
+  }, [statuses]);
+  
+  // Fetch startups for each status
+  const startupsByStatusQueries = Object.fromEntries(
+    columns.map(column => [
+      column.id,
+      useStartupsByStatusQuery(column.id)
+    ])
+  );
+  
+  // Update column startupIds when startups are loaded
+  useEffect(() => {
+    if (columns.length > 0) {
+      const newColumns = [...columns];
+      
+      columns.forEach((column, index) => {
+        const query = startupsByStatusQueries[column.id];
+        if (query?.data) {
+          newColumns[index].startupIds = query.data.map(startup => startup.id);
+        }
+      });
+      
+      setColumns(newColumns);
+    }
+  }, [columns, startupsByStatusQueries]);
+  
+  // Get a startup by ID from any status
+  const getStartupById = (id: string): Startup | undefined => {
+    for (const columnId in startupsByStatusQueries) {
+      const query = startupsByStatusQueries[columnId];
+      const startup = query?.data?.find(s => s.id === id);
+      if (startup) return startup;
+    }
+    return undefined;
+  };
+  
+  // Mutations for updating startups
+  const updateStartupMutation = useUpdateStartupMutation();
   
   // Handle card click
   const handleCardClick = (startup: Startup) => {
     toast({
       title: "Startup details",
-      description: `Opening details for ${startup.values.Startup}`,
+      description: `Opening details for ${startup.name}`,
     });
     // Navigate to startup details page would go here
   };
@@ -60,23 +122,29 @@ const Board = () => {
   const handleDrop = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
     const startupId = e.dataTransfer.getData('text/plain');
+    const startup = getStartupById(startupId);
     
-    // Remove from old column
-    const newColumns = columns.map(col => ({
-      ...col,
-      startupIds: col.startupIds.filter(id => id !== startupId)
-    }));
-    
-    // Add to new column
-    const targetColumnIndex = newColumns.findIndex(col => col.id === columnId);
-    if (targetColumnIndex !== -1) {
-      newColumns[targetColumnIndex].startupIds.push(startupId);
+    if (startup && startup.status_id !== columnId) {
+      // Update the startup's status in Supabase
+      updateStartupMutation.mutate({
+        id: startupId,
+        startup: { status_id: columnId }
+      });
+      
+      // Update local state to show the change immediately
+      const newColumns = columns.map(col => ({
+        ...col,
+        startupIds: col.id === columnId 
+          ? [...col.startupIds, startupId] 
+          : col.startupIds.filter(id => id !== startupId)
+      }));
+      
       setColumns(newColumns);
       
-      // In a real app, you'd update the startup status here
+      const newStatus = statuses.find(s => s.id === columnId);
       toast({
         title: "Startup moved",
-        description: `Startup moved to ${columns[targetColumnIndex].title}`,
+        description: `Startup moved to ${newStatus?.name || 'new status'}`,
       });
     }
     
@@ -103,10 +171,38 @@ const Board = () => {
     });
   };
   
-  const statusColorMap: { [key: string]: string } = {};
-  STATUSES.forEach(status => {
-    statusColorMap[status.id] = status.color;
-  });
+  // Create new startup mutation
+  const createStartupMutation = useCreateStartupMutation();
+  
+  const handleAddStartup = (statusId: string) => {
+    // In a real app, this would open a form to create a new startup
+    // For now, we'll create a simple startup with default values
+    createStartupMutation.mutate({
+      name: `New Startup ${Date.now()}`,
+      status_id: statusId,
+      priority: 'medium'
+    });
+  };
+  
+  if (isLoadingStatuses) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Loading board...</span>
+      </div>
+    );
+  }
+  
+  if (isErrorStatuses) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-destructive">Failed to load board</h2>
+          <p className="text-muted-foreground mt-2">Please try again later</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
@@ -190,7 +286,8 @@ const Board = () => {
         >
           <div className="flex h-full gap-4 pt-4">
             {columns.map(column => {
-              const status = STATUSES.find(s => s.id === column.id);
+              const status = statuses.find(s => s.id === column.id);
+              const { isLoading, isError } = startupsByStatusQueries[column.id] || {};
               
               return (
                 <div 
@@ -219,14 +316,14 @@ const Board = () => {
                       variant="ghost" 
                       size="sm" 
                       className="h-7 w-7 p-0" 
-                      onClick={() => {
-                        toast({
-                          title: "Add startup",
-                          description: `Adding startup to ${column.title}`,
-                        });
-                      }}
+                      onClick={() => handleAddStartup(column.id)}
+                      disabled={createStartupMutation.isPending}
                     >
-                      <Plus className="h-4 w-4" />
+                      {createStartupMutation.isPending && column.id === createStartupMutation.variables?.status_id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Plus className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                   
@@ -237,10 +334,45 @@ const Board = () => {
                       scrollbarColor: `${status?.color}20 transparent`
                     }}
                   >
-                    {column.startupIds.map(startupId => {
+                    {isLoading && (
+                      <div className="h-20 flex items-center justify-center">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                    
+                    {isError && (
+                      <div className="h-20 flex items-center justify-center text-destructive text-sm">
+                        Failed to load startups
+                      </div>
+                    )}
+                    
+                    {!isLoading && !isError && column.startupIds.map(startupId => {
                       const startup = getStartupById(startupId);
                       
                       if (!startup) return null;
+                      
+                      // Convert Supabase startup to the format expected by StartupCard
+                      const cardStartup: any = {
+                        id: startup.id,
+                        createdAt: startup.created_at ? new Date(startup.created_at) : new Date(),
+                        updatedAt: startup.updated_at ? new Date(startup.updated_at) : new Date(),
+                        statusId: startup.status_id || '',
+                        values: {
+                          Startup: startup.name,
+                          'Problema que Resolve': startup.problem_solved,
+                          Setor: startup.sector,
+                          'Modelo de Negócio': startup.business_model,
+                          'Site da Startup': startup.website,
+                          MRR: startup.mrr,
+                          'Quantidade de Clientes': startup.client_count
+                        },
+                        labels: [], // We'll fetch labels separately in a real implementation
+                        priority: startup.priority as 'low' | 'medium' | 'high',
+                        assignedTo: startup.assigned_to,
+                        dueDate: startup.due_date ? new Date(startup.due_date) : undefined,
+                        timeTracking: startup.time_tracking,
+                        attachments: [] // We'll fetch attachments separately in a real implementation
+                      };
                       
                       return (
                         <div
@@ -254,17 +386,17 @@ const Board = () => {
                           )}
                         >
                           <StartupCard 
-                            startup={startup} 
-                            statuses={STATUSES} 
+                            startup={cardStartup} 
+                            statuses={statuses.map(s => ({ id: s.id, name: s.name, color: s.color }))} 
                             users={USERS}
-                            onClick={handleCardClick}
+                            onClick={() => handleCardClick(startup)}
                             compact={showCompactCards}
                           />
                         </div>
                       );
                     })}
                     
-                    {column.startupIds.length === 0 && (
+                    {!isLoading && !isError && column.startupIds.length === 0 && (
                       <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
                         Drop startups here
                       </div>

@@ -9,7 +9,250 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      attachments: {
+        Row: {
+          id: string
+          name: string
+          size: number | null
+          startup_id: string | null
+          type: string
+          uploaded_at: string
+          url: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          size?: number | null
+          startup_id?: string | null
+          type: string
+          uploaded_at?: string
+          url: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          size?: number | null
+          startup_id?: string | null
+          type?: string
+          uploaded_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      labels: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      startup_fields: {
+        Row: {
+          created_at: string
+          field_name: string
+          field_type: string
+          field_value: Json | null
+          id: string
+          startup_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_name: string
+          field_type: string
+          field_value?: Json | null
+          id?: string
+          startup_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_name?: string
+          field_type?: string
+          field_value?: Json | null
+          id?: string
+          startup_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_fields_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startups: {
+        Row: {
+          assigned_to: string | null
+          business_model: string | null
+          client_count: number | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          mrr: number | null
+          name: string
+          priority: string | null
+          problem_solved: string | null
+          sector: string | null
+          status_id: string | null
+          time_tracking: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          business_model?: string | null
+          client_count?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          mrr?: number | null
+          name: string
+          priority?: string | null
+          problem_solved?: string | null
+          sector?: string | null
+          status_id?: string | null
+          time_tracking?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          business_model?: string | null
+          client_count?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          mrr?: number | null
+          name?: string
+          priority?: string | null
+          problem_solved?: string | null
+          sector?: string | null
+          status_id?: string | null
+          time_tracking?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startups_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startups_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startups_labels: {
+        Row: {
+          label_id: string
+          startup_id: string
+        }
+        Insert: {
+          label_id: string
+          startup_id: string
+        }
+        Update: {
+          label_id?: string
+          startup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startups_labels_label_id_fkey"
+            columns: ["label_id"]
+            isOneToOne: false
+            referencedRelation: "labels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startups_labels_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      statuses: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          email: string
+          id: string
+          name: string
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
