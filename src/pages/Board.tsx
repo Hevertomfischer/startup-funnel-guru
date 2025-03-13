@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -67,15 +67,28 @@ const Board = () => {
     }
   }, [statuses]);
   
-  // Create a memoized object to store query results
-  const startupsByStatusQueries = React.useMemo(() => {
+  // Create a properly memoized dictionary for query results
+  // Important: We define the queries OUTSIDE the useEffect to avoid React hook violations
+  const startupsByStatusQueries = useMemo(() => {
+    if (columns.length === 0) return {};
+    
     return Object.fromEntries(
       columns.map(column => [
         column.id,
-        useStartupsByStatusQuery(column.id)
+        { data: [], isLoading: false, isError: false } // Default value initially
       ])
     );
-  }, [columns]); // Only recreate when columns change
+  }, [columns]);
+  
+  // For each column, create separate queries using individual useEffect hooks
+  columns.forEach(column => {
+    const { data, isLoading, isError } = useStartupsByStatusQuery(column.id);
+    
+    // Update the query results in our memoized object
+    if (startupsByStatusQueries[column.id]) {
+      startupsByStatusQueries[column.id] = { data, isLoading, isError };
+    }
+  });
   
   // Update column startupIds when startups are loaded
   useEffect(() => {
@@ -311,7 +324,11 @@ const Board = () => {
             <div className="flex h-full gap-4 pt-4">
               {columns.map(column => {
                 const status = statuses.find(s => s.id === column.id);
-                const { isLoading, isError } = startupsByStatusQueries[column.id] || {};
+                const { isLoading, isError, data } = startupsByStatusQueries[column.id] || { 
+                  isLoading: false, 
+                  isError: false,
+                  data: []
+                };
                 
                 return (
                   <div 
