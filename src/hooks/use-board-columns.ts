@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { Column } from '@/types';
 import { useStatusesQuery } from './use-supabase-query';
@@ -28,19 +29,12 @@ export function useBoardColumns() {
   // Pre-fetch all startup data by status outside of the reducer
   const statusIds = useMemo(() => statuses.map(status => status.id), [statuses]);
   
-  // Get startup data for each column
-  const getStartupById = (id: string): any | undefined => {
-    // We'll implement this in a way that doesn't cause hook rules violations
-    return undefined; // Placeholder, will be updated
-  };
-
   return {
     columns,
     setColumns,
     statusIds,
     statuses,
     isLoadingStatuses,
-    isErrorStatuses,
-    getStartupById
+    isErrorStatuses
   };
 }

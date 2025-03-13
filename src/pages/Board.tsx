@@ -11,9 +11,11 @@ import { useStartupsByStatus } from '@/hooks/use-startups-by-status';
 import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/BoardContainer';
 import { Status } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 const Board = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showCompactCards, setShowCompactCards] = useState(false);
   const [showCreateStatusDialog, setShowCreateStatusDialog] = useState(false);
   const [statusToEdit, setStatusToEdit] = useState<Status | null>(null);
@@ -35,9 +37,7 @@ const Board = () => {
   statusIds?.forEach(statusId => {
     if (statusId) {
       const queryResult = useStartupsByStatus(statusId);
-      if (statusId) {
-        columnQueries[statusId] = queryResult;
-      }
+      columnQueries[statusId] = queryResult;
     }
   });
   
@@ -93,11 +93,19 @@ const Board = () => {
   const handleStatusCreated = () => {
     // Invalidate statuses query to refresh the columns
     queryClient.invalidateQueries({ queryKey: ['statuses'] });
+    toast({
+      title: "Status created",
+      description: "The new column has been added to the board"
+    });
   };
 
   const handleStatusUpdated = () => {
     // Invalidate statuses query to refresh the columns
     queryClient.invalidateQueries({ queryKey: ['statuses'] });
+    toast({
+      title: "Status updated",
+      description: "The column has been updated"
+    });
   };
   
   if (isLoadingStatuses) {
