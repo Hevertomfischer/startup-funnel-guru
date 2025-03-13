@@ -1,14 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Column } from '@/types';
 import { useStatusesQuery } from './use-supabase-query';
 import { useStartupsByStatus } from './use-startups-by-status';
-
-interface ColumnQuery {
-  data: any[];
-  isLoading: boolean;
-  isError: boolean;
-}
 
 export function useBoardColumns() {
   // Fetch statuses from Supabase
@@ -34,11 +28,13 @@ export function useBoardColumns() {
   }, [statuses]);
   
   // Create an object to store our query results per column
-  const columnQueries = columns.reduce<Record<string, ColumnQuery>>((acc, column) => {
-    const { data, isLoading, isError } = useStartupsByStatus(column.id);
-    acc[column.id] = { data, isLoading, isError };
-    return acc;
-  }, {});
+  const columnQueries = useMemo(() => {
+    return columns.reduce<Record<string, any>>((acc, column) => {
+      const { data, isLoading, isError } = useStartupsByStatus(column.id);
+      acc[column.id] = { data, isLoading, isError };
+      return acc;
+    }, {});
+  }, [columns]);
   
   // Update column startupIds when startups are loaded
   useEffect(() => {
@@ -48,7 +44,7 @@ export function useBoardColumns() {
       columns.forEach((column, index) => {
         const query = columnQueries[column.id];
         if (query?.data) {
-          newColumns[index].startupIds = query.data.map(startup => startup.id);
+          newColumns[index].startupIds = query.data.map((startup: any) => startup.id);
         }
       });
       
@@ -60,7 +56,7 @@ export function useBoardColumns() {
   const getStartupById = (id: string): any | undefined => {
     for (const columnId in columnQueries) {
       const query = columnQueries[columnId];
-      const startup = query?.data?.find(s => s.id === id);
+      const startup = query?.data?.find((s: any) => s.id === id);
       if (startup) return startup;
     }
     return undefined;
