@@ -3,17 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CreateStatusDialog } from '@/components/CreateStatusDialog';
+import { RenameStatusDialog } from '@/components/RenameStatusDialog';
 import { useBoardColumns } from '@/hooks/use-board-columns';
 import { useBoardDragDrop } from '@/hooks/use-board-drag-drop';
 import { useStartupActions } from '@/hooks/use-startup-actions';
 import { useStartupsByStatus } from '@/hooks/use-startups-by-status';
 import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/BoardContainer';
+import { Status } from '@/types';
 
 const Board = () => {
   const queryClient = useQueryClient();
   const [showCompactCards, setShowCompactCards] = useState(false);
   const [showCreateStatusDialog, setShowCreateStatusDialog] = useState(false);
+  const [statusToEdit, setStatusToEdit] = useState<Status | null>(null);
   
   // Get board columns and statuses
   const {
@@ -82,8 +85,17 @@ const Board = () => {
   const addNewColumn = () => {
     setShowCreateStatusDialog(true);
   };
+
+  const editColumn = (status: Status) => {
+    setStatusToEdit(status);
+  };
   
   const handleStatusCreated = () => {
+    // Invalidate statuses query to refresh the columns
+    queryClient.invalidateQueries({ queryKey: ['statuses'] });
+  };
+
+  const handleStatusUpdated = () => {
     // Invalidate statuses query to refresh the columns
     queryClient.invalidateQueries({ queryKey: ['statuses'] });
   };
@@ -131,6 +143,7 @@ const Board = () => {
           onCardClick={handleCardClick}
           showCompactCards={showCompactCards}
           addNewColumn={addNewColumn}
+          onEditColumn={editColumn}
         />
       </div>
       
@@ -138,6 +151,15 @@ const Board = () => {
         open={showCreateStatusDialog}
         onOpenChange={setShowCreateStatusDialog}
         onStatusCreated={handleStatusCreated}
+      />
+
+      <RenameStatusDialog
+        open={!!statusToEdit}
+        onOpenChange={(open) => {
+          if (!open) setStatusToEdit(null);
+        }}
+        onStatusUpdated={handleStatusUpdated}
+        status={statusToEdit}
       />
     </>
   );

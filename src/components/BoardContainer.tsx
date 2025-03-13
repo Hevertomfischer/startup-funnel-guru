@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BoardColumn from '@/components/BoardColumn';
 import { Column, Status } from '@/types';
@@ -21,6 +21,7 @@ interface BoardContainerProps {
   onCardClick: (startup: any) => void;
   showCompactCards: boolean;
   addNewColumn: () => void;
+  onEditColumn: (status: Status) => void;
 }
 
 const BoardContainer: React.FC<BoardContainerProps> = ({
@@ -37,7 +38,8 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
   pendingAddStatusId,
   onCardClick,
   showCompactCards,
-  addNewColumn
+  addNewColumn,
+  onEditColumn
 }) => {
   const scrollContainer = (direction: 'left' | 'right') => {
     const container = document.getElementById('board-container');
@@ -95,6 +97,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                 showCompactCards={showCompactCards}
                 statuses={statuses.map(s => ({ id: s.id, name: s.name, color: s.color }))}
                 users={USERS}
+                onEditColumn={status ? () => onEditColumn(status) : undefined}
               />
             );
           })}
