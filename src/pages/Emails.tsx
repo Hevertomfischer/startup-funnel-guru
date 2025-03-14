@@ -96,7 +96,7 @@ const Emails = () => {
     console.log('Auth state changed:', {
       isAuthenticated,
       authStage,
-      authError: authError ? authError.message : null,
+      authError: authError ? authError : null,
       tokenExists: !!accessToken
     });
   }, [isAuthenticated, authStage, authError, accessToken]);
@@ -112,7 +112,9 @@ const Emails = () => {
         <AlertDescription>
           <div className="space-y-2 mt-2">
             <div><strong>Stage:</strong> {authStage || 'not_started'}</div>
-            {authError && <div><strong>Error:</strong> {authError.message}</div>}
+            {authError && <div><strong>Error:</strong> {typeof authError === 'object' && authError !== null && 'message' in authError 
+              ? authError.message 
+              : String(authError)}</div>}
             <div><strong>Auth attempts:</strong> {authAttempts}</div>
             {lastAuthTimestamp && <div><strong>Last attempt:</strong> {new Date(lastAuthTimestamp).toLocaleString()}</div>}
             <div className="flex gap-2 mt-2">
