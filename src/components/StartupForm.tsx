@@ -7,7 +7,6 @@ import { Status } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -78,9 +77,9 @@ const StartupForm: React.FC<StartupFormProps> = ({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Startup Name</FormLabel>
+              <FormLabel>Nome da Startup</FormLabel>
               <FormControl>
-                <Input placeholder="Enter startup name" {...field} />
+                <Input placeholder="Digite o nome da startup" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -92,9 +91,9 @@ const StartupForm: React.FC<StartupFormProps> = ({
           name="problem_solved"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Problem Solved</FormLabel>
+              <FormLabel>Problema Resolvido</FormLabel>
               <FormControl>
-                <Textarea placeholder="What problem does this startup solve?" {...field} />
+                <Textarea placeholder="Qual problema esta startup resolve?" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -107,9 +106,9 @@ const StartupForm: React.FC<StartupFormProps> = ({
             name="sector"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Sector</FormLabel>
+                <FormLabel>Setor</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. FinTech, HealthTech" {...field} />
+                  <Input placeholder="ex: FinTech, HealthTech" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,9 +120,9 @@ const StartupForm: React.FC<StartupFormProps> = ({
             name="business_model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Business Model</FormLabel>
+                <FormLabel>Modelo de Negócio</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. SaaS, Marketplace" {...field} />
+                  <Input placeholder="ex: SaaS, Marketplace" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -139,7 +138,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
               <FormItem>
                 <FormLabel>Website</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://example.com" {...field} />
+                  <Input placeholder="https://exemplo.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -151,7 +150,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
             name="mrr"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Monthly Recurring Revenue (MRR)</FormLabel>
+                <FormLabel>Receita Mensal Recorrente (MRR)</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="0" {...field} />
                 </FormControl>
@@ -167,7 +166,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
             name="client_count"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Client Count</FormLabel>
+                <FormLabel>Quantidade de Clientes</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="0" {...field} />
                 </FormControl>
@@ -181,20 +180,20 @@ const StartupForm: React.FC<StartupFormProps> = ({
             name="priority"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Priority</FormLabel>
+                <FormLabel>Prioridade</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
+                      <SelectValue placeholder="Selecione a prioridade" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="low">Baixa</SelectItem>
+                    <SelectItem value="medium">Média</SelectItem>
+                    <SelectItem value="high">Alta</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -215,7 +214,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -236,9 +235,9 @@ const StartupForm: React.FC<StartupFormProps> = ({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Additional Description</FormLabel>
+              <FormLabel>Descrição Adicional</FormLabel>
               <FormControl>
-                <Textarea placeholder="Additional details about the startup" {...field} />
+                <Textarea placeholder="Detalhes adicionais sobre a startup" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -247,10 +246,10 @@ const StartupForm: React.FC<StartupFormProps> = ({
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : startup ? 'Update Startup' : 'Add Startup'}
+            {isSubmitting ? 'Salvando...' : startup ? 'Atualizar Startup' : 'Adicionar Startup'}
           </Button>
         </div>
       </form>
