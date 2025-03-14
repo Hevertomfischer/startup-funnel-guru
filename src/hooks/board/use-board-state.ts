@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Status } from '@/types';
@@ -49,7 +48,12 @@ export function useBoardState() {
     });
     
     return () => {
-      subscription.unsubscribe();
+      // Fix: Use the correct type for unsubscribe
+      if (typeof subscription === 'function') {
+        subscription();
+      } else if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
     };
   }, [queryClient, statusIds]);
   
