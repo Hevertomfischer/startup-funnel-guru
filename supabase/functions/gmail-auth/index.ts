@@ -24,6 +24,8 @@ serve(async (req) => {
   console.log(`Gmail auth function called with path: ${path}`);
   console.log(`GMAIL_CLIENT_ID exists: ${!!GMAIL_CLIENT_ID}`);
   console.log(`GMAIL_CLIENT_SECRET exists: ${!!GMAIL_CLIENT_SECRET}`);
+  console.log(`REDIRECT_URI: ${REDIRECT_URI}`);
+  console.log(`FRONTEND_URL: ${FRONTEND_URL}`);
 
   if (path === 'callback') {
     // Handle OAuth callback
@@ -57,19 +59,31 @@ serve(async (req) => {
         }),
       });
 
+      const responseText = await tokenResponse.text();
+      console.log(`Token exchange response status: ${tokenResponse.status}`);
+      console.log(`Token exchange response headers: ${JSON.stringify(Object.fromEntries(tokenResponse.headers))}`);
+
       if (!tokenResponse.ok) {
-        const errorData = await tokenResponse.text();
-        console.error('Token exchange error:', errorData);
+        console.error('Token exchange error text:', responseText);
         try {
-          const parsedError = JSON.parse(errorData);
+          const parsedError = JSON.parse(responseText);
+          console.error('Parsed token exchange error:', JSON.stringify(parsedError));
           throw new Error(`Failed to exchange code for token: ${parsedError.error_description || parsedError.error || 'Unknown error'}`);
         } catch (e) {
-          throw new Error(`Failed to exchange code for token: ${errorData || tokenResponse.status}`);
+          throw new Error(`Failed to exchange code for token: ${responseText || tokenResponse.status}`);
         }
       }
 
-      const tokenData = await tokenResponse.json();
-      console.log('Successfully obtained access token');
+      let tokenData;
+      try {
+        tokenData = JSON.parse(responseText);
+        console.log('Token data received, access_token length:', tokenData.access_token?.length);
+        console.log('Token data received, refresh_token exists:', !!tokenData.refresh_token);
+        console.log('Token data received, expires_in:', tokenData.expires_in);
+      } catch (e) {
+        console.error('Error parsing token response as JSON:', e);
+        throw new Error('Invalid token response format');
+      }
 
       // Redirect back to the frontend with the tokens
       const redirectUrl = new URL(`${FRONTEND_URL}/emails`);
@@ -96,7 +110,9 @@ serve(async (req) => {
         'https://www.googleapis.com/auth/gmail.send',
         'https://www.googleapis.com/auth/gmail.compose',
         'https://mail.google.com/',
-        'https://www.googleapis.com/auth/gmail.modify'
+        'https://www.googleapis.com/auth/gmail.modify',
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile'
       ];
 
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -106,6 +122,7 @@ serve(async (req) => {
       authUrl.searchParams.set('scope', scopes.join(' '));
       authUrl.searchParams.set('access_type', 'offline');
       authUrl.searchParams.set('prompt', 'consent');
+      authUrl.searchParams.set('include_granted_scopes', 'true');
 
       console.log(`Generated auth URL: ${authUrl.toString().substring(0, 100)}...`);
       

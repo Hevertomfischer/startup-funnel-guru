@@ -47,9 +47,11 @@ serve(async (req) => {
     console.log('Subject:', subject);
     console.log('Access token provided:', !!accessToken);
     console.log('Access token length:', accessToken.length);
+    console.log('Access token begins with:', accessToken.substring(0, 10) + '...');
 
     // Build the RFC822 formatted message
     const encodedMessage = buildRFC822Message(to, subject, content);
+    console.log('Encoded message length:', encodedMessage.length);
 
     // Send the email using Gmail API
     const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
