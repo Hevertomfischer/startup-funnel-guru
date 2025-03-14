@@ -6,7 +6,6 @@ import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/board/BoardContainer';
 import BoardDialogs from '@/components/board/BoardDialogs';
 import { useBoardState } from '@/hooks/board/use-board-state';
-import Header from '@/components/Header';
 
 const BoardView = () => {
   // Component state
@@ -63,7 +62,10 @@ const BoardView = () => {
   // Function to open the add startup dialog with the first status
   const openAddStartupDialog = () => {
     if (statuses && statuses.length > 0) {
+      console.log("Opening add startup dialog with status:", statuses[0]);
       handleAddStartup(statuses[0].id);
+    } else {
+      console.log("No statuses available to add startup");
     }
   };
   
@@ -93,7 +95,7 @@ const BoardView = () => {
         <BoardHeader 
           showCompactCards={showCompactCards}
           setShowCompactCards={setShowCompactCards}
-          onAddStartup={openAddStartupDialog}
+          addNewStartup={openAddStartupDialog}
         />
         
         {columns.length === 0 ? (

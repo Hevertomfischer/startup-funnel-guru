@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   useCreateStartupMutation, 
   useUpdateStartupMutation
-} from '../use-supabase-query';
+} from './use-supabase-query';
 
 export function useStartupActions() {
   const { toast } = useToast();
@@ -26,6 +25,7 @@ export function useStartupActions() {
     // Add console log to debug
     console.log('Opening create dialog with status ID:', statusId);
     console.log('showCreateDialog set to:', true);
+    console.log('selectedStartup set to:', { status_id: statusId });
   };
   
   const handleCreateStartup = (data: any) => {

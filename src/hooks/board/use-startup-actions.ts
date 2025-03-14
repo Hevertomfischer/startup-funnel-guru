@@ -21,8 +21,10 @@ export function useStartupActions() {
   const updateStartupMutation = useUpdateStartupMutation();
   
   const handleAddStartup = (statusId: string) => {
+    console.log("handleAddStartup called with statusId:", statusId);
     setSelectedStartup({ status_id: statusId });
     setShowCreateDialog(true);
+    console.log("After setting dialog state - showCreateDialog:", true);
   };
   
   const handleCreateStartup = (data: any) => {

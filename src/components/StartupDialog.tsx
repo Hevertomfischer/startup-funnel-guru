@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,11 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
 }) => {
   console.log('StartupDialog rendered with open:', open);
   console.log('Startup data:', startup);
+  console.log('Status length:', statuses?.length);
+  
+  useEffect(() => {
+    console.log('StartupDialog useEffect - open state changed to:', open);
+  }, [open]);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
