@@ -19,7 +19,12 @@ export const getEmailTemplates = async (): Promise<EmailTemplate[]> => {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    
+    // Cast the status field to the correct type
+    return (data || []).map(template => ({
+      ...template,
+      status: template.status as 'active' | 'draft'
+    }));
   } catch (error: any) {
     handleError(error, 'Failed to fetch email templates');
     return [];
@@ -35,7 +40,14 @@ export const getEmailTemplate = async (id: string): Promise<EmailTemplate | null
       .single();
     
     if (error) throw error;
-    return data;
+    
+    if (data) {
+      return {
+        ...data,
+        status: data.status as 'active' | 'draft'
+      };
+    }
+    return null;
   } catch (error: any) {
     handleError(error, 'Failed to fetch email template');
     return null;
@@ -53,7 +65,14 @@ export const createEmailTemplate = async (template: EmailTemplateFormValues): Pr
     if (error) throw error;
     
     toast.success('Email template created successfully');
-    return data;
+    
+    if (data) {
+      return {
+        ...data,
+        status: data.status as 'active' | 'draft'
+      };
+    }
+    return null;
   } catch (error: any) {
     handleError(error, 'Failed to create email template');
     return null;
@@ -72,7 +91,14 @@ export const updateEmailTemplate = async (id: string, template: EmailTemplateFor
     if (error) throw error;
     
     toast.success('Email template updated successfully');
-    return data;
+    
+    if (data) {
+      return {
+        ...data,
+        status: data.status as 'active' | 'draft'
+      };
+    }
+    return null;
   } catch (error: any) {
     handleError(error, 'Failed to update email template');
     return null;
