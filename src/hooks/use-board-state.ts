@@ -1,0 +1,121 @@
+
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Status } from '@/types';
+import { useToast } from '@/hooks/use-toast';
+import { useBoardColumns } from '@/hooks/use-board-columns';
+import { useStatusQueries } from '@/hooks/use-status-queries';
+import { useBoardDragDrop } from '@/hooks/use-board-drag-drop';
+import { useStartupActions } from '@/hooks/use-startup-actions';
+
+export function useBoardState() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [showCreateStatusDialog, setShowCreateStatusDialog] = useState(false);
+  const [statusToEdit, setStatusToEdit] = useState<Status | null>(null);
+  
+  // Get board columns and statuses
+  const {
+    columns,
+    setColumns,
+    statusIds,
+    statuses,
+    isLoadingStatuses,
+    isErrorStatuses,
+  } = useBoardColumns();
+
+  // Get status queries using our hook
+  const { queries: mappedQueries } = useStatusQueries(statusIds || []);
+  
+  // Get a startup by ID from any status
+  const getStartupById = (id: string) => {
+    for (const statusId in mappedQueries) {
+      const query = mappedQueries[statusId];
+      const startup = query?.data?.find((s: any) => s.id === id);
+      if (startup) return startup;
+    }
+    return undefined;
+  };
+  
+  // Drag and drop functionality
+  const {
+    draggingStartupId,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    handleDragEnd
+  } = useBoardDragDrop(columns, setColumns, statuses, getStartupById);
+  
+  // Startup actions
+  const {
+    createStartupMutation,
+    updateStartupMutation,
+    selectedStartup,
+    showCreateDialog,
+    setShowCreateDialog,
+    showEditDialog,
+    setShowEditDialog,
+    handleAddStartup,
+    handleCreateStartup,
+    handleEditStartup,
+    handleUpdateStartup,
+    handleCardClick
+  } = useStartupActions();
+  
+  // Status handlers
+  const handleStatusCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ['statuses'] });
+    toast({
+      title: "Status created",
+      description: "The new column has been added to the board"
+    });
+  };
+
+  const handleStatusUpdated = () => {
+    queryClient.invalidateQueries({ queryKey: ['statuses'] });
+    toast({
+      title: "Status updated",
+      description: "The column has been updated"
+    });
+  };
+
+  return {
+    // Board state
+    columns,
+    statuses,
+    isLoadingStatuses,
+    isErrorStatuses,
+    mappedQueries,
+    
+    // Handlers
+    getStartupById,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    handleDragEnd,
+    draggingStartupId,
+    
+    // Dialog state
+    showCreateStatusDialog,
+    setShowCreateStatusDialog,
+    statusToEdit,
+    setStatusToEdit,
+    
+    // Startup actions
+    handleAddStartup,
+    handleCardClick,
+    handleCreateStartup,
+    handleUpdateStartup,
+    createStartupMutation,
+    updateStartupMutation,
+    selectedStartup,
+    showCreateDialog,
+    setShowCreateDialog,
+    showEditDialog,
+    setShowEditDialog,
+    
+    // Toast handlers
+    handleStatusCreated,
+    handleStatusUpdated
+  };
+}

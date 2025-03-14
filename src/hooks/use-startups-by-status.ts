@@ -6,7 +6,7 @@ export const useStartupsByStatus = (statusId: string | undefined) => {
   const query = useStartupsByStatusQuery(statusId || '');
   
   return {
-    data: query.data || [],
+    data: statusId ? (query.data || []) : [],
     isLoading: query.isLoading && !!statusId,
     isError: query.isError && !!statusId,
   };
