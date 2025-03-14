@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Shield, Edit, Settings } from 'lucide-react';
+import { Shield, Edit, Settings, Trash2 } from 'lucide-react';
 
 interface TeamMemberCardProps {
   member: {
@@ -19,9 +19,10 @@ interface TeamMemberCardProps {
   };
   onEditPermissions: (member: any) => void;
   onEdit: (member: any) => void;
+  onRemove: (member: any) => void;
 }
 
-const TeamMemberCard = ({ member, onEditPermissions, onEdit }: TeamMemberCardProps) => {
+const TeamMemberCard = ({ member, onEditPermissions, onEdit, onRemove }: TeamMemberCardProps) => {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -58,19 +59,28 @@ const TeamMemberCard = ({ member, onEditPermissions, onEdit }: TeamMemberCardPro
               {member.permissions === 'admin' ? 'Administrador' : 'Somente leitura'}
             </Badge>
           </div>
-          <div className="flex gap-2 mt-4">
-            <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={() => onEdit(member)}>
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => onEdit(member)}>
               <Edit className="h-3.5 w-3.5" />
               Editar
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 gap-1 text-muted-foreground"
+              className="gap-1 text-muted-foreground"
               onClick={() => onEditPermissions(member)}
             >
               <Settings className="h-3.5 w-3.5" />
               Permissões
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              className="col-span-2 gap-1"
+              onClick={() => onRemove(member)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Remover
             </Button>
           </div>
         </div>

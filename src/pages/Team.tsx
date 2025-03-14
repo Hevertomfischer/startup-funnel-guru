@@ -8,6 +8,8 @@ import { PlusCircle } from 'lucide-react';
 import TeamMemberCard from '@/components/team/TeamMemberCard';
 import TeamMemberDialog from '@/components/team/TeamMemberDialog';
 import TeamMemberPermissionsDialog from '@/components/team/TeamMemberPermissionsDialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 // Dados iniciais para demonstração
 const initialTeamMembers = [
@@ -67,6 +69,7 @@ const Team = () => {
   const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
   const [openMemberDialog, setOpenMemberDialog] = useState(false);
   const [openPermissionsDialog, setOpenPermissionsDialog] = useState(false);
+  const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
 
   const handleAddMember = () => {
@@ -82,6 +85,11 @@ const Team = () => {
   const handleEditPermissions = (member: any) => {
     setSelectedMember(member);
     setOpenPermissionsDialog(true);
+  };
+
+  const handleRemoveMember = (member: any) => {
+    setSelectedMember(member);
+    setOpenRemoveDialog(true);
   };
 
   const handleSaveMember = (data: any) => {
@@ -113,6 +121,16 @@ const Team = () => {
     );
   };
 
+  const confirmRemoveMember = () => {
+    if (selectedMember) {
+      setTeamMembers(prevMembers => 
+        prevMembers.filter(member => member.id !== selectedMember.id)
+      );
+      setOpenRemoveDialog(false);
+      toast.success(`${selectedMember.name} foi removido da equipe`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -133,6 +151,7 @@ const Team = () => {
             member={member} 
             onEditPermissions={handleEditPermissions}
             onEdit={handleEditMember}
+            onRemove={handleRemoveMember}
           />
         ))}
       </div>
@@ -154,6 +173,26 @@ const Team = () => {
           onSave={handleSavePermissions}
         />
       )}
+
+      {/* Diálogo de confirmação para remover membro */}
+      <Dialog open={openRemoveDialog} onOpenChange={setOpenRemoveDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Remover membro da equipe</DialogTitle>
+            <DialogDescription>
+              {selectedMember && `Tem certeza que deseja remover ${selectedMember.name} da equipe? Esta ação não pode ser desfeita.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setOpenRemoveDialog(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={confirmRemoveMember}>
+              Remover
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
