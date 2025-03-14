@@ -8,7 +8,11 @@ import BoardDialogs from '@/components/board/BoardDialogs';
 import { useBoardState } from '@/hooks/board/use-board-state';
 
 const BoardView = () => {
+  // Component state
   const [showCompactCards, setShowCompactCards] = useState(false);
+  
+  // Use the board state hook to get all the data and handlers
+  const boardState = useBoardState();
   
   const {
     // Board state
@@ -48,7 +52,7 @@ const BoardView = () => {
     // Toast handlers
     handleStatusCreated,
     handleStatusUpdated
-  } = useBoardState();
+  } = boardState;
   
   if (isLoadingStatuses) {
     return (

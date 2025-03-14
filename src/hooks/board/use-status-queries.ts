@@ -4,12 +4,14 @@ import { useStartupsByStatus } from '../use-startups-by-status';
 
 export const useStatusQueries = (statusIds: string[]) => {
   // Create query results for all status IDs dynamically
-  const statusQueries = statusIds.map((statusId) => {
-    return {
-      statusId,
-      query: useStartupsByStatus(statusId),
-    };
-  });
+  const statusQueries = useMemo(() => {
+    return statusIds.map((statusId) => {
+      return {
+        statusId,
+        query: useStartupsByStatus(statusId),
+      };
+    });
+  }, [statusIds]);
   
   // Combine all query results into a mapping
   const queries = useMemo(() => {

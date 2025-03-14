@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Status } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -28,14 +28,16 @@ export function useBoardState() {
   const { queries: mappedQueries } = useStatusQueries(statusIds || []);
   
   // Get a startup by ID from any status
-  const getStartupById = (id: string) => {
-    for (const statusId in mappedQueries) {
-      const query = mappedQueries[statusId];
-      const startup = query?.data?.find((s: any) => s.id === id);
-      if (startup) return startup;
-    }
-    return undefined;
-  };
+  const getStartupById = useMemo(() => {
+    return (id: string) => {
+      for (const statusId in mappedQueries) {
+        const query = mappedQueries[statusId];
+        const startup = query?.data?.find((s: any) => s.id === id);
+        if (startup) return startup;
+      }
+      return undefined;
+    };
+  }, [mappedQueries]);
   
   // Drag and drop functionality
   const {
