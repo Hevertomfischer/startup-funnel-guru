@@ -64,6 +64,7 @@ const ListView = () => {
       <ListViewHeader 
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        startups={sortedStartups}
       />
       
       <div className="flex-1 overflow-auto p-4">

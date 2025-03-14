@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Filter, Plus, Search } from 'lucide-react';
+import { Filter, Plus, Search, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,13 +12,16 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { Startup } from '@/types';
+import { exportStartupsToCSV } from '@/utils/export-utils';
 
 interface ListViewHeaderProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  startups?: Startup[];
 }
 
-const ListViewHeader = ({ searchTerm, setSearchTerm }: ListViewHeaderProps) => {
+const ListViewHeader = ({ searchTerm, setSearchTerm, startups = [] }: ListViewHeaderProps) => {
   const { toast } = useToast();
 
   const handleAddStartup = () => {
@@ -27,6 +30,24 @@ const ListViewHeader = ({ searchTerm, setSearchTerm }: ListViewHeaderProps) => {
       description: "Opening startup form",
     });
     // Add startup functionality would go here
+  };
+
+  const handleExportCSV = () => {
+    if (startups.length === 0) {
+      toast({
+        title: "Export failed",
+        description: "No startups to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    exportStartupsToCSV(startups);
+    
+    toast({
+      title: "Export successful",
+      description: `Exported ${startups.length} startups to CSV`,
+    });
   };
 
   return (
@@ -73,6 +94,11 @@ const ListViewHeader = ({ searchTerm, setSearchTerm }: ListViewHeaderProps) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        
+        <Button variant="outline" onClick={handleExportCSV}>
+          <Download className="h-4 w-4 mr-1" />
+          Export CSV
+        </Button>
         
         <Button onClick={handleAddStartup}>
           <Plus className="h-4 w-4 mr-1" />
