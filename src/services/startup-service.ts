@@ -20,6 +20,7 @@ export const getStartups = async (): Promise<Startup[]> => {
 
 export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> => {
   try {
+    console.log(`Fetching startups for status: ${statusId}`);
     const { data, error } = await supabase
       .from('startups')
       .select('*')
@@ -27,6 +28,7 @@ export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> 
       .order('created_at', { ascending: false });
     
     if (error) throw error;
+    console.log(`Retrieved ${data?.length || 0} startups for status ${statusId}`);
     return data || [];
   } catch (error: any) {
     handleError(error, 'Failed to fetch startups by status');
