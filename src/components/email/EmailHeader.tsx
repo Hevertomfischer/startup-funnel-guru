@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 interface EmailHeaderProps {
   isAuthenticated: boolean;
   isAuthLoading: boolean;
-  authError: string | null;
+  authError: string | null | Error | any;
   authStage?: string;
   startGmailAuth: () => void;
   disconnect: () => void;
@@ -36,6 +36,12 @@ const EmailHeader: React.FC<EmailHeaderProps> = ({
     startGmailAuth();
   };
 
+  const getErrorMessage = (error: any): string => {
+    if (typeof error === 'string') return error;
+    if (error && typeof error === 'object' && 'message' in error) return error.message;
+    return String(error);
+  };
+
   return (
     <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
       <div>
@@ -52,7 +58,7 @@ const EmailHeader: React.FC<EmailHeaderProps> = ({
         {authError && (
           <div className="flex items-center gap-2 text-destructive mt-2 p-2 border border-destructive/30 rounded bg-destructive/10">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            <span className="text-sm">Erro: {authError}</span>
+            <span className="text-sm">Erro: {getErrorMessage(authError)}</span>
             <Button variant="ghost" size="sm" onClick={() => window.open('https://support.google.com/accounts/answer/6010255', '_blank')}>
               Ajuda
             </Button>

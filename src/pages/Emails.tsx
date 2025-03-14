@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useGmailAuth } from '@/hooks/use-gmail-auth';
@@ -112,9 +111,15 @@ const Emails = () => {
         <AlertDescription>
           <div className="space-y-2 mt-2">
             <div><strong>Stage:</strong> {authStage || 'not_started'}</div>
-            {authError && <div><strong>Error:</strong> {typeof authError === 'object' && authError !== null && 'message' in authError 
-              ? authError.message 
-              : String(authError)}</div>}
+            {authError && (
+              <div>
+                <strong>Error:</strong> {
+                  typeof authError === 'object' && authError !== null && 'message' in authError 
+                    ? authError.message 
+                    : String(authError)
+                }
+              </div>
+            )}
             <div><strong>Auth attempts:</strong> {authAttempts}</div>
             {lastAuthTimestamp && <div><strong>Last attempt:</strong> {new Date(lastAuthTimestamp).toLocaleString()}</div>}
             <div className="flex gap-2 mt-2">
