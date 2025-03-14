@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { Column } from '@/types';
 import { useStatusesQuery } from '../use-supabase-query';
-import { updateStatusPositions } from '@/services/status-service';
+import { updateStatusPositions } from '@/services';
 import { useToast } from '@/hooks/use-toast';
 
 export function useBoardColumns() {

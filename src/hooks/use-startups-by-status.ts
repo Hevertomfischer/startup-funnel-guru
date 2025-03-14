@@ -2,7 +2,7 @@
 import { useStartupsByStatusQuery } from './use-supabase-query';
 
 export const useStartupsByStatus = (statusId: string | undefined) => {
-  // Only fetch startups data if we have a valid status ID
+  // Use the query hook at the top level
   const query = useStartupsByStatusQuery(statusId || '');
   
   return {

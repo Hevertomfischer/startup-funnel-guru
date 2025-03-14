@@ -3,36 +3,35 @@ import { useMemo } from 'react';
 import { useStartupsByStatus } from '../use-startups-by-status';
 
 export const useStatusQueries = (statusIds: string[]) => {
-  // Create query results for all status IDs dynamically
-  const statusQueries = useMemo(() => {
-    return statusIds.map((statusId) => {
-      return {
-        statusId,
-        query: useStartupsByStatus(statusId),
-      };
-    });
-  }, [statusIds]);
+  // Create individual query hooks for each status ID
+  const queryResults = statusIds.map(statusId => {
+    // This is a valid use of hooks at the top level
+    return {
+      statusId,
+      ...useStartupsByStatus(statusId)
+    };
+  });
   
   // Combine all query results into a mapping
   const queries = useMemo(() => {
     const result: Record<string, any> = {};
     
-    statusQueries.forEach(({ statusId, query }) => {
+    queryResults.forEach(({ statusId, ...query }) => {
       result[statusId] = query;
     });
     
     return result;
-  }, [statusQueries]);
+  }, [queryResults]);
   
   // Check if any query is loading
   const isLoading = useMemo(() => {
-    return Object.values(queries).some(query => query?.isLoading);
-  }, [queries]);
+    return queryResults.some(query => query.isLoading);
+  }, [queryResults]);
   
   // Check if any query has an error
   const isError = useMemo(() => {
-    return Object.values(queries).some(query => query?.isError);
-  }, [queries]);
+    return queryResults.some(query => query.isError);
+  }, [queryResults]);
   
   return { queries, isLoading, isError };
 };
