@@ -1,12 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import TeamMemberCard from '@/components/team/TeamMemberCard';
+import TeamMemberDialog from '@/components/team/TeamMemberDialog';
+import TeamMemberPermissionsDialog from '@/components/team/TeamMemberPermissionsDialog';
 
-const teamMembers = [
+// Dados iniciais para demonstração
+const initialTeamMembers = [
   {
     id: '1',
     name: 'Ana Silva',
@@ -14,7 +18,8 @@ const teamMembers = [
     email: 'ana@scventures.com',
     avatar: null,
     initials: 'AS',
-    assignedStartups: 12
+    assignedStartups: 12,
+    permissions: 'admin'
   },
   {
     id: '2',
@@ -23,7 +28,8 @@ const teamMembers = [
     email: 'carlos@scventures.com',
     avatar: null,
     initials: 'CM',
-    assignedStartups: 8
+    assignedStartups: 8,
+    permissions: 'admin'
   },
   {
     id: '3',
@@ -32,7 +38,8 @@ const teamMembers = [
     email: 'juliana@scventures.com',
     avatar: null,
     initials: 'JC',
-    assignedStartups: 15
+    assignedStartups: 15,
+    permissions: 'read_only'
   },
   {
     id: '4',
@@ -41,7 +48,8 @@ const teamMembers = [
     email: 'rafael@scventures.com',
     avatar: null,
     initials: 'RS',
-    assignedStartups: 6
+    assignedStartups: 6,
+    permissions: 'read_only'
   },
   {
     id: '5',
@@ -50,60 +58,102 @@ const teamMembers = [
     email: 'mariana@scventures.com',
     avatar: null,
     initials: 'MO',
-    assignedStartups: 10
+    assignedStartups: 10,
+    permissions: 'read_only'
   }
 ];
 
 const Team = () => {
+  const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
+  const [openMemberDialog, setOpenMemberDialog] = useState(false);
+  const [openPermissionsDialog, setOpenPermissionsDialog] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+
+  const handleAddMember = () => {
+    setSelectedMember(null);
+    setOpenMemberDialog(true);
+  };
+
+  const handleEditMember = (member: any) => {
+    setSelectedMember(member);
+    setOpenMemberDialog(true);
+  };
+
+  const handleEditPermissions = (member: any) => {
+    setSelectedMember(member);
+    setOpenPermissionsDialog(true);
+  };
+
+  const handleSaveMember = (data: any) => {
+    if (data.id) {
+      // Atualizar membro existente
+      setTeamMembers(prevMembers => 
+        prevMembers.map(member => 
+          member.id === data.id ? { ...member, ...data } : member
+        )
+      );
+    } else {
+      // Adicionar novo membro
+      const newMember = {
+        ...data,
+        id: `${teamMembers.length + 1}`,
+        avatar: null,
+        initials: data.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+        assignedStartups: 0
+      };
+      setTeamMembers([...teamMembers, newMember]);
+    }
+  };
+
+  const handleSavePermissions = (memberId: string, permissions: string) => {
+    setTeamMembers(prevMembers => 
+      prevMembers.map(member => 
+        member.id === memberId ? { ...member, permissions } : member
+      )
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Team</h1>
-          <p className="text-muted-foreground">Manage team members and access permissions</p>
+          <h1 className="text-3xl font-bold mb-2">Equipe</h1>
+          <p className="text-muted-foreground">Gerencie membros da equipe e permissões de acesso</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={handleAddMember}>
           <PlusCircle className="h-4 w-4" />
-          Add Team Member
+          Adicionar Membro
         </Button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {teamMembers.map(member => (
-          <Card key={member.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={member.avatar || ''} alt={member.name} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {member.initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-lg">{member.name}</CardTitle>
-                  <Badge variant="outline" className="mt-1">{member.role}</Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Email:</span>
-                  <span>{member.email}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Assigned startups:</span>
-                  <span className="font-medium">{member.assignedStartups}</span>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="flex-1">Edit</Button>
-                  <Button variant="outline" size="sm" className="flex-1 text-muted-foreground">Permissions</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TeamMemberCard 
+            key={member.id} 
+            member={member} 
+            onEditPermissions={handleEditPermissions}
+            onEdit={handleEditMember}
+          />
         ))}
       </div>
+
+      {/* Diálogo para adicionar/editar membros */}
+      <TeamMemberDialog 
+        open={openMemberDialog}
+        onOpenChange={setOpenMemberDialog}
+        member={selectedMember}
+        onSave={handleSaveMember}
+      />
+
+      {/* Diálogo para editar permissões */}
+      {selectedMember && (
+        <TeamMemberPermissionsDialog
+          open={openPermissionsDialog}
+          onOpenChange={setOpenPermissionsDialog}
+          member={selectedMember}
+          onSave={handleSavePermissions}
+        />
+      )}
     </div>
   );
 };
