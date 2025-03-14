@@ -1,20 +1,29 @@
 
-import { useState, useMemo, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Status } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 import { useBoardColumns } from '@/hooks/board/use-board-columns';
 import { useStatusQueries } from '@/hooks/board/use-status-queries';
 import { useBoardDragDrop } from '@/hooks/board/use-board-drag-drop';
 import { useStartupActions } from '@/hooks/use-startup-actions';
-import { useDeleteStartupMutation } from '@/hooks/use-supabase-query';
+import { useBoardSearch } from '@/hooks/board/use-board-search';
+import { useBoardDialogs } from '@/hooks/board/use-board-dialogs';
+import { useStartupDeletion } from '@/hooks/board/use-startup-deletion';
 
 export function useBoardState() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [showCreateStatusDialog, setShowCreateStatusDialog] = useState(false);
-  const [statusToEdit, setStatusToEdit] = useState<Status | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  
+  // Get board search functionality
+  const { searchTerm, setSearchTerm, handleSearch } = useBoardSearch();
+  
+  // Get dialog state management
+  const {
+    showCreateStatusDialog,
+    setShowCreateStatusDialog,
+    statusToEdit,
+    setStatusToEdit,
+    handleStatusCreated,
+    handleStatusUpdated
+  } = useBoardDialogs();
   
   // Get board columns and statuses
   const {
@@ -101,48 +110,12 @@ export function useBoardState() {
     };
   }, [mappedQueries]);
   
-  // Delete startup mutation
-  const deleteStartupMutation = useDeleteStartupMutation();
+  // Get startup deletion functionality
+  const { deleteStartupMutation, handleDeleteStartup: baseHandleDeleteStartup } = useStartupDeletion();
   
-  // Handle startup deletion
+  // Wire up the handleDeleteStartup to use our getStartupById
   const handleDeleteStartup = (startupId: string) => {
-    const startup = getStartupById(startupId);
-    
-    if (!startup) {
-      toast({
-        title: "Error",
-        description: "Startup not found",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Confirm deletion
-    if (confirm(`Are you sure you want to delete "${startup.name}"?`)) {
-      deleteStartupMutation.mutate(startupId, {
-        onSuccess: () => {
-          toast({
-            title: "Startup deleted",
-            description: `${startup.name} has been removed`
-          });
-          
-          // Invalidate queries to update the UI
-          if (startup.status_id) {
-            queryClient.invalidateQueries({ 
-              queryKey: ['startups', 'status', startup.status_id] 
-            });
-          }
-          queryClient.invalidateQueries({ queryKey: ['startups'] });
-        },
-        onError: (error) => {
-          toast({
-            title: "Error",
-            description: `Failed to delete startup: ${(error as Error).message}`,
-            variant: "destructive"
-          });
-        }
-      });
-    }
+    baseHandleDeleteStartup(startupId, getStartupById);
   };
   
   // Drag and drop functionality
@@ -191,32 +164,9 @@ export function useBoardState() {
     setShowEditDialog,
     handleAddStartup,
     handleCreateStartup,
-    handleEditStartup,
     handleUpdateStartup,
     handleCardClick
   } = useStartupActions();
-  
-  // Status handlers
-  const handleStatusCreated = () => {
-    queryClient.invalidateQueries({ queryKey: ['statuses'] });
-    toast({
-      title: "Status created",
-      description: "The new column has been added to the board"
-    });
-  };
-
-  const handleStatusUpdated = () => {
-    queryClient.invalidateQueries({ queryKey: ['statuses'] });
-    toast({
-      title: "Status updated",
-      description: "The column has been updated"
-    });
-  };
-
-  // Search handler
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
 
   return {
     // Board state
