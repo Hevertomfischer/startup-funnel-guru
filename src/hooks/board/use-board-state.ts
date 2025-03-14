@@ -51,6 +51,26 @@ export function useBoardState() {
     }
   }, [queryClient, statusIds]);
   
+  // Update columns with startup IDs from queries
+  useEffect(() => {
+    if (columns.length > 0 && mappedQueries) {
+      const updatedColumns = columns.map(column => {
+        const query = mappedQueries[column.id];
+        if (query && query.data) {
+          // Extract startup IDs from the query data
+          const startupIds = query.data.map((startup: any) => startup.id);
+          return {
+            ...column,
+            startupIds
+          };
+        }
+        return column;
+      });
+      
+      setColumns(updatedColumns);
+    }
+  }, [mappedQueries, columns, setColumns]);
+  
   // Get a startup by ID from any status
   const getStartupById = useMemo(() => {
     return (id: string) => {
