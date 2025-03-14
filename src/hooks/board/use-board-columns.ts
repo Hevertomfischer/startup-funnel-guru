@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export function useBoardColumns() {
   const { toast } = useToast();
+  
   // Fetch statuses from Supabase
   const { 
     data: statuses = [], 
