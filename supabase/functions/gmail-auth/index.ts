@@ -38,6 +38,9 @@ serve(async (req) => {
       const code = url.searchParams.get('code');
       const error = url.searchParams.get('error');
       
+      console.log('Callback received with code:', code ? 'yes (length: ' + code.length + ')' : 'no');
+      console.log('Callback received with error:', error || 'none');
+      
       if (error) {
         console.error('OAuth error returned:', error);
         throw new Error(`Authorization failed: ${error}`);
