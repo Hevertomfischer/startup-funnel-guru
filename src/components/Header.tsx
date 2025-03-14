@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -35,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,9 +43,9 @@ const Header: React.FC<HeaderProps> = ({
 
   const toggleDarkMode = () => {
     if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
     } else {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
     }
     setIsDarkMode(!isDarkMode);
   };
@@ -161,7 +160,6 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
       
-      {/* Mobile search bar */}
       <div className="md:hidden px-4 pb-3">
         <form onSubmit={handleSearch} className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -175,7 +173,6 @@ const Header: React.FC<HeaderProps> = ({
         </form>
       </div>
       
-      {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden absolute w-full bg-background border-b z-50 shadow-lg animate-fade-in">
           <nav className="px-4 py-3">

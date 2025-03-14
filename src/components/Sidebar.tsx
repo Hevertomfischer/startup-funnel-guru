@@ -68,7 +68,7 @@ const Sidebar = () => {
   ];
   
   return (
-    <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-background fixed">
+    <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-sidebar fixed">
       <div className="flex h-16 items-center border-b px-6">
         <Link to="/" className="flex items-center gap-2">
           <img 
