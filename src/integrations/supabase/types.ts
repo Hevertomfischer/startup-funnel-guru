@@ -47,6 +47,36 @@ export type Database = {
           },
         ]
       }
+      email_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          name: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          name: string
+          status: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       labels: {
         Row: {
           color: string

@@ -1,7 +1,15 @@
 
-import { supabase, handleError } from './base-service';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { EmailTemplate } from '@/types/email-template';
+import type { EmailTemplate, EmailTemplateFormValues } from '@/types/email-template';
+
+// Helper function to handle errors
+const handleError = (error: any, message: string): void => {
+  toast.error(message, {
+    description: error.message
+  });
+  console.error(`${message}:`, error);
+};
 
 export const getEmailTemplates = async (): Promise<EmailTemplate[]> => {
   try {
@@ -34,7 +42,7 @@ export const getEmailTemplate = async (id: string): Promise<EmailTemplate | null
   }
 };
 
-export const createEmailTemplate = async (template: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>): Promise<EmailTemplate | null> => {
+export const createEmailTemplate = async (template: EmailTemplateFormValues): Promise<EmailTemplate | null> => {
   try {
     const { data, error } = await supabase
       .from('email_templates')
@@ -52,7 +60,7 @@ export const createEmailTemplate = async (template: Omit<EmailTemplate, 'id' | '
   }
 };
 
-export const updateEmailTemplate = async (id: string, template: Partial<EmailTemplate>): Promise<EmailTemplate | null> => {
+export const updateEmailTemplate = async (id: string, template: EmailTemplateFormValues): Promise<EmailTemplate | null> => {
   try {
     const { data, error } = await supabase
       .from('email_templates')
