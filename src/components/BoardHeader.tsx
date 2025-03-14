@@ -14,11 +14,13 @@ import {
 interface BoardHeaderProps {
   showCompactCards: boolean;
   setShowCompactCards: (show: boolean) => void;
+  addNewStartup: () => void;
 }
 
 const BoardHeader: React.FC<BoardHeaderProps> = ({ 
   showCompactCards, 
-  setShowCompactCards 
+  setShowCompactCards,
+  addNewStartup
 }) => {
   return (
     <div className="flex items-center justify-between p-4 border-b">
@@ -29,6 +31,14 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
         </p>
       </div>
       <div className="flex items-center gap-2">
+        <Button
+          variant="default"
+          size="sm"
+          onClick={addNewStartup}
+        >
+          Add Startup
+        </Button>
+        
         <Button
           variant="outline"
           size="sm"
