@@ -30,7 +30,11 @@ export const useGmailAuth = () => {
     if (errorParam) {
       setError(errorParam);
       toast.error('Gmail authentication failed', {
-        description: errorParam
+        description: errorParam,
+        action: {
+          label: 'Retry',
+          onClick: () => startGmailAuth()
+        }
       });
       return;
     }
@@ -49,6 +53,7 @@ export const useGmailAuth = () => {
       localStorage.setItem('gmail_expires_at', expiresAt.toString());
       
       toast.success('Gmail account connected successfully');
+      setError(null);
     }
   }, []);
 
@@ -72,6 +77,7 @@ export const useGmailAuth = () => {
           localStorage.setItem('gmail_expires_at', newExpiresAt.toString());
           
           console.log('Gmail token refreshed successfully');
+          setError(null);
         } catch (error: any) {
           console.error('Failed to refresh token:', error);
           setError(error.message);
@@ -105,6 +111,7 @@ export const useGmailAuth = () => {
           localStorage.setItem('gmail_expires_at', newExpiresAt.toString());
           
           console.log('Gmail token loaded successfully');
+          setError(null);
         } catch (error: any) {
           console.error('Failed to load token:', error);
           setError(error.message);
@@ -136,7 +143,26 @@ export const useGmailAuth = () => {
       
       const authUrl = await getGmailAuthUrl();
       console.log('Redirecting to auth URL:', authUrl);
-      window.location.href = authUrl;
+      
+      // Open in a popup window for better user experience
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      
+      const popup = window.open(
+        authUrl,
+        'gmailAuthPopup',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+      
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        // Popup was blocked, try direct navigation
+        window.location.href = authUrl;
+        toast.info('Abrindo janela de autenticação do Gmail', {
+          description: 'Se não aparecer, verifique se os pop-ups estão permitidos neste site.'
+        });
+      }
     } catch (error: any) {
       console.error('Failed to start Gmail authentication:', error);
       setError(error.message);
@@ -154,6 +180,7 @@ export const useGmailAuth = () => {
     setExpiresAt(null);
     localStorage.removeItem('gmail_refresh_token');
     localStorage.removeItem('gmail_expires_at');
+    setError(null);
     
     toast.success('Gmail account disconnected');
   };

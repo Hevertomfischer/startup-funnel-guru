@@ -38,7 +38,8 @@ const Emails = () => {
   const { 
     accessToken, 
     isAuthenticated, 
-    isLoading: isAuthLoading, 
+    isLoading: isAuthLoading,
+    error: authError,
     startGmailAuth, 
     disconnect 
   } = useGmailAuth();
@@ -80,6 +81,7 @@ const Emails = () => {
       <EmailHeader
         isAuthenticated={isAuthenticated}
         isAuthLoading={isAuthLoading}
+        authError={authError}
         startGmailAuth={startGmailAuth}
         disconnect={disconnect}
         handleCreateTemplate={handleCreateTemplate}
