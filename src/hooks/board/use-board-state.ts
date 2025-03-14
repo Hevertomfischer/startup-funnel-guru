@@ -48,11 +48,14 @@ export function useBoardState() {
     });
     
     return () => {
-      // Fix: Use the correct type for unsubscribe
-      if (typeof subscription === 'function') {
-        subscription();
-      } else if (subscription && typeof subscription.unsubscribe === 'function') {
-        subscription.unsubscribe();
+      // Handle the subscription cleanup correctly based on its type
+      if (subscription) {
+        // Handle both function and object with unsubscribe method
+        if (typeof subscription === 'function') {
+          subscription();
+        } else if (typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe();
+        }
       }
     };
   }, [queryClient, statusIds]);
