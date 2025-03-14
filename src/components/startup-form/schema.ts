@@ -12,6 +12,14 @@ export const startupSchema = z.object({
   client_count: z.coerce.number().optional(),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
   status_id: z.string().min(1, { message: "Status is required" }),
+  attachments: z.array(
+    z.object({
+      name: z.string(),
+      size: z.number(),
+      type: z.string(),
+      url: z.string()
+    })
+  ).optional().default([]),
 });
 
 export type StartupFormValues = z.infer<typeof startupSchema>;

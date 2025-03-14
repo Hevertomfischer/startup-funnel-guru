@@ -9,6 +9,7 @@ import { BasicInfoSection } from './BasicInfoSection';
 import { BusinessSection } from './BusinessSection';
 import { MetricsSection } from './MetricsSection';
 import { StatusDescriptionSection } from './StatusDescriptionSection';
+import { AttachmentSection } from './AttachmentSection';
 import { FormActions } from './FormActions';
 
 interface StartupFormProps {
@@ -39,6 +40,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
       client_count: startup?.client_count || undefined,
       priority: startup?.priority || 'medium',
       status_id: startup?.status_id || statuses[0]?.id || '',
+      attachments: startup?.attachments || [],
     },
   });
 
@@ -50,6 +52,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
           <BusinessSection />
           <MetricsSection />
           <StatusDescriptionSection statuses={statuses} />
+          <AttachmentSection />
           <FormActions 
             onCancel={onCancel} 
             isSubmitting={isSubmitting} 

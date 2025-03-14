@@ -1,7 +1,7 @@
-
 import { supabase, handleError } from './base-service';
 import { toast } from 'sonner';
 import type { Startup } from '@/integrations/supabase/client';
+import { addAttachment } from './attachment-service';
 
 export const getStartups = async (): Promise<Startup[]> => {
   try {
@@ -52,15 +52,30 @@ export const getStartup = async (id: string): Promise<Startup | null> => {
   }
 };
 
-export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' | 'updated_at'>): Promise<Startup | null> => {
+export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' | 'updated_at'> & { attachments?: any[] }): Promise<Startup | null> => {
   try {
+    const { attachments, ...startupData } = startup;
+    
     const { data, error } = await supabase
       .from('startups')
-      .insert(startup)
+      .insert(startupData)
       .select()
       .single();
     
     if (error) throw error;
+    
+    if (attachments && attachments.length > 0) {
+      for (const file of attachments) {
+        await addAttachment({
+          startup_id: data.id,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: file.url
+        });
+      }
+    }
+    
     toast.success('Startup created successfully');
     return data;
   } catch (error: any) {
@@ -69,16 +84,33 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
   }
 };
 
-export const updateStartup = async (id: string, startup: Partial<Startup>): Promise<Startup | null> => {
+export const updateStartup = async (id: string, startup: Partial<Startup> & { attachments?: any[] }): Promise<Startup | null> => {
   try {
+    const { attachments, ...startupData } = startup;
+    
     const { data, error } = await supabase
       .from('startups')
-      .update(startup)
+      .update(startupData)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
+    
+    if (attachments && attachments.length > 0) {
+      for (const file of attachments) {
+        if (!file.id) {
+          await addAttachment({
+            startup_id: id,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: file.url
+          });
+        }
+      }
+    }
+    
     toast.success('Startup updated successfully');
     return data;
   } catch (error: any) {
