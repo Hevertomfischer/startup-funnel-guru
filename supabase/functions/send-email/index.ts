@@ -45,6 +45,7 @@ serve(async (req) => {
 
     console.log('Sending email to:', to);
     console.log('Subject:', subject);
+    console.log('Access token provided:', !!accessToken);
     console.log('Access token length:', accessToken.length);
 
     // Build the RFC822 formatted message
@@ -62,26 +63,36 @@ serve(async (req) => {
       }),
     });
 
+    const responseText = await response.text();
+    console.log('Gmail API response status:', response.status);
+    console.log('Gmail API response headers:', JSON.stringify(Object.fromEntries(response.headers)));
+    
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gmail API error response:', errorText);
+      console.error('Gmail API error response:', responseText);
       
       try {
-        const errorData = JSON.parse(errorText);
-        console.error('Gmail API error details:', errorData);
+        const errorData = JSON.parse(responseText);
+        console.error('Gmail API error details:', JSON.stringify(errorData));
         throw new Error(`Gmail API error: ${errorData.error?.message || JSON.stringify(errorData)}`);
       } catch (e) {
-        throw new Error(`Gmail API error: Status ${response.status} - ${errorText}`);
+        throw new Error(`Gmail API error: Status ${response.status} - ${responseText}`);
       }
     }
 
-    const data = await response.json();
-    console.log('Email sent successfully. Message ID:', data.id);
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.warn('Could not parse response as JSON:', responseText);
+      data = { responseText };
+    }
+    
+    console.log('Email sent successfully. Response:', JSON.stringify(data));
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        messageId: data.id 
+        messageId: data.id || 'unknown'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

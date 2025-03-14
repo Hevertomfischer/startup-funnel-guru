@@ -21,10 +21,20 @@ serve(async (req) => {
   const url = new URL(req.url);
   const path = url.pathname.split('/').pop();
 
+  console.log(`Gmail auth function called with path: ${path}`);
+  console.log(`GMAIL_CLIENT_ID exists: ${!!GMAIL_CLIENT_ID}`);
+  console.log(`GMAIL_CLIENT_SECRET exists: ${!!GMAIL_CLIENT_SECRET}`);
+
   if (path === 'callback') {
     // Handle OAuth callback
     try {
       const code = url.searchParams.get('code');
+      const error = url.searchParams.get('error');
+      
+      if (error) {
+        console.error('OAuth error returned:', error);
+        throw new Error(`Authorization failed: ${error}`);
+      }
       
       if (!code) {
         throw new Error('No authorization code provided');
@@ -48,9 +58,14 @@ serve(async (req) => {
       });
 
       if (!tokenResponse.ok) {
-        const errorData = await tokenResponse.json();
+        const errorData = await tokenResponse.text();
         console.error('Token exchange error:', errorData);
-        throw new Error('Failed to exchange code for token');
+        try {
+          const parsedError = JSON.parse(errorData);
+          throw new Error(`Failed to exchange code for token: ${parsedError.error_description || parsedError.error || 'Unknown error'}`);
+        } catch (e) {
+          throw new Error(`Failed to exchange code for token: ${errorData || tokenResponse.status}`);
+        }
       }
 
       const tokenData = await tokenResponse.json();
@@ -62,6 +77,7 @@ serve(async (req) => {
       redirectUrl.searchParams.set('refresh_token', tokenData.refresh_token);
       redirectUrl.searchParams.set('expires_in', tokenData.expires_in.toString());
 
+      console.log(`Redirecting to: ${redirectUrl.toString().substring(0, 100)}...`);
       return Response.redirect(redirectUrl.toString(), 302);
     } catch (error: any) {
       console.error('Error in OAuth callback:', error);
@@ -91,6 +107,8 @@ serve(async (req) => {
       authUrl.searchParams.set('access_type', 'offline');
       authUrl.searchParams.set('prompt', 'consent');
 
+      console.log(`Generated auth URL: ${authUrl.toString().substring(0, 100)}...`);
+      
       return new Response(
         JSON.stringify({ authUrl: authUrl.toString() }),
         {
