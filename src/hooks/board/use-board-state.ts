@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Status } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { useBoardColumns } from '@/hooks/use-board-columns';
-import { useStatusQueries } from '@/hooks/use-status-queries';
-import { useBoardDragDrop } from '@/hooks/use-board-drag-drop';
-import { useStartupActions } from '@/hooks/use-startup-actions';
+import { useBoardColumns } from '@/hooks/board/use-board-columns';
+import { useStatusQueries } from '@/hooks/board/use-status-queries';
+import { useBoardDragDrop } from '@/hooks/board/use-board-drag-drop';
+import { useStartupActions } from '@/hooks/board/use-startup-actions';
 
 export function useBoardState() {
   const queryClient = useQueryClient();

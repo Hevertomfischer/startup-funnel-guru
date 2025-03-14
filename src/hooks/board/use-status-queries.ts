@@ -1,6 +1,6 @@
 
 import { useMemo } from 'react';
-import { useStartupsByStatus } from './use-startups-by-status';
+import { useStartupsByStatus } from '../use-startups-by-status';
 
 export const useStatusQueries = (statusIds: string[]) => {
   // Create query results for all status IDs dynamically

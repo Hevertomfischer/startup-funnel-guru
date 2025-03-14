@@ -2,7 +2,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import BoardColumn from '@/components/BoardColumn';
+import BoardColumn from '@/components/board/BoardColumn';
 import { Column, Status } from '@/types';
 import { USERS } from '@/data/mockData';
 

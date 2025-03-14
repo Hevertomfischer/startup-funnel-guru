@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import BoardHeader from '@/components/BoardHeader';
-import BoardContainer from '@/components/BoardContainer';
-import BoardDialogs from '@/components/BoardDialogs';
-import { useBoardState } from '@/hooks/use-board-state';
+import BoardContainer from '@/components/board/BoardContainer';
+import BoardDialogs from '@/components/board/BoardDialogs';
+import { useBoardState } from '@/hooks/board/use-board-state';
 
 const BoardView = () => {
   const [showCompactCards, setShowCompactCards] = useState(false);

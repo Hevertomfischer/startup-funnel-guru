@@ -5,8 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { 
   useCreateStartupMutation, 
   useUpdateStartupMutation
-} from './use-supabase-query';
-import { Status } from '@/types';
+} from '../use-supabase-query';
 
 export function useStartupActions() {
   const { toast } = useToast();

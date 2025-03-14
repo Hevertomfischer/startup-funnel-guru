@@ -6,8 +6,8 @@ export const useStartupsByStatus = (statusId: string | undefined) => {
   const query = useStartupsByStatusQuery(statusId || '');
   
   return {
-    data: statusId ? (query.data || []) : [],
-    isLoading: query.isLoading && !!statusId,
-    isError: query.isError && !!statusId,
+    data: statusId && query.data ? query.data : [],
+    isLoading: statusId ? query.isLoading : false,
+    isError: statusId ? query.isError : false,
   };
 };

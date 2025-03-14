@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Column } from '@/types';
-import { useStatusesQuery } from './use-supabase-query';
+import { useStatusesQuery } from '../use-supabase-query';
 
 export function useBoardColumns() {
   // Fetch statuses from Supabase

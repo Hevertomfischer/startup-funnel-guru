@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useUpdateStartupMutation } from './use-supabase-query';
+import { useUpdateStartupMutation } from '../use-supabase-query';
 import { Column } from '@/types';
 
 export function useBoardDragDrop(
