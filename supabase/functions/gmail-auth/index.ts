@@ -75,7 +75,7 @@ serve(async (req) => {
   } else {
     // Generate OAuth URL
     try {
-      // Adicionar mais escopos necessários para o Gmail
+      // Add all necessary scopes for Gmail
       const scopes = [
         'https://www.googleapis.com/auth/gmail.send',
         'https://www.googleapis.com/auth/gmail.compose',
