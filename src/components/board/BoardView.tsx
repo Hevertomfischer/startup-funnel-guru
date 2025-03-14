@@ -30,6 +30,11 @@ const BoardView = () => {
     handleDragEnd,
     draggingStartupId,
     
+    // Column drag handlers
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDrop,
+    
     // Dialog state
     showCreateStatusDialog,
     setShowCreateStatusDialog,
@@ -113,6 +118,9 @@ const BoardView = () => {
             showCompactCards={showCompactCards}
             addNewColumn={() => setShowCreateStatusDialog(true)}
             onEditColumn={setStatusToEdit}
+            onColumnDragStart={handleColumnDragStart}
+            onColumnDragOver={handleColumnDragOver}
+            onColumnDrop={handleColumnDrop}
           />
         )}
       </div>

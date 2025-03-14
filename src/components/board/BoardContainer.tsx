@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BoardColumn from '@/components/board/BoardColumn';
 import { Column, Status } from '@/types';
@@ -22,6 +22,9 @@ interface BoardContainerProps {
   showCompactCards: boolean;
   addNewColumn: () => void;
   onEditColumn: (status: Status) => void;
+  onColumnDragStart: (e: React.DragEvent, columnIndex: number) => void;
+  onColumnDragOver: (e: React.DragEvent) => void;
+  onColumnDrop: (e: React.DragEvent, columnIndex: number) => void;
 }
 
 const BoardContainer: React.FC<BoardContainerProps> = ({
@@ -39,7 +42,10 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
   onCardClick,
   showCompactCards,
   addNewColumn,
-  onEditColumn
+  onEditColumn,
+  onColumnDragStart,
+  onColumnDragOver,
+  onColumnDrop
 }) => {
   const scrollContainer = (direction: 'left' | 'right') => {
     const container = document.getElementById('board-container');
@@ -67,7 +73,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
         className="h-full overflow-x-auto overflow-y-hidden px-4 pb-4"
       >
         <div className="flex h-full gap-4 pt-4">
-          {columns && columns.length > 0 ? columns.map(column => {
+          {columns && columns.length > 0 ? columns.map((column, index) => {
             const status = statuses.find(s => s.id === column.id);
             const query = columnQueries[column.id] || { 
               isLoading: false, 
@@ -78,29 +84,40 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
             const startups = Array.isArray(query.data) ? query.data : [];
             
             return (
-              <BoardColumn
-                key={column.id}
-                id={column.id}
-                title={column.title}
-                color={status?.color || '#e2e8f0'}
-                startups={startups}
-                startupIds={column.startupIds || []}
-                isLoading={query?.isLoading || false}
-                isError={query?.isError || false}
-                onDrop={onDrop}
-                onDragOver={onDragOver}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-                draggingStartupId={draggingStartupId}
-                onAddStartup={onAddStartup}
-                isPendingAdd={isPendingAdd}
-                pendingAddStatusId={pendingAddStatusId}
-                onCardClick={onCardClick}
-                showCompactCards={showCompactCards}
-                statuses={statuses.map(s => ({ id: s.id, name: s.name, color: s.color }))}
-                users={USERS}
-                onEditColumn={status ? () => onEditColumn(status) : undefined}
-              />
+              <div 
+                key={column.id} 
+                className="h-full" 
+                draggable
+                onDragStart={(e) => onColumnDragStart(e, index)}
+                onDragOver={onColumnDragOver}
+                onDrop={(e) => onColumnDrop(e, index)}
+              >
+                <div className="flex items-center mb-2 cursor-move">
+                  <GripVertical className="h-4 w-4 text-muted-foreground mr-1" />
+                </div>
+                <BoardColumn
+                  id={column.id}
+                  title={column.title}
+                  color={status?.color || '#e2e8f0'}
+                  startups={startups}
+                  startupIds={column.startupIds || []}
+                  isLoading={query?.isLoading || false}
+                  isError={query?.isError || false}
+                  onDrop={onDrop}
+                  onDragOver={onDragOver}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                  draggingStartupId={draggingStartupId}
+                  onAddStartup={onAddStartup}
+                  isPendingAdd={isPendingAdd}
+                  pendingAddStatusId={pendingAddStatusId}
+                  onCardClick={onCardClick}
+                  showCompactCards={showCompactCards}
+                  statuses={statuses.map(s => ({ id: s.id, name: s.name, color: s.color }))}
+                  users={USERS}
+                  onEditColumn={status ? () => onEditColumn(status) : undefined}
+                />
+              </div>
             );
           }) : (
             <div className="flex items-center justify-center w-full h-32 text-muted-foreground">
@@ -108,7 +125,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
             </div>
           )}
           
-          <div className="h-full min-w-[280px] flex items-start pt-4">
+          <div className="h-full min-w-[280px] flex items-start pt-12">
             <Button 
               variant="outline" 
               onClick={addNewColumn} 

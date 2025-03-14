@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getStatuses, 
@@ -11,7 +10,8 @@ import {
   deleteStartup,
   getStartupLabels,
   getStartupAttachments,
-  getStartupFields
+  getStartupFields,
+  updateStatusPositions
 } from '@/services/supabase';
 
 // Status queries
@@ -86,6 +86,18 @@ export const useDeleteStartupMutation = () => {
     mutationFn: deleteStartup,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['startups'] });
+    }
+  });
+};
+
+// Status mutations
+export const useUpdateStatusPositionsMutation = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: updateStatusPositions,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['statuses'] });
     }
   });
 };

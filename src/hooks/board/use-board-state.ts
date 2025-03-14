@@ -22,6 +22,7 @@ export function useBoardState() {
     statuses,
     isLoadingStatuses,
     isErrorStatuses,
+    reorderColumns
   } = useBoardColumns();
 
   // Get status queries using our hook
@@ -47,6 +48,26 @@ export function useBoardState() {
     handleDrop,
     handleDragEnd
   } = useBoardDragDrop(columns, setColumns, statuses, getStartupById);
+  
+  // Column drag functionality
+  const handleColumnDragStart = (e: React.DragEvent, columnIndex: number) => {
+    e.dataTransfer.setData('columnIndex', columnIndex.toString());
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  
+  const handleColumnDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+  
+  const handleColumnDrop = (e: React.DragEvent, columnIndex: number) => {
+    e.preventDefault();
+    const sourceIndex = parseInt(e.dataTransfer.getData('columnIndex'));
+    
+    if (sourceIndex !== columnIndex) {
+      reorderColumns(sourceIndex, columnIndex);
+    }
+  };
   
   // Startup actions
   const {
@@ -96,6 +117,11 @@ export function useBoardState() {
     handleDrop,
     handleDragEnd,
     draggingStartupId,
+    
+    // Column drag handlers
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDrop,
     
     // Dialog state
     showCreateStatusDialog,

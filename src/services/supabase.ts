@@ -16,7 +16,7 @@ export const getStatuses = async (): Promise<Status[]> => {
     const { data, error } = await supabase
       .from('statuses')
       .select('*')
-      .order('name');
+      .order('position');
     
     if (error) throw error;
     return data || [];
@@ -31,9 +31,18 @@ export const getStatuses = async (): Promise<Status[]> => {
 
 export const createStatus = async (status: Omit<Status, 'id' | 'created_at'>): Promise<Status | null> => {
   try {
+    // Get the highest position value to place new status at the end
+    const { data: lastStatus, error: posError } = await supabase
+      .from('statuses')
+      .select('position')
+      .order('position', { ascending: false })
+      .limit(1);
+      
+    const newPosition = (lastStatus && lastStatus.length > 0) ? lastStatus[0].position + 1 : 0;
+    
     const { data, error } = await supabase
       .from('statuses')
-      .insert(status)
+      .insert({ ...status, position: newPosition })
       .select()
       .single();
     
@@ -67,6 +76,28 @@ export const updateStatus = async (id: string, status: Partial<Status>): Promise
     });
     console.error('Error updating status:', error);
     return null;
+  }
+};
+
+export const updateStatusPositions = async (statusPositions: { id: string, position: number }[]): Promise<boolean> => {
+  try {
+    // Use Promise.all to update all statuses concurrently
+    await Promise.all(
+      statusPositions.map(({ id, position }) => 
+        supabase
+          .from('statuses')
+          .update({ position })
+          .eq('id', id)
+      )
+    );
+    
+    return true;
+  } catch (error: any) {
+    toast.error('Failed to update status positions', {
+      description: error.message
+    });
+    console.error('Error updating status positions:', error);
+    return false;
   }
 };
 
