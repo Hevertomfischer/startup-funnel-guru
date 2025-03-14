@@ -18,7 +18,7 @@ import {
 interface StartupTableRowProps {
   startup: Startup;
   status?: Status;
-  onRowClick: (startup: Startup) => void;
+  onRowClick: (startup: any) => void;
   onDelete?: (startupId: string) => void;
 }
 
@@ -39,10 +39,10 @@ const StartupTableRow = ({ startup, status, onRowClick, onDelete }: StartupTable
       id: startup.id,
       name: startup.values.Startup || '',
       problem_solved: startup.values['Problema Resolvido'] || '',
-      description: startup.description || '',
+      description: startup.values.Description || '',
       sector: startup.values.Setor || '',
       business_model: startup.values['Modelo de Negócio'] || '',
-      website: startup.website || '',
+      website: startup.values.Website || '',
       mrr: startup.values.MRR,
       client_count: startup.values['Quantidade de Clientes'],
       priority: startup.priority || 'medium',
