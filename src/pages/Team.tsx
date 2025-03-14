@@ -10,84 +10,40 @@ import TeamMemberDialog from '@/components/team/TeamMemberDialog';
 import TeamMemberPermissionsDialog from '@/components/team/TeamMemberPermissionsDialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-
-// Dados iniciais para demonstração
-const initialTeamMembers = [
-  {
-    id: '1',
-    name: 'Ana Silva',
-    role: 'Investment Partner',
-    email: 'ana@scventures.com',
-    avatar: null,
-    initials: 'AS',
-    assignedStartups: 12,
-    permissions: 'admin'
-  },
-  {
-    id: '2',
-    name: 'Carlos Mendes',
-    role: 'Managing Partner',
-    email: 'carlos@scventures.com',
-    avatar: null,
-    initials: 'CM',
-    assignedStartups: 8,
-    permissions: 'admin'
-  },
-  {
-    id: '3',
-    name: 'Juliana Costa',
-    role: 'Analyst',
-    email: 'juliana@scventures.com',
-    avatar: null,
-    initials: 'JC',
-    assignedStartups: 15,
-    permissions: 'read_only'
-  },
-  {
-    id: '4',
-    name: 'Rafael Santos',
-    role: 'Venture Partner',
-    email: 'rafael@scventures.com',
-    avatar: null,
-    initials: 'RS',
-    assignedStartups: 6,
-    permissions: 'read_only'
-  },
-  {
-    id: '5',
-    name: 'Mariana Oliveira',
-    role: 'Investment Associate',
-    email: 'mariana@scventures.com',
-    avatar: null,
-    initials: 'MO',
-    assignedStartups: 10,
-    permissions: 'read_only'
-  }
-];
+import { useTeamMembersQuery, useCreateTeamMemberMutation, useUpdateTeamMemberMutation, useDeleteTeamMemberMutation } from '@/hooks/use-team-members';
+import { TeamMember } from '@/services/team-member-service';
 
 const Team = () => {
-  const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
   const [openMemberDialog, setOpenMemberDialog] = useState(false);
   const [openPermissionsDialog, setOpenPermissionsDialog] = useState(false);
   const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  
+  // Queries and mutations
+  const teamMembersQuery = useTeamMembersQuery();
+  const createTeamMemberMutation = useCreateTeamMemberMutation();
+  const updateTeamMemberMutation = useUpdateTeamMemberMutation();
+  const deleteTeamMemberMutation = useDeleteTeamMemberMutation();
 
+  const teamMembers = teamMembersQuery.data || [];
+  const isLoading = teamMembersQuery.isLoading;
+  
   const handleAddMember = () => {
     setSelectedMember(null);
     setOpenMemberDialog(true);
   };
 
-  const handleEditMember = (member: any) => {
+  const handleEditMember = (member: TeamMember) => {
     setSelectedMember(member);
     setOpenMemberDialog(true);
   };
 
-  const handleEditPermissions = (member: any) => {
+  const handleEditPermissions = (member: TeamMember) => {
     setSelectedMember(member);
     setOpenPermissionsDialog(true);
   };
 
-  const handleRemoveMember = (member: any) => {
+  const handleRemoveMember = (member: TeamMember) => {
     setSelectedMember(member);
     setOpenRemoveDialog(true);
   };
@@ -95,39 +51,39 @@ const Team = () => {
   const handleSaveMember = (data: any) => {
     if (data.id) {
       // Atualizar membro existente
-      setTeamMembers(prevMembers => 
-        prevMembers.map(member => 
-          member.id === data.id ? { ...member, ...data } : member
-        )
-      );
+      updateTeamMemberMutation.mutate({
+        id: data.id, 
+        teamMember: data
+      });
     } else {
       // Adicionar novo membro
-      const newMember = {
-        ...data,
-        id: `${teamMembers.length + 1}`,
+      createTeamMemberMutation.mutate({
+        name: data.name,
+        email: data.email,
+        role: data.role,
         avatar: null,
         initials: data.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
-        assignedStartups: 0
-      };
-      setTeamMembers([...teamMembers, newMember]);
+        assigned_startups: 0,
+        permissions: data.permissions || 'read_only'
+      });
     }
   };
 
   const handleSavePermissions = (memberId: string, permissions: string) => {
-    setTeamMembers(prevMembers => 
-      prevMembers.map(member => 
-        member.id === memberId ? { ...member, permissions } : member
-      )
-    );
+    updateTeamMemberMutation.mutate({
+      id: memberId, 
+      teamMember: { permissions }
+    });
   };
 
   const confirmRemoveMember = () => {
     if (selectedMember) {
-      setTeamMembers(prevMembers => 
-        prevMembers.filter(member => member.id !== selectedMember.id)
-      );
-      setOpenRemoveDialog(false);
-      toast.success(`${selectedMember.name} foi removido da equipe`);
+      deleteTeamMemberMutation.mutate(selectedMember.id, {
+        onSuccess: () => {
+          setOpenRemoveDialog(false);
+          toast.success(`${selectedMember.name} foi removido da equipe`);
+        }
+      });
     }
   };
 
@@ -144,17 +100,32 @@ const Team = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {teamMembers.map(member => (
-          <TeamMemberCard 
-            key={member.id} 
-            member={member} 
-            onEditPermissions={handleEditPermissions}
-            onEdit={handleEditMember}
-            onRemove={handleRemoveMember}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center p-8">
+          <p>Carregando membros da equipe...</p>
+        </div>
+      ) : teamMembers.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+            <p className="text-muted-foreground mb-4">Nenhum membro da equipe encontrado</p>
+            <Button onClick={handleAddMember} size="sm">
+              Adicionar seu primeiro membro
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {teamMembers.map(member => (
+            <TeamMemberCard 
+              key={member.id} 
+              member={member} 
+              onEditPermissions={handleEditPermissions}
+              onEdit={handleEditMember}
+              onRemove={handleRemoveMember}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Diálogo para adicionar/editar membros */}
       <TeamMemberDialog 
@@ -187,8 +158,12 @@ const Team = () => {
             <Button variant="outline" onClick={() => setOpenRemoveDialog(false)}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={confirmRemoveMember}>
-              Remover
+            <Button 
+              variant="destructive" 
+              onClick={confirmRemoveMember}
+              disabled={deleteTeamMemberMutation.isPending}
+            >
+              {deleteTeamMemberMutation.isPending ? 'Removendo...' : 'Remover'}
             </Button>
           </DialogFooter>
         </DialogContent>

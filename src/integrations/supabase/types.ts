@@ -262,6 +262,45 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          assigned_startups: number | null
+          avatar: string | null
+          created_at: string | null
+          email: string
+          id: string
+          initials: string | null
+          name: string
+          permissions: string | null
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_startups?: number | null
+          avatar?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          initials?: string | null
+          name: string
+          permissions?: string | null
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_startups?: number | null
+          avatar?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          initials?: string | null
+          name?: string
+          permissions?: string | null
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar: string | null
