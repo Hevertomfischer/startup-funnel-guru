@@ -22,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { updateStatus } from '@/services/supabase';
+import { updateStatus } from '@/services/status-service';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Status name is required'),

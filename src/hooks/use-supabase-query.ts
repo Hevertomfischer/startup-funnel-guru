@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getStatuses, 
@@ -12,7 +13,7 @@ import {
   getStartupAttachments,
   getStartupFields,
   updateStatusPositions
-} from '@/services/supabase';
+} from '@/services';
 
 // Status queries
 export const useStatusesQuery = () => {
