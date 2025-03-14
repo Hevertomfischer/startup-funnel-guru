@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -89,14 +88,6 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
               <div 
                 key={column.id} 
                 className="h-full"
-                draggable
-                onDragStart={(e) => {
-                  // Verificar se estamos arrastando a coluna e não um card
-                  // Se o target do evento for diferente do currentTarget, significa que o evento se originou em um filho
-                  if (e.target === e.currentTarget) {
-                    onColumnDragStart(e, index);
-                  }
-                }}
                 onDragOver={onColumnDragOver}
                 onDrop={(e) => onColumnDrop(e, index)}
               >
@@ -105,6 +96,8 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                   draggable
                   onDragStart={(e) => {
                     e.stopPropagation();
+                    e.dataTransfer.setData('type', 'column');
+                    e.dataTransfer.setData('columnIndex', index.toString());
                     onColumnDragStart(e, index);
                   }}
                 >

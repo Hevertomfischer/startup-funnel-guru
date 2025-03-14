@@ -140,6 +140,7 @@ export function useBoardState() {
   // Column drag functionality
   const handleColumnDragStart = (e: React.DragEvent, columnIndex: number) => {
     e.dataTransfer.setData('columnIndex', columnIndex.toString());
+    e.dataTransfer.setData('type', 'column');
     e.dataTransfer.effectAllowed = 'move';
   };
   
@@ -150,6 +151,11 @@ export function useBoardState() {
   
   const handleColumnDrop = (e: React.DragEvent, columnIndex: number) => {
     e.preventDefault();
+    
+    // Only handle column reordering if a column is being dragged
+    const type = e.dataTransfer.getData('type');
+    if (type !== 'column') return;
+    
     const sourceIndex = parseInt(e.dataTransfer.getData('columnIndex'));
     
     if (sourceIndex !== columnIndex) {

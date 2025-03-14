@@ -19,6 +19,7 @@ export function useBoardDragDrop(
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, startupId: string) => {
     e.dataTransfer.setData('text/plain', startupId);
+    e.dataTransfer.setData('type', 'startup');
     setDraggingStartupId(startupId);
   };
   
@@ -28,6 +29,11 @@ export function useBoardDragDrop(
   
   const handleDrop = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
+    
+    // Check if this is a startup being dragged
+    const type = e.dataTransfer.getData('type');
+    if (type !== 'startup') return;
+    
     const startupId = e.dataTransfer.getData('text/plain');
     const startup = getStartupById(startupId);
     
@@ -38,7 +44,7 @@ export function useBoardDragDrop(
         startup: { status_id: columnId }
       });
       
-      // Update local state to show the change immediately
+      // Create a new columns array with the updated startupIds
       const newColumns = columns.map(col => ({
         ...col,
         startupIds: col.id === columnId 
@@ -46,6 +52,7 @@ export function useBoardDragDrop(
           : col.startupIds.filter(id => id !== startupId)
       }));
       
+      // Important: preserve the original column order
       setColumns(newColumns);
       
       const newStatus = statuses.find(s => s.id === columnId);
