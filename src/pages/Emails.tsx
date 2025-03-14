@@ -40,6 +40,7 @@ const Emails = () => {
     isAuthenticated, 
     isLoading: isAuthLoading,
     error: authError,
+    authStage,
     startGmailAuth, 
     disconnect 
   } = useGmailAuth();
@@ -76,12 +77,23 @@ const Emails = () => {
     setIsSendDialogOpen(true);
   };
 
+  // Log current state for debugging
+  console.log('Emails page state:', {
+    isAuthenticated,
+    isAuthLoading,
+    authError,
+    authStage,
+    accessTokenExists: !!accessToken,
+    templatesLoaded: templates.length
+  });
+
   return (
     <div className="space-y-6">
       <EmailHeader
         isAuthenticated={isAuthenticated}
         isAuthLoading={isAuthLoading}
         authError={authError}
+        authStage={authStage}
         startGmailAuth={startGmailAuth}
         disconnect={disconnect}
         handleCreateTemplate={handleCreateTemplate}

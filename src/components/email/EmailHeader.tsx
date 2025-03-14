@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Mail, PlusCircle, AlertCircle } from 'lucide-react';
+import { Mail, PlusCircle, AlertCircle, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EmailHeaderProps {
   isAuthenticated: boolean;
   isAuthLoading: boolean;
   authError: string | null;
+  authStage?: string;
   startGmailAuth: () => void;
   disconnect: () => void;
   handleCreateTemplate: () => void;
@@ -17,6 +18,7 @@ const EmailHeader: React.FC<EmailHeaderProps> = ({
   isAuthenticated,
   isAuthLoading,
   authError,
+  authStage,
   startGmailAuth,
   disconnect,
   handleCreateTemplate
@@ -39,6 +41,14 @@ const EmailHeader: React.FC<EmailHeaderProps> = ({
       <div>
         <h1 className="text-3xl font-bold mb-2">Email Templates</h1>
         <p className="text-muted-foreground">Manage your email templates for automated communications</p>
+        
+        {authStage && (
+          <div className="flex items-center gap-2 text-blue-500 mt-2 p-2 border border-blue-200 rounded bg-blue-50">
+            <Info className="h-4 w-4 shrink-0" />
+            <span className="text-sm">Auth status: {authStage}</span>
+          </div>
+        )}
+        
         {authError && (
           <div className="flex items-center gap-2 text-destructive mt-2 p-2 border border-destructive/30 rounded bg-destructive/10">
             <AlertCircle className="h-4 w-4 shrink-0" />

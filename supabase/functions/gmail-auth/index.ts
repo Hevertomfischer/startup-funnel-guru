@@ -15,8 +15,14 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("======= GMAIL AUTH FUNCTION CALLED =======");
+  console.log(`Request URL: ${req.url}`);
+  console.log(`Request method: ${req.method}`);
+  console.log(`Request headers: ${JSON.stringify(Object.fromEntries(req.headers))}`);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling OPTIONS request with CORS headers");
     return new Response(null, { 
       status: 204, 
       headers: corsHeaders 
@@ -40,6 +46,8 @@ serve(async (req) => {
       
       console.log('Callback received with code:', code ? 'yes (length: ' + code.length + ')' : 'no');
       console.log('Callback received with error:', error || 'none');
+      console.log('Full callback URL: ', req.url);
+      console.log('Query parameters: ', JSON.stringify(Object.fromEntries(url.searchParams)));
       
       if (error) {
         console.error('OAuth error returned:', error);
@@ -52,24 +60,30 @@ serve(async (req) => {
 
       console.log('Received authorization code, exchanging for tokens');
 
+      // Prepare the payload for token exchange
+      const tokenPayload = new URLSearchParams({
+        code,
+        client_id: GMAIL_CLIENT_ID!,
+        client_secret: GMAIL_CLIENT_SECRET!,
+        redirect_uri: REDIRECT_URI,
+        grant_type: 'authorization_code',
+      });
+      
+      console.log('Token exchange payload prepared:', tokenPayload.toString());
+
       // Exchange the authorization code for access and refresh tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          code,
-          client_id: GMAIL_CLIENT_ID!,
-          client_secret: GMAIL_CLIENT_SECRET!,
-          redirect_uri: REDIRECT_URI,
-          grant_type: 'authorization_code',
-        }),
+        body: tokenPayload,
       });
 
       const responseText = await tokenResponse.text();
       console.log(`Token exchange response status: ${tokenResponse.status}`);
       console.log(`Token exchange response headers: ${JSON.stringify(Object.fromEntries(tokenResponse.headers))}`);
+      console.log('Token exchange response text:', responseText);
 
       if (!tokenResponse.ok) {
         console.error('Token exchange error text:', responseText);
@@ -111,6 +125,7 @@ serve(async (req) => {
       });
     } catch (error: any) {
       console.error('Error in OAuth callback:', error);
+      console.error('Error stack:', error.stack);
       
       // Redirect back to the frontend with an error
       const redirectUrl = new URL(`${FRONTEND_URL}/emails`);
