@@ -23,6 +23,7 @@ interface BoardColumnProps {
   isPendingAdd: boolean;
   pendingAddStatusId: string | null;
   onCardClick: (startup: any) => void;
+  onDeleteStartup?: (startupId: string) => void;
   showCompactCards: boolean;
   statuses: any[];
   users: any;
@@ -46,6 +47,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   isPendingAdd,
   pendingAddStatusId,
   onCardClick,
+  onDeleteStartup,
   showCompactCards,
   statuses,
   users,
@@ -168,6 +170,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
                 statuses={statuses} 
                 users={users}
                 onClick={() => onCardClick(startup)}
+                onDelete={onDeleteStartup}
                 compact={showCompactCards}
               />
             </div>

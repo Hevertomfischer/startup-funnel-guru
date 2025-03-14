@@ -7,6 +7,7 @@ import { useBoardColumns } from '@/hooks/board/use-board-columns';
 import { useStatusQueries } from '@/hooks/board/use-status-queries';
 import { useBoardDragDrop } from '@/hooks/board/use-board-drag-drop';
 import { useStartupActions } from '@/hooks/use-startup-actions';
+import { useDeleteStartupMutation } from '@/hooks/use-supabase-query';
 
 export function useBoardState() {
   const queryClient = useQueryClient();
@@ -82,6 +83,50 @@ export function useBoardState() {
       return undefined;
     };
   }, [mappedQueries]);
+  
+  // Delete startup mutation
+  const deleteStartupMutation = useDeleteStartupMutation();
+  
+  // Handle startup deletion
+  const handleDeleteStartup = (startupId: string) => {
+    const startup = getStartupById(startupId);
+    
+    if (!startup) {
+      toast({
+        title: "Error",
+        description: "Startup not found",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Confirm deletion
+    if (confirm(`Are you sure you want to delete "${startup.name}"?`)) {
+      deleteStartupMutation.mutate(startupId, {
+        onSuccess: () => {
+          toast({
+            title: "Startup deleted",
+            description: `${startup.name} has been removed`
+          });
+          
+          // Invalidate queries to update the UI
+          if (startup.status_id) {
+            queryClient.invalidateQueries({ 
+              queryKey: ['startups', 'status', startup.status_id] 
+            });
+          }
+          queryClient.invalidateQueries({ queryKey: ['startups'] });
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: `Failed to delete startup: ${(error as Error).message}`,
+            variant: "destructive"
+          });
+        }
+      });
+    }
+  };
   
   // Drag and drop functionality
   const {
@@ -160,6 +205,7 @@ export function useBoardState() {
     handleDrop,
     handleDragEnd,
     draggingStartupId,
+    handleDeleteStartup,
     
     // Column drag handlers
     handleColumnDragStart,
@@ -179,6 +225,7 @@ export function useBoardState() {
     handleUpdateStartup,
     createStartupMutation,
     updateStartupMutation,
+    deleteStartupMutation,
     selectedStartup,
     showCreateDialog,
     setShowCreateDialog,

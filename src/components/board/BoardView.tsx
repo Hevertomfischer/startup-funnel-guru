@@ -29,6 +29,7 @@ const BoardView = () => {
     handleDrop,
     handleDragEnd,
     draggingStartupId,
+    handleDeleteStartup,
     
     // Column drag handlers
     handleColumnDragStart,
@@ -126,6 +127,7 @@ const BoardView = () => {
             isPendingAdd={createStartupMutation.isPending}
             pendingAddStatusId={createStartupMutation.isPending ? createStartupMutation.variables?.status_id : null}
             onCardClick={handleCardClick}
+            onDeleteStartup={handleDeleteStartup}
             showCompactCards={showCompactCards}
             addNewColumn={() => setShowCreateStatusDialog(true)}
             onEditColumn={setStatusToEdit}

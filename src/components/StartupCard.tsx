@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Clock, Link2, User } from 'lucide-react';
+import { Calendar, Clock, Link2, User, Trash2 } from 'lucide-react';
 import { Startup, Status } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -13,12 +13,20 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface StartupCardProps {
   startup: Startup;
   statuses: Status[];
   users?: { [key: string]: { name: string; avatar?: string } };
   onClick: (startup: Startup) => void;
+  onDelete?: (startupId: string) => void;
   compact?: boolean;
 }
 
@@ -27,6 +35,7 @@ const StartupCard: React.FC<StartupCardProps> = ({
   statuses, 
   users = {}, 
   onClick,
+  onDelete,
   compact = false 
 }) => {
   const status = statuses.find(s => s.id === startup.statusId);
@@ -38,6 +47,13 @@ const StartupCard: React.FC<StartupCardProps> = ({
     low: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
     medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
     high: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    if (onDelete) {
+      onDelete(startup.id);
+    }
   };
 
   return (
@@ -54,12 +70,35 @@ const StartupCard: React.FC<StartupCardProps> = ({
           <CardTitle className={`${compact ? 'text-base' : 'text-lg'} line-clamp-1`}>
             {startup.values.Startup || 'Unnamed Startup'}
           </CardTitle>
-          <Badge 
-            variant="outline" 
-            className={`${priorityColors[startup.priority]} text-xs`}
-          >
-            {startup.priority.charAt(0).toUpperCase() + startup.priority.slice(1)}
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Badge 
+              variant="outline" 
+              className={`${priorityColors[startup.priority]} text-xs`}
+            >
+              {startup.priority.charAt(0).toUpperCase() + startup.priority.slice(1)}
+            </Badge>
+            {onDelete && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="sr-only">Open menu</span>
+                    <svg width="15" height="3" viewBox="0 0 15 3" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3 w-3">
+                      <path d="M1.5 1.5H13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    className="text-destructive focus:text-destructive"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
         {!compact && (
           <CardDescription className="line-clamp-2 mt-1">
