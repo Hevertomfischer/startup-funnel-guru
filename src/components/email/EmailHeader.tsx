@@ -35,18 +35,18 @@ const EmailHeader: React.FC<EmailHeaderProps> = ({
   };
 
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
       <div>
         <h1 className="text-3xl font-bold mb-2">Email Templates</h1>
         <p className="text-muted-foreground">Manage your email templates for automated communications</p>
         {authError && (
-          <div className="flex items-center gap-2 text-destructive mt-2">
-            <AlertCircle className="h-4 w-4" />
+          <div className="flex items-center gap-2 text-destructive mt-2 p-2 border border-destructive/30 rounded bg-destructive/10">
+            <AlertCircle className="h-4 w-4 shrink-0" />
             <span className="text-sm">Erro: {authError}</span>
           </div>
         )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 shrink-0">
         {isAuthenticated ? (
           <Button variant="outline" className="flex items-center gap-2" onClick={disconnect}>
             <Mail className="h-4 w-4" />

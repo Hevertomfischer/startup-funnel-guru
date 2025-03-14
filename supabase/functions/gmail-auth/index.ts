@@ -92,7 +92,15 @@ serve(async (req) => {
       redirectUrl.searchParams.set('expires_in', tokenData.expires_in.toString());
 
       console.log(`Redirecting to: ${redirectUrl.toString().substring(0, 100)}...`);
-      return Response.redirect(redirectUrl.toString(), 302);
+      
+      // Set CORS headers in the redirect response
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': redirectUrl.toString()
+        }
+      });
     } catch (error: any) {
       console.error('Error in OAuth callback:', error);
       
@@ -100,7 +108,13 @@ serve(async (req) => {
       const redirectUrl = new URL(`${FRONTEND_URL}/emails`);
       redirectUrl.searchParams.set('error', error.message);
       
-      return Response.redirect(redirectUrl.toString(), 302);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': redirectUrl.toString()
+        }
+      });
     }
   } else {
     // Generate OAuth URL
