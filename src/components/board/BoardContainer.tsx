@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ interface BoardContainerProps {
   isPendingAdd: boolean;
   pendingAddStatusId: string | null;
   onCardClick: (startup: any) => void;
+  onDeleteStartup?: (startupId: string) => void;
   showCompactCards: boolean;
   addNewColumn: () => void;
   onEditColumn: (status: Status) => void;
@@ -40,6 +40,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
   isPendingAdd,
   pendingAddStatusId,
   onCardClick,
+  onDeleteStartup,
   showCompactCards,
   addNewColumn,
   onEditColumn,
@@ -112,6 +113,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                   isPendingAdd={isPendingAdd}
                   pendingAddStatusId={pendingAddStatusId}
                   onCardClick={onCardClick}
+                  onDeleteStartup={onDeleteStartup}
                   showCompactCards={showCompactCards}
                   statuses={statuses.map(s => ({ id: s.id, name: s.name, color: s.color }))}
                   users={USERS}
