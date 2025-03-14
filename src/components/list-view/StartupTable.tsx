@@ -17,6 +17,7 @@ interface StartupTableProps {
   sortDirection: 'asc' | 'desc';
   handleSort: (field: string) => void;
   handleRowClick: (startup: Startup) => void;
+  handleDeleteStartup?: (startupId: string) => void;
   searchTerm: string;
 }
 
@@ -27,6 +28,7 @@ const StartupTable = ({
   sortDirection,
   handleSort,
   handleRowClick,
+  handleDeleteStartup,
   searchTerm,
 }: StartupTableProps) => {
   return (
@@ -48,6 +50,7 @@ const StartupTable = ({
                   startup={startup}
                   status={status}
                   onRowClick={handleRowClick}
+                  onDelete={handleDeleteStartup}
                 />
               );
             })

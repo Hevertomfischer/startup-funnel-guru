@@ -1,20 +1,28 @@
 
 import React from 'react';
-import { Calendar, User } from 'lucide-react';
+import { Calendar, User, MoreHorizontal, Trash2 } from 'lucide-react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Startup, Status } from '@/types';
 import { USERS } from '@/data/mockData';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface StartupTableRowProps {
   startup: Startup;
   status?: Status;
   onRowClick: (startup: Startup) => void;
+  onDelete?: (startupId: string) => void;
 }
 
-const StartupTableRow = ({ startup, status, onRowClick }: StartupTableRowProps) => {
+const StartupTableRow = ({ startup, status, onRowClick, onDelete }: StartupTableRowProps) => {
   const assignedUser = startup.assignedTo && USERS[startup.assignedTo];
   const dueDate = startup.dueDate ? new Date(startup.dueDate) : undefined;
   
@@ -24,15 +32,43 @@ const StartupTableRow = ({ startup, status, onRowClick }: StartupTableRowProps) 
     medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
     high: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click event
+    if (onDelete) {
+      onDelete(startup.id);
+    }
+  };
   
   return (
     <TableRow 
       key={startup.id} 
-      className="cursor-pointer hover:bg-accent/50"
+      className="cursor-pointer hover:bg-accent/50 group"
       onClick={() => onRowClick(startup)}
     >
       <TableCell className="font-medium">
-        {startup.values.Startup || 'Unnamed Startup'}
+        <div className="flex items-center justify-between">
+          <span>{startup.values.Startup || 'Unnamed Startup'}</span>
+          {onDelete && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  className="text-destructive focus:text-destructive"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </TableCell>
       <TableCell>
         {startup.values.Setor || '-'}

@@ -6,9 +6,11 @@ import { useStartupData } from '@/hooks/use-startup-data';
 import { useStartupList } from '@/hooks/use-startup-list';
 import ListViewHeader from '@/components/list-view/ListViewHeader';
 import StartupTable from '@/components/list-view/StartupTable';
+import { useDeleteStartupMutation } from '@/hooks/use-supabase-query';
 
 const ListView = () => {
   const { toast } = useToast();
+  const deleteStartupMutation = useDeleteStartupMutation();
   
   // Get startup data
   const {
@@ -35,6 +37,26 @@ const ListView = () => {
       description: `Opening details for ${startup.values.Startup}`,
     });
     // Navigate to startup details page would go here
+  };
+
+  const handleDeleteStartup = (startupId) => {
+    if (!startupId) return;
+    
+    deleteStartupMutation.mutate(startupId, {
+      onSuccess: () => {
+        toast({
+          title: "Startup deleted",
+          description: "The startup has been successfully deleted",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: `Failed to delete startup: ${error.message}`,
+          variant: "destructive",
+        });
+      }
+    });
   };
   
   // Loading state
@@ -75,6 +97,7 @@ const ListView = () => {
           sortDirection={sortDirection}
           handleSort={handleSort}
           handleRowClick={handleRowClick}
+          handleDeleteStartup={handleDeleteStartup}
           searchTerm={searchTerm}
         />
       </div>
