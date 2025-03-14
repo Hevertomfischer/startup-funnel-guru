@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useGmailAuth } from '@/hooks/use-gmail-auth';
 import { useEmailTemplates } from '@/hooks/use-email-templates';
@@ -12,6 +12,9 @@ import EmailTemplateDialog from '@/components/email/EmailTemplateDialog';
 import EmailSendDialog from '@/components/email/EmailSendDialog';
 import EmailPreviewDialog from '@/components/email/EmailPreviewDialog';
 import DeleteTemplateDialog from '@/components/email/DeleteTemplateDialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Info } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const Emails = () => {
   // Email template state and hooks
@@ -45,6 +48,17 @@ const Emails = () => {
     disconnect 
   } = useGmailAuth();
 
+  // Track auth attempts for debugging
+  const [authAttempts, setAuthAttempts] = useState(0);
+  const [lastAuthTimestamp, setLastAuthTimestamp] = useState<string | null>(null);
+
+  // Handle auth attempt tracking
+  const handleAuthStart = () => {
+    setAuthAttempts(prev => prev + 1);
+    setLastAuthTimestamp(new Date().toISOString());
+    startGmailAuth();
+  };
+
   // Template actions
   const handleCreateTemplate = () => {
     setSelectedTemplate(undefined);
@@ -67,7 +81,7 @@ const Emails = () => {
         description: 'Please connect your Gmail account first',
         action: {
           label: 'Connect',
-          onClick: startGmailAuth
+          onClick: handleAuthStart
         }
       });
       return;
@@ -77,24 +91,57 @@ const Emails = () => {
     setIsSendDialogOpen(true);
   };
 
-  // Log current state for debugging
-  console.log('Emails page state:', {
-    isAuthenticated,
-    isAuthLoading,
-    authError,
-    authStage,
-    accessTokenExists: !!accessToken,
-    templatesLoaded: templates.length
-  });
+  // Log auth state changes
+  useEffect(() => {
+    console.log('Auth state changed:', {
+      isAuthenticated,
+      authStage,
+      authError: authError ? authError.message : null,
+      tokenExists: !!accessToken
+    });
+  }, [isAuthenticated, authStage, authError, accessToken]);
+
+  // Display auth debug info
+  const renderAuthDebugInfo = () => {
+    if (!authError && isAuthenticated) return null;
+    
+    return (
+      <Alert variant={authError ? "destructive" : "default"} className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Gmail Authentication Status</AlertTitle>
+        <AlertDescription>
+          <div className="space-y-2 mt-2">
+            <div><strong>Stage:</strong> {authStage || 'not_started'}</div>
+            {authError && <div><strong>Error:</strong> {authError.message}</div>}
+            <div><strong>Auth attempts:</strong> {authAttempts}</div>
+            {lastAuthTimestamp && <div><strong>Last attempt:</strong> {new Date(lastAuthTimestamp).toLocaleString()}</div>}
+            <div className="flex gap-2 mt-2">
+              <Badge variant={isAuthenticated ? "default" : "outline"}>
+                {isAuthenticated ? "Authenticated" : "Not Authenticated"}
+              </Badge>
+              <Badge variant={isAuthLoading ? "default" : "outline"}>
+                {isAuthLoading ? "Loading..." : "Idle"}
+              </Badge>
+              <Badge variant={accessToken ? "default" : "outline"}>
+                {accessToken ? "Token Present" : "No Token"}
+              </Badge>
+            </div>
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  };
 
   return (
     <div className="space-y-6">
+      {renderAuthDebugInfo()}
+      
       <EmailHeader
         isAuthenticated={isAuthenticated}
         isAuthLoading={isAuthLoading}
         authError={authError}
         authStage={authStage}
-        startGmailAuth={startGmailAuth}
+        startGmailAuth={handleAuthStart}
         disconnect={disconnect}
         handleCreateTemplate={handleCreateTemplate}
       />
