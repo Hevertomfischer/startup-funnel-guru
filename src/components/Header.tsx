@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Search, Plus, Bell, Settings, User, Menu, X, Moon, Sun
+  Search, Bell, Settings, User, Menu, X, Moon, Sun
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,17 +56,6 @@ const Header: React.FC<HeaderProps> = ({
     setIsDarkMode(!isDarkMode);
   };
 
-  const handleAddNew = () => {
-    if (onAddStartup) {
-      onAddStartup();
-    } else {
-      toast({
-        title: "Creating new startup",
-        description: "Opening startup form",
-      });
-    }
-  };
-
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6">
@@ -80,19 +68,9 @@ const Header: React.FC<HeaderProps> = ({
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
-          
-          <Link to="/" className="flex items-center">
-            <img 
-              src={isLightMode 
-                ? "/lovable-uploads/d882938e-4517-400d-aeac-d32ae1759a49.png" 
-                : "/lovable-uploads/52b2437c-f1ce-4662-9136-9d1b36a72734.png"} 
-              alt="Logo" 
-              className="h-8 w-auto"
-            />
-          </Link>
         </div>
 
-        <div className="hidden md:block flex-1 mx-4 max-w-md">
+        <div className="flex-1 mx-4 max-w-md">
           <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -107,24 +85,6 @@ const Header: React.FC<HeaderProps> = ({
 
         <div className="flex items-center gap-2">
           {children}
-          
-          <Button 
-            onClick={handleAddNew}
-            size="sm" 
-            className="hidden md:flex items-center gap-1 bg-scv-blue hover:bg-scv-blue/90"
-          >
-            <Plus className="h-4 w-4" /> 
-            <span>Add Startup</span>
-          </Button>
-          
-          <Button 
-            onClick={handleAddNew}
-            size="icon" 
-            className="md:hidden"
-            variant="default"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
 
           <Button 
             onClick={toggleDarkMode} 
