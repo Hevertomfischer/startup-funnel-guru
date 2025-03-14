@@ -121,7 +121,7 @@ export const useWorkflowRules = () => {
         if (statusChanged) {
           toast({
             title: "Status Updated by Workflow",
-            description: `Startup "${startup.name}" was moved to ${statusName}`,
+            description: `Startup "${startup.values.name || 'Unknown'}" was moved to ${statusName}`,
           });
         }
       } catch (error) {
@@ -151,7 +151,7 @@ export const useWorkflowRules = () => {
       );
       
       if (conditionsMet) {
-        console.log(`Workflow rule "${rule.name}" triggered for startup "${startup.name}"`);
+        console.log(`Workflow rule "${rule.name}" triggered for startup "${startup.values.name || 'Unknown'}"`);
         await executeActions(rule.actions, startup, statuses);
       }
     }
