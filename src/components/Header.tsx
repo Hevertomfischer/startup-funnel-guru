@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   Search, Bell, Settings, User, Menu, X, Moon, Sun
 } from 'lucide-react';
@@ -33,6 +33,7 @@ const Header: React.FC<HeaderProps> = ({
   children 
 }) => {
   const { toast } = useToast();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -46,6 +47,12 @@ const Header: React.FC<HeaderProps> = ({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(searchTerm);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    onSearch(value); // Call onSearch immediately on every change
   };
 
   const toggleDarkMode = () => {
@@ -79,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({
               placeholder="Search startups..."
               className="w-full pl-8 bg-background"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
             />
           </form>
         </div>
@@ -138,7 +145,7 @@ const Header: React.FC<HeaderProps> = ({
             placeholder="Search startups..."
             className="w-full pl-8 bg-background"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
           />
         </form>
       </div>

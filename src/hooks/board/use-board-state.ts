@@ -14,6 +14,7 @@ export function useBoardState() {
   const { toast } = useToast();
   const [showCreateStatusDialog, setShowCreateStatusDialog] = useState(false);
   const [statusToEdit, setStatusToEdit] = useState<Status | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   
   // Get board columns and statuses
   const {
@@ -59,7 +60,23 @@ export function useBoardState() {
         const query = mappedQueries[column.id];
         if (query && query.data) {
           // Extract startup IDs from the query data
-          const startupIds = query.data.map((startup: any) => startup.id);
+          let startupIds = query.data.map((startup: any) => startup.id);
+          
+          // Filter by search term if one exists
+          if (searchTerm.trim()) {
+            const searchLower = searchTerm.toLowerCase().trim();
+            startupIds = query.data
+              .filter((startup: any) => {
+                const nameMatch = (startup.name || '').toLowerCase().includes(searchLower);
+                const sectorMatch = (startup.sector || '').toLowerCase().includes(searchLower);
+                const problemMatch = (startup.problem_solved || '').toLowerCase().includes(searchLower);
+                const businessModelMatch = (startup.business_model || '').toLowerCase().includes(searchLower);
+                
+                return nameMatch || sectorMatch || problemMatch || businessModelMatch;
+              })
+              .map((startup: any) => startup.id);
+          }
+          
           return {
             ...column,
             startupIds
@@ -70,7 +87,7 @@ export function useBoardState() {
       
       setColumns(updatedColumns);
     }
-  }, [mappedQueries, columns, setColumns]);
+  }, [mappedQueries, columns, setColumns, searchTerm]);
   
   // Get a startup by ID from any status
   const getStartupById = useMemo(() => {
@@ -196,6 +213,11 @@ export function useBoardState() {
     });
   };
 
+  // Search handler
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
   return {
     // Board state
     columns,
@@ -203,6 +225,8 @@ export function useBoardState() {
     isLoadingStatuses,
     isErrorStatuses,
     mappedQueries,
+    searchTerm,
+    setSearchTerm,
     
     // Handlers
     getStartupById,
@@ -212,6 +236,7 @@ export function useBoardState() {
     handleDragEnd,
     draggingStartupId,
     handleDeleteStartup,
+    handleSearch,
     
     // Column drag handlers
     handleColumnDragStart,

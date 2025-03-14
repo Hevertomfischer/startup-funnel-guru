@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/board/BoardContainer';
 import BoardDialogs from '@/components/board/BoardDialogs';
@@ -21,6 +22,8 @@ const BoardView = () => {
     isLoadingStatuses,
     isErrorStatuses,
     mappedQueries,
+    searchTerm,
+    setSearchTerm,
     
     // Handlers
     getStartupById,
@@ -70,6 +73,10 @@ const BoardView = () => {
     }
   };
   
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+  
   if (isLoadingStatuses) {
     return (
       <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
@@ -98,6 +105,27 @@ const BoardView = () => {
           setShowCompactCards={setShowCompactCards}
           addNewStartup={openAddStartupDialog}
         />
+        
+        <div className="flex justify-between items-center p-4 border-b">
+          <div>
+            <h1 className="text-2xl font-semibold">Startup Pipeline</h1>
+            <p className="text-muted-foreground">
+              Manage your startup investment funnel
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search startups..."
+                className="w-full pl-8 bg-background"
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
+            </div>
+          </div>
+        </div>
         
         {columns.length === 0 ? (
           <div className="flex-1 flex items-center justify-center flex-col gap-4">
