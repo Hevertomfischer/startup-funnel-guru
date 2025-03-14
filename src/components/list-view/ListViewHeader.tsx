@@ -50,6 +50,10 @@ const ListViewHeader = ({ searchTerm, setSearchTerm, startups = [] }: ListViewHe
     });
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className="flex items-center justify-between p-4 border-b">
       <div>
@@ -66,7 +70,7 @@ const ListViewHeader = ({ searchTerm, setSearchTerm, startups = [] }: ListViewHe
             placeholder="Search startups..."
             className="w-full pl-8 bg-background"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
         

@@ -9,10 +9,17 @@ export const useStartupList = (formattedStartups: Startup[]) => {
   
   // Filter startups based on search term
   const filteredStartups = formattedStartups.filter(startup => {
-    const name = startup.values.Startup?.toString().toLowerCase() || '';
-    const sector = startup.values.Setor?.toString().toLowerCase() || '';
-    return name.includes(searchTerm.toLowerCase()) || 
-           sector.includes(searchTerm.toLowerCase());
+    if (!searchTerm.trim()) return true;
+    
+    const searchLower = searchTerm.toLowerCase().trim();
+    
+    // Search in all string fields
+    const nameMatch = (startup.values.Startup?.toString() || '').toLowerCase().includes(searchLower);
+    const sectorMatch = (startup.values.Setor?.toString() || '').toLowerCase().includes(searchLower);
+    const problemMatch = (startup.values['Problema que Resolve']?.toString() || '').toLowerCase().includes(searchLower);
+    const businessModelMatch = (startup.values['Modelo de Negócio']?.toString() || '').toLowerCase().includes(searchLower);
+    
+    return nameMatch || sectorMatch || problemMatch || businessModelMatch;
   });
 
   // Sort startups based on sort field and direction
