@@ -2,10 +2,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
-const GMAIL_CLIENT_ID = Deno.env.get('GMAIL_CLIENT_ID');
-const GMAIL_CLIENT_SECRET = Deno.env.get('GMAIL_CLIENT_SECRET');
-const REDIRECT_URI = 'https://qolgehnzmslkmotrrwwy.supabase.co/functions/v1/gmail-auth/callback';
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -49,6 +45,7 @@ serve(async (req) => {
 
     console.log('Sending email to:', to);
     console.log('Subject:', subject);
+    console.log('Access token length:', accessToken.length);
 
     // Build the RFC822 formatted message
     const encodedMessage = buildRFC822Message(to, subject, content);
@@ -66,9 +63,16 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Gmail API error:', errorData);
-      throw new Error(`Gmail API error: ${errorData.error?.message || 'Unknown error'}`);
+      const errorText = await response.text();
+      console.error('Gmail API error response:', errorText);
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        console.error('Gmail API error details:', errorData);
+        throw new Error(`Gmail API error: ${errorData.error?.message || JSON.stringify(errorData)}`);
+      } catch (e) {
+        throw new Error(`Gmail API error: Status ${response.status} - ${errorText}`);
+      }
     }
 
     const data = await response.json();

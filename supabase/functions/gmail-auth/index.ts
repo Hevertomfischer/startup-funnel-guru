@@ -75,9 +75,12 @@ serve(async (req) => {
   } else {
     // Generate OAuth URL
     try {
+      // Adicionar mais escopos necessários para o Gmail
       const scopes = [
         'https://www.googleapis.com/auth/gmail.send',
         'https://www.googleapis.com/auth/gmail.compose',
+        'https://mail.google.com/',
+        'https://www.googleapis.com/auth/gmail.modify'
       ];
 
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');

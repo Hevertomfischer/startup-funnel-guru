@@ -32,9 +32,11 @@ export const useGmailAuth = () => {
       toast.error('Gmail authentication failed', {
         description: errorParam
       });
+      return;
     }
 
     if (accessTokenParam && refreshTokenParam && expiresInParam) {
+      console.log('Setting tokens from URL params');
       setAccessToken(accessTokenParam);
       setRefreshToken(refreshTokenParam);
       
@@ -53,14 +55,15 @@ export const useGmailAuth = () => {
   // Check token expiration and refresh if needed
   useEffect(() => {
     const checkTokenExpiration = async () => {
-      if (!refreshToken || !expiresAt) return;
+      if (!refreshToken) return;
       
-      // If token is expired or will expire in the next 5 minutes
-      if (Date.now() > expiresAt - 5 * 60 * 1000) {
+      if (!expiresAt || Date.now() > expiresAt - 5 * 60 * 1000) {
         try {
+          console.log('Refreshing token...');
           setIsLoading(true);
           const { access_token, expires_in } = await refreshGmailToken(refreshToken);
           
+          console.log('Token refreshed, new access token length:', access_token.length);
           setAccessToken(access_token);
           
           // Calculate new expiration timestamp
@@ -89,9 +92,11 @@ export const useGmailAuth = () => {
       } else if (!accessToken) {
         // If we have a valid refresh token but no access token
         try {
+          console.log('Getting new access token from refresh token');
           setIsLoading(true);
           const { access_token, expires_in } = await refreshGmailToken(refreshToken);
           
+          console.log('Got new access token, length:', access_token.length);
           setAccessToken(access_token);
           
           // Calculate new expiration timestamp
@@ -130,8 +135,10 @@ export const useGmailAuth = () => {
       setError(null);
       
       const authUrl = await getGmailAuthUrl();
+      console.log('Redirecting to auth URL:', authUrl);
       window.location.href = authUrl;
     } catch (error: any) {
+      console.error('Failed to start Gmail authentication:', error);
       setError(error.message);
       toast.error('Failed to start Gmail authentication', {
         description: error.message
