@@ -28,6 +28,9 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
   onSubmit,
   isSubmitting,
 }) => {
+  console.log('StartupDialog rendered with open:', open);
+  console.log('Startup data:', startup);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">

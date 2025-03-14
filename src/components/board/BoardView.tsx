@@ -6,6 +6,7 @@ import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/board/BoardContainer';
 import BoardDialogs from '@/components/board/BoardDialogs';
 import { useBoardState } from '@/hooks/board/use-board-state';
+import Header from '@/components/Header';
 
 const BoardView = () => {
   // Component state
@@ -59,6 +60,13 @@ const BoardView = () => {
     handleStatusUpdated
   } = boardState;
   
+  // Function to open the add startup dialog with the first status
+  const openAddStartupDialog = () => {
+    if (statuses && statuses.length > 0) {
+      handleAddStartup(statuses[0].id);
+    }
+  };
+  
   if (isLoadingStatuses) {
     return (
       <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
@@ -85,6 +93,7 @@ const BoardView = () => {
         <BoardHeader 
           showCompactCards={showCompactCards}
           setShowCompactCards={setShowCompactCards}
+          onAddStartup={openAddStartupDialog}
         />
         
         {columns.length === 0 ? (

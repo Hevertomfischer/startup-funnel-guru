@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -21,10 +20,17 @@ interface HeaderProps {
   view: ViewMode;
   setView: (view: ViewMode) => void;
   onSearch: (searchTerm: string) => void;
+  onAddStartup?: () => void;
   children?: React.ReactNode;
 }
 
-const Header: React.FC<HeaderProps> = ({ view, setView, onSearch, children }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  view, 
+  setView, 
+  onSearch, 
+  onAddStartup,
+  children 
+}) => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,10 +51,14 @@ const Header: React.FC<HeaderProps> = ({ view, setView, onSearch, children }) =>
   };
 
   const handleAddNew = () => {
-    toast({
-      title: "Creating new startup",
-      description: "Opening startup form",
-    });
+    if (onAddStartup) {
+      onAddStartup();
+    } else {
+      toast({
+        title: "Creating new startup",
+        description: "Opening startup form",
+      });
+    }
   };
 
   return (
