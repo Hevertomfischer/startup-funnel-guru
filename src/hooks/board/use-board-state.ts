@@ -1,6 +1,5 @@
-
 import { useState, useMemo, useEffect } from 'react';
-import { useQueryClient, type Unsubscribe } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { Status } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useBoardColumns } from '@/hooks/board/use-board-columns';
