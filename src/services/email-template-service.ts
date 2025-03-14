@@ -146,7 +146,7 @@ export const sendEmail = async (
   subject: string,
   content: string,
   accessToken: string
-): Promise<{ success: boolean, messageId?: string, error?: string }> => {
+): Promise<boolean> => {
   try {
     const response = await supabase.functions.invoke('send-email', {
       method: 'POST',
@@ -162,13 +162,10 @@ export const sendEmail = async (
       throw new Error(response.error.message);
     }
     
-    return response.data;
+    return true;
   } catch (error: any) {
     handleError(error, 'Failed to send email');
-    return { 
-      success: false,
-      error: error.message
-    };
+    return false;
   }
 };
 

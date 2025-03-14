@@ -20,9 +20,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { EmailTemplate } from '@/types/email-template';
-import { sendEmail } from '@/services/email-template-service';
+import { sendEmail, processTemplateContent } from '@/services/email-template-service';
 import { toast } from 'sonner';
-import { Textarea } from '@/components/ui/textarea';
 
 const sendEmailSchema = z.object({
   to: z.string().email('Please enter a valid email address'),
@@ -110,21 +109,31 @@ const EmailSendDialog: React.FC<EmailSendDialogProps> = ({
     
     setIsSending(true);
     try {
+      // Process the template content and subject with variables
+      const variables: Record<string, string> = {
+        startup_name: values.startup_name,
+        investment_amount: values.investment_amount || '',
+        equity_percentage: values.equity_percentage || '',
+        valuation: values.valuation || '',
+      };
+      
+      const processedContent = processTemplateContent(template.content, variables);
+      const processedSubject = processTemplateContent(template.subject, variables);
+      
       const success = await sendEmail(
         values.to,
-        template.id,
-        {
-          startup_name: values.startup_name,
-          investment_amount: values.investment_amount || '',
-          equity_percentage: values.equity_percentage || '',
-          valuation: values.valuation || '',
-        },
+        processedSubject,
+        processedContent,
         accessToken
       );
       
       if (success) {
+        toast.success('Email sent successfully');
         onClose();
       }
+    } catch (error) {
+      toast.error('Failed to send email');
+      console.error('Error sending email:', error);
     } finally {
       setIsSending(false);
     }
