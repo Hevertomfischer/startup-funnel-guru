@@ -36,6 +36,15 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
     console.log('StartupDialog useEffect - open state changed to:', open);
   }, [open]);
   
+  const handleFormSubmit = (data: any) => {
+    console.log('Form submitted with data:', data);
+    try {
+      onSubmit(data);
+    } catch (error) {
+      console.error('Error in startup form submission:', error);
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -45,7 +54,7 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
         <StartupForm
           startup={startup}
           statuses={statuses}
-          onSubmit={onSubmit}
+          onSubmit={handleFormSubmit}
           onCancel={() => onOpenChange(false)}
           isSubmitting={isSubmitting}
         />

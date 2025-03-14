@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,17 +21,17 @@ export function useStartupActions() {
   const updateStartupMutation = useUpdateStartupMutation();
   
   const handleAddStartup = (statusId: string) => {
+    console.log("handleAddStartup called with statusId:", statusId);
     setSelectedStartup({ status_id: statusId });
     setShowCreateDialog(true);
-    // Add console log to debug
-    console.log('Opening create dialog with status ID:', statusId);
-    console.log('showCreateDialog set to:', true);
-    console.log('selectedStartup set to:', { status_id: statusId });
+    console.log("After setting dialog state - showCreateDialog:", true);
   };
   
   const handleCreateStartup = (data: any) => {
+    console.log("Creating startup with data:", data);
     createStartupMutation.mutate(data, {
-      onSuccess: () => {
+      onSuccess: (response) => {
+        console.log("Startup created successfully:", response);
         toast({
           title: "Startup created",
           description: `${data.name} has been added successfully`
@@ -39,6 +40,7 @@ export function useStartupActions() {
         queryClient.invalidateQueries({ queryKey: ['startups'] });
       },
       onError: (error) => {
+        console.error("Error creating startup:", error);
         toast({
           title: "Error",
           description: `Failed to create startup: ${error.message}`,
@@ -54,10 +56,12 @@ export function useStartupActions() {
   };
   
   const handleUpdateStartup = (data: any) => {
+    console.log("Updating startup with data:", data);
     updateStartupMutation.mutate(
       { id: selectedStartup.id, startup: data },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          console.log("Startup updated successfully:", response);
           toast({
             title: "Startup updated",
             description: `${data.name} has been updated successfully`
@@ -66,6 +70,7 @@ export function useStartupActions() {
           queryClient.invalidateQueries({ queryKey: ['startups'] });
         },
         onError: (error) => {
+          console.error("Error updating startup:", error);
           toast({
             title: "Error",
             description: `Failed to update startup: ${error.message}`,
