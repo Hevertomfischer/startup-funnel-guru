@@ -14,7 +14,7 @@ interface TeamMemberCardProps {
     email: string;
     avatar: string | null;
     initials: string;
-    assignedStartups: number;
+    assigned_startups: number;
     permissions?: string;
   };
   onEditPermissions: (member: any) => void;
@@ -47,7 +47,7 @@ const TeamMemberCard = ({ member, onEditPermissions, onEdit, onRemove }: TeamMem
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Startups atribuídas:</span>
-            <span className="font-medium">{member.assignedStartups}</span>
+            <span className="font-medium">{member.assigned_startups}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Permissões:</span>
