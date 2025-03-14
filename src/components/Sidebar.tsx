@@ -87,7 +87,7 @@ const Sidebar = () => {
                 className={cn(
                   "w-full justify-start gap-2 px-3",
                   (location.pathname === item.path || 
-                   (location.pathname === '/' && item.path === '/')) && 
+                   (item.path === '/' && location.pathname === '/')) && 
                    "bg-accent text-accent-foreground font-medium"
                 )}
               >

@@ -19,3 +19,4 @@ export type Label = Tables['labels']['Row'];
 export type User = Tables['users']['Row'];
 export type Attachment = Tables['attachments']['Row'];
 export type StartupField = Tables['startup_fields']['Row'];
+export type EmailTemplate = Tables['email_templates']['Row'];
