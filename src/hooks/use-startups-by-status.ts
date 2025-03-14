@@ -7,7 +7,7 @@ export const useStartupsByStatus = (statusId: string | undefined) => {
   
   return {
     data: query.data || [],
-    isLoading: query.isLoading,
-    isError: query.isError,
+    isLoading: query.isLoading && !!statusId,
+    isError: query.isError && !!statusId,
   };
 };

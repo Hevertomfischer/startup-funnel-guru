@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CreateStatusDialog } from '@/components/CreateStatusDialog';
 import { RenameStatusDialog } from '@/components/RenameStatusDialog';
+import StartupDialog from '@/components/StartupDialog';
 import { useBoardColumns } from '@/hooks/use-board-columns';
 import { useBoardDragDrop } from '@/hooks/use-board-drag-drop';
 import { useStartupActions } from '@/hooks/use-startup-actions';
@@ -73,7 +74,16 @@ const Board = () => {
   
   const {
     createStartupMutation,
+    updateStartupMutation,
+    selectedStartup,
+    showCreateDialog,
+    setShowCreateDialog,
+    showEditDialog,
+    setShowEditDialog,
     handleAddStartup,
+    handleCreateStartup,
+    handleEditStartup,
+    handleUpdateStartup,
     handleCardClick
   } = useStartupActions();
   
@@ -167,6 +177,7 @@ const Board = () => {
         )}
       </div>
       
+      {/* Dialogs */}
       <CreateStatusDialog
         open={showCreateStatusDialog}
         onOpenChange={setShowCreateStatusDialog}
@@ -180,6 +191,28 @@ const Board = () => {
         }}
         onStatusUpdated={handleStatusUpdated}
         status={statusToEdit}
+      />
+
+      {/* Create Startup Dialog */}
+      <StartupDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        title="Add New Startup"
+        startup={selectedStartup}
+        statuses={statuses}
+        onSubmit={handleCreateStartup}
+        isSubmitting={createStartupMutation.isPending}
+      />
+
+      {/* Edit Startup Dialog */}
+      <StartupDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        title="Edit Startup"
+        startup={selectedStartup}
+        statuses={statuses}
+        onSubmit={handleUpdateStartup}
+        isSubmitting={updateStartupMutation.isPending}
       />
     </>
   );

@@ -1,44 +1,95 @@
 
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useCreateStartupMutation } from './use-supabase-query';
+import { useQueryClient } from '@tanstack/react-query';
+import { 
+  useCreateStartupMutation, 
+  useUpdateStartupMutation
+} from './use-supabase-query';
+import { Status } from '@/types';
 
 export function useStartupActions() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedStartup, setSelectedStartup] = useState<any>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   
   // Create new startup mutation
   const createStartupMutation = useCreateStartupMutation();
   
+  // Update startup mutation
+  const updateStartupMutation = useUpdateStartupMutation();
+  
   const handleAddStartup = (statusId: string) => {
-    // In a real app, this would open a form to create a new startup
-    // For now, we'll create a simple startup with default values
-    createStartupMutation.mutate({
-      name: `New Startup ${Date.now()}`,
-      status_id: statusId,
-      priority: 'medium',
-      description: null,
-      problem_solved: null,
-      sector: null,
-      business_model: null,
-      website: null,
-      mrr: null,
-      client_count: null,
-      assigned_to: null,
-      due_date: null,
-      time_tracking: 0
+    setSelectedStartup({ status_id: statusId });
+    setShowCreateDialog(true);
+  };
+  
+  const handleCreateStartup = (data: any) => {
+    createStartupMutation.mutate(data, {
+      onSuccess: () => {
+        toast({
+          title: "Startup created",
+          description: `${data.name} has been added successfully`
+        });
+        setShowCreateDialog(false);
+        queryClient.invalidateQueries({ queryKey: ['startups'] });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: `Failed to create startup: ${error.message}`,
+          variant: "destructive"
+        });
+      }
     });
   };
   
+  const handleEditStartup = (startup: any) => {
+    setSelectedStartup(startup);
+    setShowEditDialog(true);
+  };
+  
+  const handleUpdateStartup = (data: any) => {
+    updateStartupMutation.mutate(
+      { id: selectedStartup.id, startup: data },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Startup updated",
+            description: `${data.name} has been updated successfully`
+          });
+          setShowEditDialog(false);
+          queryClient.invalidateQueries({ queryKey: ['startups'] });
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: `Failed to update startup: ${error.message}`,
+            variant: "destructive"
+          });
+        }
+      }
+    );
+  };
+  
   const handleCardClick = (startup: any) => {
-    toast({
-      title: "Startup details",
-      description: `Opening details for ${startup.name}`,
-    });
-    // Navigate to startup details page would go here
+    handleEditStartup(startup);
   };
 
   return {
     createStartupMutation,
+    updateStartupMutation,
+    selectedStartup,
+    showCreateDialog,
+    setShowCreateDialog,
+    showEditDialog,
+    setShowEditDialog,
     handleAddStartup,
+    handleCreateStartup,
+    handleEditStartup,
+    handleUpdateStartup,
     handleCardClick
   };
 }
