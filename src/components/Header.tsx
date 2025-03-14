@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Search, Plus, Bell, Settings, User, Menu, X, Moon, Sun
@@ -35,6 +36,12 @@ const Header: React.FC<HeaderProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isLightMode, setIsLightMode] = useState(false);
+
+  useEffect(() => {
+    // Check if light mode is active
+    setIsLightMode(document.documentElement.classList.contains('light'));
+  }, [isDarkMode]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +83,9 @@ const Header: React.FC<HeaderProps> = ({
           
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/52b2437c-f1ce-4662-9136-9d1b36a72734.png" 
+              src={isLightMode 
+                ? "/lovable-uploads/d882938e-4517-400d-aeac-d32ae1759a49.png" 
+                : "/lovable-uploads/52b2437c-f1ce-4662-9136-9d1b36a72734.png"} 
               alt="Logo" 
               className="h-8 w-auto"
             />

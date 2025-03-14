@@ -19,6 +19,9 @@ import { Separator } from '@/components/ui/separator';
 const Sidebar = () => {
   const location = useLocation();
   
+  // Determine if we're in light mode
+  const isLightMode = document.documentElement.classList.contains('light');
+  
   const menuItems = [
     {
       title: 'Dashboard',
@@ -72,7 +75,9 @@ const Sidebar = () => {
       <div className="flex h-16 items-center border-b px-6">
         <Link to="/" className="flex items-center gap-2">
           <img 
-            src="/lovable-uploads/52b2437c-f1ce-4662-9136-9d1b36a72734.png" 
+            src={isLightMode 
+              ? "/lovable-uploads/d882938e-4517-400d-aeac-d32ae1759a49.png" 
+              : "/lovable-uploads/52b2437c-f1ce-4662-9136-9d1b36a72734.png"} 
             alt="Logo" 
             className="h-8 w-auto"
           />
