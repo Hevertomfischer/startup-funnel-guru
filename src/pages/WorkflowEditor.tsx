@@ -7,18 +7,21 @@ import { Plus, Copy, AlertCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { useWorkflowRules, saveWorkflowRules } from '@/hooks/use-workflow-rules';
+import { useWorkflowRules } from '@/hooks/use-workflow-rules';
 import { useToast } from '@/hooks/use-toast';
+import { useStatusesQuery } from '@/hooks/use-supabase-query';
+import WorkflowRuleForm from '@/components/workflow/WorkflowRuleForm';
+import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
 
 const WorkflowEditor = () => {
-  const { rules, setRules, saveRules } = useWorkflowRules();
+  const { rules, saveRules } = useWorkflowRules();
   const { toast } = useToast();
-
-  // Load rules on initialization
-  useEffect(() => {
-    // The hook already loads the rules
-  }, []);
-
+  const { data: statuses = [] } = useStatusesQuery();
+  
+  const [editingRule, setEditingRule] = useState<WorkflowRule | undefined>(undefined);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  
   const toggleRuleActive = (ruleId: string) => {
     const updatedRules = rules.map(rule => 
       rule.id === ruleId ? { ...rule, active: !rule.active } : rule
@@ -64,6 +67,36 @@ const WorkflowEditor = () => {
     });
   };
 
+  const handleEditRule = (rule: WorkflowRule) => {
+    setEditingRule(rule);
+    setIsCreating(false);
+    setFormOpen(true);
+  };
+
+  const handleCreateRule = () => {
+    setEditingRule(undefined);
+    setIsCreating(true);
+    setFormOpen(true);
+  };
+
+  const handleSaveRule = (rule: WorkflowRule) => {
+    if (isCreating) {
+      saveRules([...rules, rule]);
+      toast({
+        title: "Rule Created",
+        description: `"${rule.name}" has been created.`,
+      });
+    } else {
+      const updatedRules = rules.map(r => r.id === rule.id ? rule : r);
+      saveRules(updatedRules);
+      toast({
+        title: "Rule Updated",
+        description: `"${rule.name}" has been updated.`,
+      });
+    }
+    setFormOpen(false);
+  };
+
   const getOperatorLabel = (operator: string): string => {
     const operatorMap: { [key: string]: string } = {
       'equals': 'is equal to',
@@ -96,7 +129,7 @@ const WorkflowEditor = () => {
           <h1 className="text-3xl font-bold mb-2">Workflow Rules</h1>
           <p className="text-muted-foreground">Automate your processes with custom triggers and actions</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={handleCreateRule}>
           <Plus className="h-4 w-4" />
           New Rule
         </Button>
@@ -161,7 +194,13 @@ const WorkflowEditor = () => {
                 </div>
                 
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm">Edit</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditRule(rule)}
+                  >
+                    Edit
+                  </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -185,6 +224,21 @@ const WorkflowEditor = () => {
           </Card>
         ))}
       </div>
+
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>{isCreating ? 'Create Workflow Rule' : 'Edit Workflow Rule'}</DialogTitle>
+          </DialogHeader>
+          
+          <WorkflowRuleForm
+            rule={editingRule}
+            onSave={handleSaveRule}
+            onCancel={() => setFormOpen(false)}
+            statuses={statuses}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
