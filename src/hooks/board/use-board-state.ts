@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Status } from '@/types';
@@ -27,38 +28,27 @@ export function useBoardState() {
   // Get status queries using our hook
   const { queries: mappedQueries, isLoading, isError } = useStatusQueries(statusIds || []);
   
-  // Force refresh on create or update
+  // Manual refresh instead of automatic subscription
   useEffect(() => {
-    // Subscribe to all status queries
-    const subscription = queryClient.getQueryCache().subscribe(() => {
-      console.log("Query cache updated, refreshing board state");
+    // Only set up refreshing when we have valid status IDs
+    if (statusIds && statusIds.length > 0) {
+      console.log("Setting up manual refresh for status queries");
       
-      // After any query updates, make sure column IDs are updated
-      if (statusIds && statusIds.length > 0) {
+      // Create a refresh interval
+      const intervalId = setInterval(() => {
         statusIds.forEach(statusId => {
           if (statusId) {
-            console.log(`Refreshing query for status: ${statusId}`);
-            queryClient.refetchQueries({ 
-              queryKey: ['startups', 'status', statusId],
-              exact: true
+            queryClient.invalidateQueries({ 
+              queryKey: ['startups', 'status', statusId]
             });
           }
         });
-      }
-    });
-    
-    return () => {
-      // Properly handle subscription cleanup regardless of return type
-      if (subscription) {
-        // The subscription can be a function or an object with unsubscribe method
-        // Using type guard to safely handle either case
-        if (typeof subscription === 'function') {
-          subscription();
-        } else if (subscription && typeof (subscription as any).unsubscribe === 'function') {
-          (subscription as any).unsubscribe();
-        }
-      }
-    };
+      }, 10000); // Refresh every 10 seconds
+      
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
   }, [queryClient, statusIds]);
   
   // Get a startup by ID from any status
