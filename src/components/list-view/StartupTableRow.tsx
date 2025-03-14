@@ -33,6 +33,25 @@ const StartupTableRow = ({ startup, status, onRowClick, onDelete }: StartupTable
     high: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   };
 
+  const handleRowClicked = () => {
+    // Format the startup data for the form
+    const formattedStartup = {
+      id: startup.id,
+      name: startup.values.Startup || '',
+      problem_solved: startup.values['Problema Resolvido'] || '',
+      description: startup.description || '',
+      sector: startup.values.Setor || '',
+      business_model: startup.values['Modelo de Negócio'] || '',
+      website: startup.website || '',
+      mrr: startup.values.MRR,
+      client_count: startup.values['Quantidade de Clientes'],
+      priority: startup.priority || 'medium',
+      status_id: startup.statusId,
+    };
+    
+    onRowClick(formattedStartup);
+  };
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent row click event
     if (onDelete) {
@@ -44,7 +63,7 @@ const StartupTableRow = ({ startup, status, onRowClick, onDelete }: StartupTable
     <TableRow 
       key={startup.id} 
       className="cursor-pointer hover:bg-accent/50 group"
-      onClick={() => onRowClick(startup)}
+      onClick={handleRowClicked}
     >
       <TableCell className="font-medium">
         <div className="flex items-center justify-between">

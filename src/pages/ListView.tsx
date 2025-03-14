@@ -1,16 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useStartupData } from '@/hooks/use-startup-data';
 import { useStartupList } from '@/hooks/use-startup-list';
+import { useStartupActions } from '@/hooks/use-startup-actions';
 import ListViewHeader from '@/components/list-view/ListViewHeader';
 import StartupTable from '@/components/list-view/StartupTable';
+import StartupDialog from '@/components/StartupDialog';
 import { useDeleteStartupMutation } from '@/hooks/use-supabase-query';
 
 const ListView = () => {
   const { toast } = useToast();
   const deleteStartupMutation = useDeleteStartupMutation();
+  const [editStartup, setEditStartup] = useState<any>(null);
+  const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
   
   // Get startup data
   const {
@@ -31,12 +35,34 @@ const ListView = () => {
     handleSort,
   } = useStartupList(formattedStartups);
   
+  // Get startup actions (update functionality)
+  const { updateStartupMutation } = useStartupActions();
+  
   const handleRowClick = (startup) => {
-    toast({
-      title: "Startup details",
-      description: `Opening details for ${startup.values.Startup}`,
-    });
-    // Navigate to startup details page would go here
+    setEditStartup(startup);
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateStartup = (data) => {
+    updateStartupMutation.mutate(
+      { id: editStartup.id, startup: data },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Startup atualizada",
+            description: `${data.name} foi atualizada com sucesso`,
+          });
+          setShowEditDialog(false);
+        },
+        onError: (error) => {
+          toast({
+            title: "Erro",
+            description: `Falha ao atualizar startup: ${error.message}`,
+            variant: "destructive",
+          });
+        }
+      }
+    );
   };
 
   const handleDeleteStartup = (startupId) => {
@@ -101,6 +127,18 @@ const ListView = () => {
           searchTerm={searchTerm}
         />
       </div>
+
+      {statusesData && (
+        <StartupDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          title="Editar Startup"
+          startup={editStartup}
+          statuses={statusesData}
+          onSubmit={handleUpdateStartup}
+          isSubmitting={updateStartupMutation.isPending}
+        />
+      )}
     </div>
   );
 };
