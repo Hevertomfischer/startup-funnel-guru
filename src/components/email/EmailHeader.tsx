@@ -43,6 +43,9 @@ const EmailHeader: React.FC<EmailHeaderProps> = ({
           <div className="flex items-center gap-2 text-destructive mt-2 p-2 border border-destructive/30 rounded bg-destructive/10">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span className="text-sm">Erro: {authError}</span>
+            <Button variant="ghost" size="sm" onClick={() => window.open('https://support.google.com/accounts/answer/6010255', '_blank')}>
+              Ajuda
+            </Button>
           </div>
         )}
       </div>

@@ -10,12 +10,17 @@ const FRONTEND_URL = 'https://e20e0388-6149-477c-ae32-72eaea337a61.lovableprojec
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      status: 204, 
+      headers: corsHeaders 
+    });
   }
 
   const url = new URL(req.url);
@@ -93,7 +98,7 @@ serve(async (req) => {
 
       console.log(`Redirecting to: ${redirectUrl.toString().substring(0, 100)}...`);
       
-      // Set CORS headers in the redirect response
+      // Use Response.redirect with CORS headers
       return new Response(null, {
         status: 302,
         headers: {
