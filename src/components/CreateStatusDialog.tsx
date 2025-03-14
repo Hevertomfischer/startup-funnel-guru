@@ -60,7 +60,8 @@ export function CreateStatusDialog({
     try {
       const result = await createStatus({
         name: data.name,
-        color: data.color
+        color: data.color,
+        position: 0 // Add position field with a default value
       });
       
       if (!result) throw new Error('Failed to create status');
