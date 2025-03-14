@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -74,14 +75,12 @@ const Header: React.FC<HeaderProps> = ({
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
           
-          <Link to="/" className="flex items-center gap-2">
-            <div className="relative h-8 w-8">
-              <div className="absolute inset-0 bg-scv-blue rounded-md animate-float"></div>
-              <div className="absolute inset-0 translate-x-1 -translate-y-1 bg-scv-teal rounded-md"></div>
-            </div>
-            <span className="hidden text-xl font-semibold sm:inline-block">
-              SCVentures
-            </span>
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/lovable-uploads/52b2437c-f1ce-4662-9136-9d1b36a72734.png" 
+              alt="Logo" 
+              className="h-8 w-auto"
+            />
           </Link>
         </div>
 

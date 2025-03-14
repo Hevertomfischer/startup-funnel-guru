@@ -71,11 +71,11 @@ const Sidebar = () => {
     <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-background fixed">
       <div className="flex h-16 items-center border-b px-6">
         <Link to="/" className="flex items-center gap-2">
-          <div className="relative h-8 w-8">
-            <div className="absolute inset-0 bg-scv-blue rounded-md animate-float"></div>
-            <div className="absolute inset-0 translate-x-1 -translate-y-1 bg-scv-teal rounded-md"></div>
-          </div>
-          <span className="text-xl font-semibold">SCVentures</span>
+          <img 
+            src="/lovable-uploads/52b2437c-f1ce-4662-9136-9d1b36a72734.png" 
+            alt="Logo" 
+            className="h-8 w-auto"
+          />
         </Link>
       </div>
       <div className="flex-1 overflow-auto py-4">
