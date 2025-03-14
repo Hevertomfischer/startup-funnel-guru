@@ -65,6 +65,16 @@ const Team = () => {
         initials: data.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
         assigned_startups: 0,
         permissions: data.permissions || 'read_only'
+      }, {
+        onSuccess: () => {
+          setOpenMemberDialog(false);
+          toast.success(`${data.name} foi adicionado à equipe`);
+          teamMembersQuery.refetch();
+        },
+        onError: (error) => {
+          console.error('Error creating team member:', error);
+          toast.error('Erro ao adicionar membro');
+        }
       });
     }
   };
@@ -73,6 +83,12 @@ const Team = () => {
     updateTeamMemberMutation.mutate({
       id: memberId, 
       teamMember: { permissions }
+    }, {
+      onSuccess: () => {
+        setOpenPermissionsDialog(false);
+        toast.success('Permissões atualizadas com sucesso');
+        teamMembersQuery.refetch();
+      }
     });
   };
 
@@ -82,6 +98,11 @@ const Team = () => {
         onSuccess: () => {
           setOpenRemoveDialog(false);
           toast.success(`${selectedMember.name} foi removido da equipe`);
+          teamMembersQuery.refetch();
+        },
+        onError: (error) => {
+          console.error('Error deleting team member:', error);
+          toast.error('Erro ao remover membro');
         }
       });
     }

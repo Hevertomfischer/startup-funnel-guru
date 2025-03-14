@@ -41,6 +41,8 @@ export async function createTeamMember(teamMember: Omit<TeamMember, 'id' | 'crea
         .toUpperCase();
     }
 
+    console.log('Creating team member with data:', teamMember);
+
     const { data, error } = await supabase
       .from('team_members')
       .insert(teamMember)
