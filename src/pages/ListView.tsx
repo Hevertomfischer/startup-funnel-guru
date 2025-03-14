@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -34,24 +34,58 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MOCK_STARTUPS, STATUSES, USERS } from '@/data/mockData';
+import { USERS } from '@/data/mockData';
 import { format } from 'date-fns';
+import { useStartupsQuery, useStatusesQuery } from '@/hooks/use-supabase-query';
+import { Loader2 } from 'lucide-react';
 
 const ListView = () => {
   const { toast } = useToast();
-  const [startups] = useState<Startup[]>(MOCK_STARTUPS);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Fetch startups and statuses from Supabase
+  const { data: startupsData, isLoading: isLoadingStartups, isError: isErrorStartups } = useStartupsQuery();
+  const { data: statusesData, isLoading: isLoadingStatuses } = useStatusesQuery();
+
+  // State to hold the formatted startups data
+  const [formattedStartups, setFormattedStartups] = useState<Startup[]>([]);
+
+  // Format Supabase startups data to match the Startup type
+  useEffect(() => {
+    if (startupsData && Array.isArray(startupsData)) {
+      const formatted = startupsData.map(startup => ({
+        id: startup.id,
+        createdAt: new Date(startup.created_at),
+        updatedAt: new Date(startup.updated_at),
+        statusId: startup.status_id || '',
+        values: {
+          Startup: startup.name,
+          'Problema que Resolve': startup.problem_solved,
+          Setor: startup.sector,
+          'Modelo de Negócio': startup.business_model,
+          'Site da Startup': startup.website,
+          MRR: startup.mrr,
+          'Quantidade de Clientes': startup.client_count
+        },
+        labels: [],
+        priority: startup.priority as 'low' | 'medium' | 'high' || 'medium',
+        assignedTo: startup.assigned_to,
+        dueDate: startup.due_date ? new Date(startup.due_date) : undefined,
+        timeTracking: startup.time_tracking || 0,
+        attachments: []
+      }));
+      setFormattedStartups(formatted);
+    }
+  }, [startupsData]);
+
   // Filter startups based on search term
-  const filteredStartups = startups.filter(startup => {
+  const filteredStartups = formattedStartups.filter(startup => {
     const name = startup.values.Startup?.toString().toLowerCase() || '';
     const sector = startup.values.Setor?.toString().toLowerCase() || '';
-    const ceo = startup.values['Nome do CEO']?.toString().toLowerCase() || '';
     return name.includes(searchTerm.toLowerCase()) || 
-           sector.includes(searchTerm.toLowerCase()) ||
-           ceo.includes(searchTerm.toLowerCase());
+           sector.includes(searchTerm.toLowerCase());
   });
 
   // Sort startups based on sort field and direction
@@ -96,6 +130,14 @@ const ListView = () => {
     // Navigate to startup details page would go here
   };
   
+  const handleAddStartup = () => {
+    toast({
+      title: "Add startup",
+      description: "Opening startup form",
+    });
+    // Add startup functionality would go here
+  };
+  
   const renderSortIcon = (field: string) => {
     if (sortField !== field) return null;
     
@@ -110,6 +152,28 @@ const ListView = () => {
     medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
     high: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   };
+
+  // Loading state
+  if (isLoadingStartups || isLoadingStatuses) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Loading startups...</span>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isErrorStartups) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-destructive">Failed to load startups</h2>
+          <p className="text-muted-foreground mt-2">Please try again later</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
@@ -157,14 +221,7 @@ const ListView = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <Button 
-            onClick={() => {
-              toast({
-                title: "Add startup",
-                description: "Opening startup form",
-              });
-            }}
-          >
+          <Button onClick={handleAddStartup}>
             <Plus className="h-4 w-4 mr-1" />
             Add Startup
           </Button>
@@ -244,94 +301,94 @@ const ListView = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedStartups.map((startup) => {
-                const status = STATUSES.find(s => s.id === startup.statusId);
-                const assignedUser = startup.assignedTo && USERS[startup.assignedTo];
-                const dueDate = startup.dueDate ? new Date(startup.dueDate) : undefined;
-                
-                return (
-                  <TableRow 
-                    key={startup.id} 
-                    className="cursor-pointer hover:bg-accent/50"
-                    onClick={() => handleRowClick(startup)}
-                  >
-                    <TableCell className="font-medium">
-                      {startup.values.Startup || 'Unnamed Startup'}
-                    </TableCell>
-                    <TableCell>
-                      {startup.values.Setor || '-'}
-                    </TableCell>
-                    <TableCell>
-                      {startup.values['Modelo de Negócio'] || '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {typeof startup.values.MRR === 'number' 
-                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(startup.values.MRR) 
-                        : (startup.values.MRR || '-')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {startup.values['Quantidade de Clientes'] || '-'}
-                    </TableCell>
-                    <TableCell>
-                      {status && (
+              {sortedStartups.length > 0 ? (
+                sortedStartups.map((startup) => {
+                  const status = statusesData?.find(s => s.id === startup.statusId);
+                  const assignedUser = startup.assignedTo && USERS[startup.assignedTo];
+                  const dueDate = startup.dueDate ? new Date(startup.dueDate) : undefined;
+                  
+                  return (
+                    <TableRow 
+                      key={startup.id} 
+                      className="cursor-pointer hover:bg-accent/50"
+                      onClick={() => handleRowClick(startup)}
+                    >
+                      <TableCell className="font-medium">
+                        {startup.values.Startup || 'Unnamed Startup'}
+                      </TableCell>
+                      <TableCell>
+                        {startup.values.Setor || '-'}
+                      </TableCell>
+                      <TableCell>
+                        {startup.values['Modelo de Negócio'] || '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {typeof startup.values.MRR === 'number' 
+                          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(startup.values.MRR) 
+                          : (startup.values.MRR || '-')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {startup.values['Quantidade de Clientes'] || '-'}
+                      </TableCell>
+                      <TableCell>
+                        {status && (
+                          <Badge 
+                            className="whitespace-nowrap" 
+                            style={{ 
+                              backgroundColor: `${status.color}20`, 
+                              color: status.color,
+                              borderColor: `${status.color}30`
+                            }}
+                            variant="outline"
+                          >
+                            {status.name}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <Badge 
-                          className="whitespace-nowrap" 
-                          style={{ 
-                            backgroundColor: `${status.color}20`, 
-                            color: status.color,
-                            borderColor: `${status.color}30`
-                          }}
-                          variant="outline"
+                          variant="outline" 
+                          className={`${priorityColors[startup.priority]} text-xs`}
                         >
-                          {status.name}
+                          {startup.priority.charAt(0).toUpperCase() + startup.priority.slice(1)}
                         </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline" 
-                        className={`${priorityColors[startup.priority]} text-xs`}
-                      >
-                        {startup.priority.charAt(0).toUpperCase() + startup.priority.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {assignedUser ? (
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                              {assignedUser.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs truncate max-w-[80px]">
-                            {assignedUser.name}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <User className="h-3 w-3" />
-                          <span>Unassigned</span>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {dueDate ? (
-                        <div className="flex items-center gap-1 text-xs">
-                          <Calendar className="h-3 w-3" />
-                          <span>{format(dueDate, 'dd/MM/yyyy')}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              
-              {filteredStartups.length === 0 && (
+                      </TableCell>
+                      <TableCell>
+                        {assignedUser ? (
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                                {assignedUser.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs truncate max-w-[80px]">
+                              {assignedUser.name}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <User className="h-3 w-3" />
+                            <span>Unassigned</span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {dueDate ? (
+                          <div className="flex items-center gap-1 text-xs">
+                            <Calendar className="h-3 w-3" />
+                            <span>{format(dueDate, 'dd/MM/yyyy')}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
                 <TableRow>
                   <TableCell colSpan={9} className="h-24 text-center">
-                    No startups found
+                    {searchTerm ? "No startups found matching your search" : "No startups found. Add your first startup to get started."}
                   </TableCell>
                 </TableRow>
               )}
