@@ -40,10 +40,15 @@ export const useStartupsQuery = () => {
 };
 
 export const useStartupsByStatusQuery = (statusId: string) => {
+  // Check if this is a placeholder ID (for conditional rendering)
+  const isPlaceholder = statusId.startsWith('placeholder-');
+  
   return useQuery({
     queryKey: ['startups', 'status', statusId],
     queryFn: () => getStartupsByStatus(statusId),
-    enabled: !!statusId
+    enabled: !!statusId && !isPlaceholder, // Don't run query for placeholder IDs
+    staleTime: isPlaceholder ? Infinity : undefined, // Don't refetch placeholder queries
+    gcTime: isPlaceholder ? 0 : undefined // Don't cache placeholder queries
   });
 };
 

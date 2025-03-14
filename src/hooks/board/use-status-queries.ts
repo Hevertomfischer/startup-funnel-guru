@@ -3,48 +3,47 @@ import { useMemo } from 'react';
 import { useStartupsByStatus } from '../use-startups-by-status';
 
 export const useStatusQueries = (statusIds: string[]) => {
-  // Create an array to hold all the query results
-  const queryResults = [];
+  // Each hook must be called unconditionally at the top level
+  // We'll use fixed number of hooks based on maximum possible number of statuses
+  // We're using 12 as the maximum number of possible statuses
+  const query1 = useStartupsByStatus(statusIds[0] || 'placeholder-1');
+  const query2 = useStartupsByStatus(statusIds[1] || 'placeholder-2');
+  const query3 = useStartupsByStatus(statusIds[2] || 'placeholder-3');
+  const query4 = useStartupsByStatus(statusIds[3] || 'placeholder-4');
+  const query5 = useStartupsByStatus(statusIds[4] || 'placeholder-5');
+  const query6 = useStartupsByStatus(statusIds[5] || 'placeholder-6');
+  const query7 = useStartupsByStatus(statusIds[6] || 'placeholder-7');
+  const query8 = useStartupsByStatus(statusIds[7] || 'placeholder-8');
+  const query9 = useStartupsByStatus(statusIds[8] || 'placeholder-9');
+  const query10 = useStartupsByStatus(statusIds[9] || 'placeholder-10');
+  const query11 = useStartupsByStatus(statusIds[10] || 'placeholder-11');
+  const query12 = useStartupsByStatus(statusIds[11] || 'placeholder-12');
+
+  // Combine real queries into results array based on available statusIds
+  const queryResults = useMemo(() => {
+    const results = [];
+    
+    if (statusIds[0]) results.push({ statusId: statusIds[0], ...query1 });
+    if (statusIds[1]) results.push({ statusId: statusIds[1], ...query2 });
+    if (statusIds[2]) results.push({ statusId: statusIds[2], ...query3 });
+    if (statusIds[3]) results.push({ statusId: statusIds[3], ...query4 });
+    if (statusIds[4]) results.push({ statusId: statusIds[4], ...query5 });
+    if (statusIds[5]) results.push({ statusId: statusIds[5], ...query6 });
+    if (statusIds[6]) results.push({ statusId: statusIds[6], ...query7 });
+    if (statusIds[7]) results.push({ statusId: statusIds[7], ...query8 });
+    if (statusIds[8]) results.push({ statusId: statusIds[8], ...query9 });
+    if (statusIds[9]) results.push({ statusId: statusIds[9], ...query10 });
+    if (statusIds[10]) results.push({ statusId: statusIds[10], ...query11 });
+    if (statusIds[11]) results.push({ statusId: statusIds[11], ...query12 });
+    
+    return results;
+  }, [
+    statusIds,
+    query1, query2, query3, query4, query5, query6,
+    query7, query8, query9, query10, query11, query12
+  ]);
   
-  // Use all hooks at the top level (Rule #1 of React Hooks)
-  // This ensures hooks are called in the same order on every render
-  const status1Query = statusIds[0] ? useStartupsByStatus(statusIds[0]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[0]) queryResults.push({ statusId: statusIds[0], ...status1Query });
-  
-  const status2Query = statusIds[1] ? useStartupsByStatus(statusIds[1]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[1]) queryResults.push({ statusId: statusIds[1], ...status2Query });
-  
-  const status3Query = statusIds[2] ? useStartupsByStatus(statusIds[2]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[2]) queryResults.push({ statusId: statusIds[2], ...status3Query });
-  
-  const status4Query = statusIds[3] ? useStartupsByStatus(statusIds[3]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[3]) queryResults.push({ statusId: statusIds[3], ...status4Query });
-  
-  const status5Query = statusIds[4] ? useStartupsByStatus(statusIds[4]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[4]) queryResults.push({ statusId: statusIds[4], ...status5Query });
-  
-  const status6Query = statusIds[5] ? useStartupsByStatus(statusIds[5]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[5]) queryResults.push({ statusId: statusIds[5], ...status6Query });
-  
-  const status7Query = statusIds[6] ? useStartupsByStatus(statusIds[6]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[6]) queryResults.push({ statusId: statusIds[6], ...status7Query });
-  
-  const status8Query = statusIds[7] ? useStartupsByStatus(statusIds[7]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[7]) queryResults.push({ statusId: statusIds[7], ...status8Query });
-  
-  const status9Query = statusIds[8] ? useStartupsByStatus(statusIds[8]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[8]) queryResults.push({ statusId: statusIds[8], ...status9Query });
-  
-  const status10Query = statusIds[9] ? useStartupsByStatus(statusIds[9]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[9]) queryResults.push({ statusId: statusIds[9], ...status10Query });
-  
-  const status11Query = statusIds[10] ? useStartupsByStatus(statusIds[10]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[10]) queryResults.push({ statusId: statusIds[10], ...status11Query });
-  
-  const status12Query = statusIds[11] ? useStartupsByStatus(statusIds[11]) : { data: [], isLoading: false, isError: false };
-  if (statusIds[11]) queryResults.push({ statusId: statusIds[11], ...status12Query });
-  
-  // Combine all query results into a mapping
+  // Map queries to their status IDs
   const queries = useMemo(() => {
     const result: Record<string, any> = {};
     
@@ -55,15 +54,33 @@ export const useStatusQueries = (statusIds: string[]) => {
     return result;
   }, [queryResults]);
   
-  // Check if any query is loading
+  // Check if any real query (not placeholder) is loading
   const isLoading = useMemo(() => {
-    return queryResults.some(query => query.isLoading);
-  }, [queryResults]);
+    return statusIds.some((id, index) => {
+      if (!id) return false;
+      const queryIndex = index + 1;
+      const query = eval(`query${queryIndex}`);
+      return query.isLoading;
+    });
+  }, [
+    statusIds,
+    query1, query2, query3, query4, query5, query6,
+    query7, query8, query9, query10, query11, query12
+  ]);
   
-  // Check if any query has an error
+  // Check if any real query (not placeholder) has an error
   const isError = useMemo(() => {
-    return queryResults.some(query => query.isError);
-  }, [queryResults]);
+    return statusIds.some((id, index) => {
+      if (!id) return false;
+      const queryIndex = index + 1;
+      const query = eval(`query${queryIndex}`);
+      return query.isError;
+    });
+  }, [
+    statusIds,
+    query1, query2, query3, query4, query5, query6,
+    query7, query8, query9, query10, query11, query12
+  ]);
   
   return { queries, isLoading, isError };
 };
