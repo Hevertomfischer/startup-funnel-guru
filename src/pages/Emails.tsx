@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Mail, PlusCircle, Filter, AlertCircle } from 'lucide-react';
+import { Mail, PlusCircle, Filter, AlertCircle, Send } from 'lucide-react';
 import { 
   getEmailTemplates, 
   deleteEmailTemplate 
 } from '@/services/email-template-service';
 import { EmailTemplate } from '@/types/email-template';
 import EmailTemplateDialog from '@/components/email/EmailTemplateDialog';
+import EmailSendDialog from '@/components/email/EmailSendDialog';
+import { useGmailAuth } from '@/hooks/use-gmail-auth';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +35,16 @@ const Emails = () => {
   const [templateToDelete, setTemplateToDelete] = useState<EmailTemplate | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
+  const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
+  const [templateToSend, setTemplateToSend] = useState<EmailTemplate | null>(null);
+  
+  const { 
+    accessToken, 
+    isAuthenticated, 
+    isLoading: isAuthLoading, 
+    startGmailAuth, 
+    disconnect 
+  } = useGmailAuth();
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -85,6 +97,22 @@ const Emails = () => {
   const handlePreviewTemplate = (template: EmailTemplate) => {
     setPreviewTemplate(template);
     setIsPreviewDialogOpen(true);
+  };
+  
+  const handleSendTemplate = (template: EmailTemplate) => {
+    if (!isAuthenticated) {
+      toast.error('Gmail authentication required', {
+        description: 'Please connect your Gmail account first',
+        action: {
+          label: 'Connect',
+          onClick: startGmailAuth
+        }
+      });
+      return;
+    }
+    
+    setTemplateToSend(template);
+    setIsSendDialogOpen(true);
   };
 
   const renderTemplateList = (templateList: EmailTemplate[]) => {
@@ -148,6 +176,15 @@ const Emails = () => {
                         Preview
                       </Button>
                       <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleSendTemplate(template)}
+                        disabled={template.status !== 'active'}
+                      >
+                        <Send className="h-3 w-3 mr-1" />
+                        Send
+                      </Button>
+                      <Button 
                         variant="ghost" 
                         size="sm" 
                         className="text-muted-foreground ml-auto"
@@ -173,10 +210,23 @@ const Emails = () => {
           <h1 className="text-3xl font-bold mb-2">Email Templates</h1>
           <p className="text-muted-foreground">Manage your email templates for automated communications</p>
         </div>
-        <Button className="flex items-center gap-2" onClick={handleCreateTemplate}>
-          <PlusCircle className="h-4 w-4" />
-          Create Template
-        </Button>
+        <div className="flex gap-2">
+          {isAuthenticated ? (
+            <Button variant="outline" className="flex items-center gap-2" onClick={disconnect}>
+              <Mail className="h-4 w-4" />
+              Disconnect Gmail
+            </Button>
+          ) : (
+            <Button variant="outline" className="flex items-center gap-2" onClick={startGmailAuth} disabled={isAuthLoading}>
+              <Mail className="h-4 w-4" />
+              {isAuthLoading ? 'Connecting...' : 'Connect Gmail'}
+            </Button>
+          )}
+          <Button className="flex items-center gap-2" onClick={handleCreateTemplate}>
+            <PlusCircle className="h-4 w-4" />
+            Create Template
+          </Button>
+        </div>
       </div>
       
       <Tabs defaultValue="all">
@@ -253,13 +303,30 @@ const Emails = () => {
               </div>
             </div>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
               Close
             </Button>
+            {previewTemplate?.status === 'active' && (
+              <Button onClick={() => {
+                setIsPreviewDialogOpen(false);
+                handleSendTemplate(previewTemplate);
+              }}>
+                <Send className="h-4 w-4 mr-2" />
+                Send
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Send Email Dialog */}
+      <EmailSendDialog
+        isOpen={isSendDialogOpen}
+        onClose={() => setIsSendDialogOpen(false)}
+        template={templateToSend}
+        accessToken={accessToken}
+      />
     </div>
   );
 };

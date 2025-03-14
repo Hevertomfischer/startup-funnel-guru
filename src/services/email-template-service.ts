@@ -120,3 +120,76 @@ export const deleteEmailTemplate = async (id: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Novas funções para integração com Gmail
+export const getGmailAuthUrl = async (): Promise<string> => {
+  try {
+    const response = await supabase.functions.invoke('gmail-auth');
+    
+    if (response.error) throw new Error(response.error.message);
+    return response.data.authUrl;
+  } catch (error: any) {
+    handleError(error, 'Failed to generate Gmail authentication URL');
+    throw error;
+  }
+};
+
+export const refreshGmailToken = async (refreshToken: string): Promise<{ access_token: string, expires_in: number }> => {
+  try {
+    const response = await supabase.functions.invoke('refresh-token', {
+      body: { refresh_token: refreshToken }
+    });
+    
+    if (response.error) throw new Error(response.error.message);
+    return response.data;
+  } catch (error: any) {
+    handleError(error, 'Failed to refresh Gmail token');
+    throw error;
+  }
+};
+
+export const sendEmail = async (
+  to: string, 
+  templateId: string, 
+  data: Record<string, string>,
+  accessToken: string
+): Promise<boolean> => {
+  try {
+    // Get the email template
+    const template = await getEmailTemplate(templateId);
+    if (!template) {
+      throw new Error('Email template not found');
+    }
+    
+    // Process template placeholders
+    let subject = template.subject;
+    let content = template.content;
+    
+    // Replace placeholders in subject and content
+    Object.entries(data).forEach(([key, value]) => {
+      const regex = new RegExp(`{${key}}`, 'g');
+      subject = subject.replace(regex, value);
+      content = content.replace(regex, value);
+    });
+    
+    // Send the email using the edge function
+    const response = await supabase.functions.invoke('send-email', {
+      body: {
+        to,
+        subject,
+        content,
+        accessToken
+      }
+    });
+    
+    if (response.error || !response.data.success) {
+      throw new Error(response.error?.message || response.data.error || 'Failed to send email');
+    }
+    
+    toast.success('Email sent successfully');
+    return true;
+  } catch (error: any) {
+    handleError(error, 'Failed to send email');
+    return false;
+  }
+};
