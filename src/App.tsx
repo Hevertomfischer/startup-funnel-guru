@@ -15,6 +15,10 @@ import Team from "./pages/Team";
 import Emails from "./pages/Emails";
 import Reports from "./pages/Reports";
 import Dashboard from "./pages/Dashboard";
+import { initializeWorkflowRules } from "./utils/workflow-utils";
+
+// Initialize workflow rules with mock data if none exist
+initializeWorkflowRules();
 
 const queryClient = new QueryClient();
 

@@ -1,104 +1,67 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { WorkflowRule } from '@/types';
-import { Plus, Copy, ToggleLeft, AlertCircle } from 'lucide-react';
+import { Plus, Copy, AlertCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-
-const mockRules: WorkflowRule[] = [
-  {
-    id: '1',
-    name: 'Send follow-up email after status change',
-    conditions: [
-      {
-        fieldId: 'statusId',
-        operator: 'changed',
-        value: null
-      }
-    ],
-    actions: [
-      {
-        type: 'sendEmail',
-        config: {
-          emailTemplate: 'status-change',
-          emailTo: 'CEO'
-        }
-      }
-    ],
-    active: true
-  },
-  {
-    id: '2',
-    name: 'Move to Due Diligence when all info received',
-    conditions: [
-      {
-        fieldId: 'Problema que Resolve',
-        operator: 'notEquals',
-        value: ''
-      },
-      {
-        fieldId: 'Como Resolve o Problema',
-        operator: 'notEquals',
-        value: ''
-      },
-      {
-        fieldId: 'Modelo de Negócio',
-        operator: 'notEquals',
-        value: ''
-      }
-    ],
-    actions: [
-      {
-        type: 'updateField',
-        config: {
-          fieldId: 'statusId',
-          value: 'due-diligence'
-        }
-      },
-      {
-        type: 'createNotification',
-        config: {
-          message: 'Startup ready for due diligence review'
-        }
-      }
-    ],
-    active: true
-  },
-  {
-    id: '3',
-    name: 'Flag high MRR startups as priority',
-    conditions: [
-      {
-        fieldId: 'Receita Recorrente Mensal (MRR)',
-        operator: 'greaterThan',
-        value: 100000
-      }
-    ],
-    actions: [
-      {
-        type: 'updateField',
-        config: {
-          fieldId: 'priority',
-          value: 'high'
-        }
-      }
-    ],
-    active: false
-  }
-];
+import { useWorkflowRules, saveWorkflowRules } from '@/hooks/use-workflow-rules';
+import { useToast } from '@/hooks/use-toast';
 
 const WorkflowEditor = () => {
-  const [rules, setRules] = useState<WorkflowRule[]>(mockRules);
+  const { rules, setRules, saveRules } = useWorkflowRules();
+  const { toast } = useToast();
+
+  // Load rules on initialization
+  useEffect(() => {
+    // The hook already loads the rules
+  }, []);
 
   const toggleRuleActive = (ruleId: string) => {
-    setRules(prevRules => 
-      prevRules.map(rule => 
-        rule.id === ruleId ? { ...rule, active: !rule.active } : rule
-      )
+    const updatedRules = rules.map(rule => 
+      rule.id === ruleId ? { ...rule, active: !rule.active } : rule
     );
+    saveRules(updatedRules);
+    
+    const rule = rules.find(r => r.id === ruleId);
+    toast({
+      title: rule?.active ? "Workflow Rule Disabled" : "Workflow Rule Enabled",
+      description: `"${rule?.name}" has been ${rule?.active ? "disabled" : "enabled"}.`,
+    });
+  };
+
+  const duplicateRule = (ruleId: string) => {
+    const ruleToDuplicate = rules.find(rule => rule.id === ruleId);
+    if (ruleToDuplicate) {
+      const newRule: WorkflowRule = {
+        ...JSON.parse(JSON.stringify(ruleToDuplicate)),
+        id: `${Date.now()}`, // Simple ID generation
+        name: `${ruleToDuplicate.name} (Copy)`,
+        active: false // Disable by default for safety
+      };
+      
+      const updatedRules = [...rules, newRule];
+      saveRules(updatedRules);
+      
+      toast({
+        title: "Rule Duplicated",
+        description: `"${ruleToDuplicate.name}" has been duplicated.`,
+      });
+    }
+  };
+
+  const deleteRule = (ruleId: string) => {
+    const ruleToDelete = rules.find(rule => rule.id === ruleId);
+    const updatedRules = rules.filter(rule => rule.id !== ruleId);
+    saveRules(updatedRules);
+    
+    toast({
+      title: "Rule Deleted",
+      description: `"${ruleToDelete?.name}" has been deleted.`,
+      variant: "destructive"
+    });
   };
 
   const getOperatorLabel = (operator: string): string => {
@@ -199,11 +162,21 @@ const WorkflowEditor = () => {
                 
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" size="sm">Edit</Button>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-1"
+                    onClick={() => duplicateRule(rule.id)}
+                  >
                     <Copy className="h-3 w-3" />
                     Duplicate
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive ml-auto">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-destructive ml-auto"
+                    onClick={() => deleteRule(rule.id)}
+                  >
                     Delete
                   </Button>
                 </div>
