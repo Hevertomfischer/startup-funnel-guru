@@ -7,7 +7,7 @@ import { RenameStatusDialog } from '@/components/RenameStatusDialog';
 import { useBoardColumns } from '@/hooks/use-board-columns';
 import { useBoardDragDrop } from '@/hooks/use-board-drag-drop';
 import { useStartupActions } from '@/hooks/use-startup-actions';
-import { useStartupsByStatus } from '@/hooks/use-startups-by-status';
+import { useStatusQueries } from '@/hooks/use-status-queries';
 import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/BoardContainer';
 import { Status } from '@/types';
@@ -31,59 +31,8 @@ const Board = () => {
     isErrorStatuses,
   } = useBoardColumns();
 
-  // Create a mapping of status IDs to column queries
-  const statusQueries = useMemo(() => {
-    const queries: Record<string, any> = {};
-    
-    if (!statusIds || statusIds.length === 0) {
-      return queries;
-    }
-    
-    // This works because useStartupsByStatus is called conditionally inside the useMemo,
-    // not at the component root level, so it doesn't violate hooks rules
-    statusIds.forEach(statusId => {
-      if (statusId) {
-        // Use the custom hook for each status ID
-        const queryResult = useStartupsByStatus(statusId);
-        queries[statusId] = queryResult;
-      }
-    });
-    
-    return queries;
-  }, [statusIds]); // This will still violate React hooks rules, and we'll fix it differently
-  
-  // Instead of using hooks inside useMemo (which violates rules), 
-  // we'll create a separate hook for each status ID and store results
-  const firstStatusQuery = statusIds && statusIds[0] ? useStartupsByStatus(statusIds[0]) : null;
-  const secondStatusQuery = statusIds && statusIds[1] ? useStartupsByStatus(statusIds[1]) : null;
-  const thirdStatusQuery = statusIds && statusIds[2] ? useStartupsByStatus(statusIds[2]) : null;
-  const fourthStatusQuery = statusIds && statusIds[3] ? useStartupsByStatus(statusIds[3]) : null;
-  const fifthStatusQuery = statusIds && statusIds[4] ? useStartupsByStatus(statusIds[4]) : null;
-  const sixthStatusQuery = statusIds && statusIds[5] ? useStartupsByStatus(statusIds[5]) : null;
-  const seventhStatusQuery = statusIds && statusIds[6] ? useStartupsByStatus(statusIds[6]) : null;
-  const eighthStatusQuery = statusIds && statusIds[7] ? useStartupsByStatus(statusIds[7]) : null;
-  
-  // Combine all query results
-  const mappedQueries = useMemo(() => {
-    const queries: Record<string, any> = {};
-    
-    if (statusIds && statusIds.length > 0) {
-      if (statusIds[0] && firstStatusQuery) queries[statusIds[0]] = firstStatusQuery;
-      if (statusIds[1] && secondStatusQuery) queries[statusIds[1]] = secondStatusQuery;
-      if (statusIds[2] && thirdStatusQuery) queries[statusIds[2]] = thirdStatusQuery;
-      if (statusIds[3] && fourthStatusQuery) queries[statusIds[3]] = fourthStatusQuery;
-      if (statusIds[4] && fifthStatusQuery) queries[statusIds[4]] = fifthStatusQuery;
-      if (statusIds[5] && sixthStatusQuery) queries[statusIds[5]] = sixthStatusQuery;
-      if (statusIds[6] && seventhStatusQuery) queries[statusIds[6]] = seventhStatusQuery;
-      if (statusIds[7] && eighthStatusQuery) queries[statusIds[7]] = eighthStatusQuery;
-    }
-    
-    return queries;
-  }, [
-    statusIds, 
-    firstStatusQuery, secondStatusQuery, thirdStatusQuery, fourthStatusQuery,
-    fifthStatusQuery, sixthStatusQuery, seventhStatusQuery, eighthStatusQuery
-  ]);
+  // Get status queries using our new hook
+  const { queries: mappedQueries, isLoading: isLoadingQueries } = useStatusQueries(statusIds || []);
   
   // Update column startupIds when startups are loaded
   useEffect(() => {

@@ -49,9 +49,6 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
     }
   };
 
-  console.log('BoardContainer rendering with columns:', columns);
-  console.log('columnQueries:', columnQueries);
-
   return (
     <div className="relative flex-1 overflow-hidden">
       <div className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10">
