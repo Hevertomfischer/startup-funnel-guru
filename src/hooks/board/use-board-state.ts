@@ -1,5 +1,6 @@
+
 import { useState, useMemo, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type Unsubscribe } from '@tanstack/react-query';
 import { Status } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useBoardColumns } from '@/hooks/board/use-board-columns';
@@ -48,13 +49,14 @@ export function useBoardState() {
     });
     
     return () => {
-      // Handle the subscription cleanup correctly based on its type
+      // Properly handle subscription cleanup regardless of return type
       if (subscription) {
-        // Handle both function and object with unsubscribe method
+        // The subscription can be a function or an object with unsubscribe method
+        // Using type guard to safely handle either case
         if (typeof subscription === 'function') {
           subscription();
-        } else if (typeof subscription.unsubscribe === 'function') {
-          subscription.unsubscribe();
+        } else if (subscription && typeof (subscription as any).unsubscribe === 'function') {
+          (subscription as any).unsubscribe();
         }
       }
     };
