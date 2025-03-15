@@ -68,6 +68,9 @@ const Tasks = () => {
   };
 
   const createTask = (data: TaskFormValues) => {
+    // Handle "none" value for related startup
+    const relatedStartupId = data.relatedStartupId === "none" ? undefined : data.relatedStartupId;
+    
     const newTask: Task = {
       id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: data.title,
@@ -75,7 +78,7 @@ const Tasks = () => {
       assignedTo: data.assignedTo,
       priority: data.priority,
       status: 'pending',
-      relatedStartupId: data.relatedStartupId || undefined,
+      relatedStartupId: relatedStartupId,
       createdAt: new Date(),
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined
     };

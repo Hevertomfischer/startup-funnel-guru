@@ -31,7 +31,7 @@ const TaskForm = ({ onSubmit, onCancel, teamMembers, startups }: TaskFormProps) 
       description: '',
       assignedTo: '',
       priority: 'medium',
-      relatedStartupId: '',
+      relatedStartupId: undefined,
       dueDate: ''
     }
   });
@@ -156,7 +156,7 @@ const TaskForm = ({ onSubmit, onCancel, teamMembers, startups }: TaskFormProps) 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {startups && startups.map(startup => (
                         <SelectItem key={startup.id} value={startup.id}>
                           {startup.values.Startup || 'Unnamed Startup'}
