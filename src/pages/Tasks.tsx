@@ -17,6 +17,7 @@ const Tasks = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedStartupId, setSelectedStartupId] = useState<string | undefined>(undefined);
   const { data: teamMembers = [] } = useTeamMembersQuery();
   const { formattedStartups } = useStartupData();
   
@@ -88,6 +89,17 @@ const Tasks = () => {
     localStorage.setItem('workflowTasks', JSON.stringify(updatedTasks));
     toast.success('New task created successfully');
     setIsCreateDialogOpen(false);
+    setSelectedStartupId(undefined);
+  };
+
+  const handleOpenCreateTaskDialog = (startupId?: string) => {
+    setSelectedStartupId(startupId);
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleCloseCreateTaskDialog = () => {
+    setIsCreateDialogOpen(false);
+    setSelectedStartupId(undefined);
   };
 
   const getTeamMemberName = (id?: string) => {
@@ -119,7 +131,7 @@ const Tasks = () => {
         </div>
         <div className="flex items-center gap-4">
           <TaskFilter value={filterStatus} onChange={(value) => setFilterStatus(value)} />
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Button onClick={() => handleOpenCreateTaskDialog()}>
             <PlusCircle className="mr-2 h-4 w-4" />
             New Task
           </Button>
@@ -146,13 +158,14 @@ const Tasks = () => {
         </div>
       )}
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog open={isCreateDialogOpen} onOpenChange={handleCloseCreateTaskDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <TaskForm
             onSubmit={createTask}
-            onCancel={() => setIsCreateDialogOpen(false)}
+            onCancel={handleCloseCreateTaskDialog}
             teamMembers={teamMembers}
             startups={formattedStartupsForForm}
+            defaultStartupId={selectedStartupId}
           />
         </DialogContent>
       </Dialog>

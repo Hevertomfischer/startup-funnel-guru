@@ -22,16 +22,23 @@ interface TaskFormProps {
   onCancel: () => void;
   teamMembers: Array<{ id: string; name: string }>;
   startups: Array<{ id: string; values: { Startup: string } }>;
+  defaultStartupId?: string;
 }
 
-const TaskForm = ({ onSubmit, onCancel, teamMembers, startups }: TaskFormProps) => {
+const TaskForm = ({ 
+  onSubmit, 
+  onCancel, 
+  teamMembers, 
+  startups,
+  defaultStartupId 
+}: TaskFormProps) => {
   const form = useForm<TaskFormValues>({
     defaultValues: {
       title: '',
       description: '',
       assignedTo: '',
       priority: 'medium',
-      relatedStartupId: undefined,
+      relatedStartupId: defaultStartupId || 'none',
       dueDate: ''
     }
   });
@@ -147,8 +154,8 @@ const TaskForm = ({ onSubmit, onCancel, teamMembers, startups }: TaskFormProps) 
                   <FormLabel>Related Startup</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value || ""}
-                    defaultValue={field.value || ""}
+                    value={field.value || "none"}
+                    defaultValue={field.value || "none"}
                   >
                     <FormControl>
                       <SelectTrigger>

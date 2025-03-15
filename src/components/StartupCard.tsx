@@ -28,6 +28,7 @@ interface StartupCardProps {
   onClick: (startup: Startup) => void;
   onDelete?: (startupId: string) => void;
   compact?: boolean;
+  onCreateTask?: (startupId: string) => void;
 }
 
 const StartupCard: React.FC<StartupCardProps> = ({ 
@@ -36,7 +37,8 @@ const StartupCard: React.FC<StartupCardProps> = ({
   users = {}, 
   onClick,
   onDelete,
-  compact = false 
+  compact = false,
+  onCreateTask
 }) => {
   const status = statuses.find(s => s.id === startup.statusId);
   const dueDate = startup.dueDate ? new Date(startup.dueDate) : undefined;
@@ -74,6 +76,13 @@ const StartupCard: React.FC<StartupCardProps> = ({
     }
   };
 
+  const handleTaskIconClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    if (onCreateTask) {
+      onCreateTask(startup.id);
+    }
+  };
+
   return (
     <Card 
       className="glass-card cursor-pointer overflow-hidden group" 
@@ -89,10 +98,23 @@ const StartupCard: React.FC<StartupCardProps> = ({
             {startup.values.Startup || 'Unnamed Startup'}
           </CardTitle>
           <div className="flex items-center gap-1">
-            {openTasksCount > 0 && (
-              <Badge className="bg-primary text-primary-foreground" title="Open tasks">
+            {openTasksCount > 0 ? (
+              <Badge 
+                className="bg-primary text-primary-foreground cursor-pointer" 
+                title="Open tasks - Click to add new task"
+                onClick={handleTaskIconClick}
+              >
                 <ListTodo className="h-3 w-3 mr-1" />
                 {openTasksCount}
+              </Badge>
+            ) : (
+              <Badge 
+                className="bg-primary/80 text-primary-foreground cursor-pointer" 
+                title="Add new task"
+                onClick={handleTaskIconClick}
+              >
+                <ListTodo className="h-3 w-3 mr-1" />
+                0
               </Badge>
             )}
             <Badge 
