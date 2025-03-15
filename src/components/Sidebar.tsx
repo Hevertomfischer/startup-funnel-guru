@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -18,9 +18,30 @@ import { Separator } from '@/components/ui/separator';
 
 const Sidebar = () => {
   const location = useLocation();
+  const [isLightMode, setIsLightMode] = useState(false);
   
-  // Determine if we're in light mode
-  const isLightMode = document.documentElement.classList.contains('light');
+  useEffect(() => {
+    // Check if light mode is active and update state when theme changes
+    const checkTheme = () => {
+      setIsLightMode(document.documentElement.classList.contains('light'));
+    };
+    
+    // Initial check
+    checkTheme();
+    
+    // Listen for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          checkTheme();
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+    
+    return () => observer.disconnect();
+  }, []);
   
   const menuItems = [
     {

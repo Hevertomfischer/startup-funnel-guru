@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -40,9 +39,29 @@ const Header: React.FC<HeaderProps> = ({
   const [isLightMode, setIsLightMode] = useState(false);
 
   useEffect(() => {
-    // Check if light mode is active
-    setIsLightMode(document.documentElement.classList.contains('light'));
-  }, [isDarkMode]);
+    // Check if light mode is active and update states accordingly
+    const checkTheme = () => {
+      const isLight = document.documentElement.classList.contains('light');
+      setIsLightMode(isLight);
+      setIsDarkMode(!isLight);
+    };
+    
+    // Initial check
+    checkTheme();
+    
+    // Listen for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          checkTheme();
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +81,7 @@ const Header: React.FC<HeaderProps> = ({
       document.documentElement.classList.remove('light');
     }
     setIsDarkMode(!isDarkMode);
+    setIsLightMode(!isLightMode);
   };
 
   return (
