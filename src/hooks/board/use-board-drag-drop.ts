@@ -4,21 +4,32 @@ import { useToast } from '@/hooks/use-toast';
 import { useUpdateStartupMutation } from '../use-supabase-query';
 import { Column, Startup } from '@/types';
 import { useWorkflowRules } from '../use-workflow-rules';
+import { useQueryClient } from '@tanstack/react-query';
 
-export function useBoardDragDrop(
-  columns: Column[],
-  setColumns: React.Dispatch<React.SetStateAction<Column[]>>,
-  statuses: any[],
-  getStartupById: (id: string) => any | undefined
-) {
+type UseBoardDragDropParams = {
+  columns: Column[];
+  setColumns: React.Dispatch<React.SetStateAction<Column[]>>;
+  queryClient: any;
+  statuses: any[];
+  getStartupById: (id: string) => any | undefined;
+};
+
+export function useBoardDragDrop({
+  columns,
+  setColumns,
+  queryClient,
+  statuses,
+  getStartupById
+}: UseBoardDragDropParams) {
   const { toast } = useToast();
   const [draggingStartupId, setDraggingStartupId] = useState<string | null>(null);
+  const [draggingColumnId, setDraggingColumnId] = useState<string | null>(null);
   const { processStartup } = useWorkflowRules();
   
   // Mutations for updating startups
   const updateStartupMutation = useUpdateStartupMutation();
   
-  // Drag and drop handlers
+  // Drag and drop handlers for startups
   const handleDragStart = (e: React.DragEvent, startupId: string) => {
     e.dataTransfer.setData('text/plain', startupId);
     e.dataTransfer.setData('type', 'startup');
@@ -93,11 +104,59 @@ export function useBoardDragDrop(
     setDraggingStartupId(null);
   };
 
+  // Column drag and drop handlers
+  const handleColumnDragStart = (e: React.DragEvent, columnId: string) => {
+    e.dataTransfer.setData('text/plain', columnId);
+    e.dataTransfer.setData('type', 'column');
+    setDraggingColumnId(columnId);
+  };
+  
+  const handleColumnDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  
+  const handleColumnDrop = (e: React.DragEvent, targetColumnId: string) => {
+    e.preventDefault();
+    
+    // Check if this is a column being dragged
+    const type = e.dataTransfer.getData('type');
+    if (type !== 'column') return;
+    
+    const sourceColumnId = e.dataTransfer.getData('text/plain');
+    
+    if (sourceColumnId !== targetColumnId) {
+      // Find the indices of the source and target columns
+      const sourceIndex = columns.findIndex(col => col.id === sourceColumnId);
+      const targetIndex = columns.findIndex(col => col.id === targetColumnId);
+      
+      if (sourceIndex !== -1 && targetIndex !== -1) {
+        // Create a new array and move the column
+        const newColumns = [...columns];
+        const [movedColumn] = newColumns.splice(sourceIndex, 1);
+        newColumns.splice(targetIndex, 0, movedColumn);
+        
+        // Update the positions of all columns
+        const columnsWithNewPositions = newColumns.map((col, index) => ({
+          ...col,
+          position: index
+        }));
+        
+        // Update the state with the new columns array
+        setColumns(columnsWithNewPositions);
+      }
+    }
+    
+    setDraggingColumnId(null);
+  };
+
   return {
     draggingStartupId,
     handleDragStart,
     handleDragOver,
     handleDrop,
-    handleDragEnd
+    handleDragEnd,
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDrop
   };
 }

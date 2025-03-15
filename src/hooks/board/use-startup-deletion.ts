@@ -3,10 +3,12 @@ import { useDeleteStartupMutation } from '@/hooks/use-supabase-query';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
-export function useStartupDeletion() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
+interface UseStartupDeletionParams {
+  queryClient: any;
+  toast: any;
+}
+
+export function useStartupDeletion({ queryClient, toast }: UseStartupDeletionParams) {
   // Delete startup mutation
   const deleteStartupMutation = useDeleteStartupMutation();
   
@@ -40,7 +42,7 @@ export function useStartupDeletion() {
           }
           queryClient.invalidateQueries({ queryKey: ['startups'] });
         },
-        onError: (error) => {
+        onError: (error: any) => {
           toast({
             title: "Error",
             description: `Failed to delete startup: ${(error as Error).message}`,

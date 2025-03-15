@@ -2,7 +2,13 @@
 import { useMemo } from 'react';
 import { useStartupsByStatus } from '../use-startups-by-status';
 
-export const useStatusQueries = (statusIds: string[]) => {
+export const useStatusQueries = ({ statuses, columns }: { statuses: any[], columns: any[] }) => {
+  // Get all status IDs from the columns array
+  const statusIds = useMemo(() => 
+    columns.map(column => column.id),
+    [columns]
+  );
+
   // Each hook must be called unconditionally at the top level
   // We'll use fixed number of hooks based on maximum possible number of statuses
   // We're using 12 as the maximum number of possible statuses
@@ -81,6 +87,27 @@ export const useStatusQueries = (statusIds: string[]) => {
     query1, query2, query3, query4, query5, query6,
     query7, query8, query9, query10, query11, query12
   ]);
+
+  // Create a function to get a startup by its ID from any of the queries
+  const getStartupById = (id: string) => {
+    // Check all status queries
+    for (const statusId of statusIds) {
+      if (!statusId) continue;
+      const query = queries[statusId];
+      if (!query || !query.data) continue;
+      
+      // Find startup in the data array
+      const startup = query.data.find((s: any) => s.id === id);
+      if (startup) return startup;
+    }
+    return undefined;
+  };
   
-  return { queries, isLoading, isError };
+  return { 
+    queries, 
+    isLoading, 
+    isError,
+    mappedQueries: queries, // Add mappedQueries alias for backward compatibility
+    getStartupById 
+  };
 };

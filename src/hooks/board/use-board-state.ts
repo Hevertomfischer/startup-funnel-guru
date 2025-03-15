@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Startup } from '@/types';
 import { useNavigate } from 'react-router-dom';
-import { useStartupActions } from '../use-startup-actions';
+import { useStartupActions } from './use-startup-actions'; // Fixed import path
 import { useBoardColumns } from './use-board-columns';
 import { useBoardDragDrop } from './use-board-drag-drop';
 import { useBoardDialogs } from './use-board-dialogs';
@@ -32,7 +32,7 @@ export function useBoardState() {
     getStartupById
   } = useStatusQueries({ 
     statuses, 
-    columns
+    columns 
   });
   
   // Get drag and drop handlers
@@ -101,6 +101,11 @@ export function useBoardState() {
     navigate('/tasks', { state: { createTask: true, startupId: startup.id } });
   }, [navigate]);
   
+  // Modified function to be compatible with what's expected in BoardView
+  const handleStartupDeletion = useCallback((startupId: string) => {
+    handleDeleteStartup(startupId, getStartupById);
+  }, [handleDeleteStartup, getStartupById]);
+  
   return {
     // Board state
     columns,
@@ -118,7 +123,7 @@ export function useBoardState() {
     handleDrop,
     handleDragEnd,
     draggingStartupId,
-    handleDeleteStartup,
+    handleDeleteStartup: handleStartupDeletion, // Use compatible function
     handleCreateTask,
     
     // Column drag handlers

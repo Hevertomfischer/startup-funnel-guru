@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
 import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/board/BoardContainer';
 import BoardDialogs from '@/components/board/BoardDialogs';
@@ -33,6 +32,7 @@ const BoardView = () => {
     handleDragEnd,
     draggingStartupId,
     handleDeleteStartup,
+    handleCreateTask,
     
     // Column drag handlers
     handleColumnDragStart,
@@ -143,6 +143,7 @@ const BoardView = () => {
             onColumnDragStart={handleColumnDragStart}
             onColumnDragOver={handleColumnDragOver}
             onColumnDrop={handleColumnDrop}
+            onCreateTask={handleCreateTask}
           />
         )}
       </div>
