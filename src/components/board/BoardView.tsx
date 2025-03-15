@@ -104,28 +104,9 @@ const BoardView = () => {
           showCompactCards={showCompactCards}
           setShowCompactCards={setShowCompactCards}
           addNewStartup={openAddStartupDialog}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
         />
-        
-        <div className="flex justify-between items-center p-4 border-b">
-          <div>
-            <h1 className="text-2xl font-semibold">Startup Pipeline</h1>
-            <p className="text-muted-foreground">
-              Manage your startup investment funnel
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search startups..."
-                className="w-full pl-8 bg-background"
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
-        </div>
         
         {columns.length === 0 ? (
           <div className="flex-1 flex items-center justify-center flex-col gap-4">

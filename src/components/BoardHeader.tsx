@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Filter, SlidersHorizontal } from 'lucide-react';
+import { Filter, Search, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +16,16 @@ interface BoardHeaderProps {
   showCompactCards: boolean;
   setShowCompactCards: (show: boolean) => void;
   addNewStartup: () => void;
+  searchTerm: string;
+  onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const BoardHeader: React.FC<BoardHeaderProps> = ({ 
   showCompactCards, 
   setShowCompactCards,
-  addNewStartup
+  addNewStartup,
+  searchTerm,
+  onSearchChange
 }) => {
   return (
     <div className="flex items-center justify-between p-4 border-b">
@@ -31,6 +36,17 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
         </p>
       </div>
       <div className="flex items-center gap-2">
+        <div className="relative w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search startups..."
+            className="w-full pl-8 bg-background"
+            value={searchTerm}
+            onChange={onSearchChange}
+          />
+        </div>
+        
         <Button
           variant="default"
           size="sm"
