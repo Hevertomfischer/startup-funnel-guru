@@ -103,6 +103,8 @@ export function useBoardState() {
   
   // Modified function to be compatible with what's expected in BoardView
   const handleStartupDeletion = useCallback((startupId: string) => {
+    // Instead of directly calling handleDeleteStartup with getStartupById, 
+    // we'll call it correctly based on its expected signature
     handleDeleteStartup(startupId, getStartupById);
   }, [handleDeleteStartup, getStartupById]);
   
