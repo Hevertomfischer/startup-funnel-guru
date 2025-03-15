@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,9 +23,10 @@ interface BoardContainerProps {
   showCompactCards: boolean;
   addNewColumn: () => void;
   onEditColumn: (status: Status) => void;
-  onColumnDragStart: (e: React.DragEvent, columnIndex: number) => void;
+  onColumnDragStart: (e: React.DragEvent, columnId: string) => void;
   onColumnDragOver: (e: React.DragEvent) => void;
-  onColumnDrop: (e: React.DragEvent, columnIndex: number) => void;
+  onColumnDrop: (e: React.DragEvent, columnId: string) => void;
+  onCreateTask: (startup: any) => void;
 }
 
 const BoardContainer: React.FC<BoardContainerProps> = ({
@@ -46,7 +48,8 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
   onEditColumn,
   onColumnDragStart,
   onColumnDragOver,
-  onColumnDrop
+  onColumnDrop,
+  onCreateTask
 }) => {
   const scrollContainer = (direction: 'left' | 'right') => {
     const container = document.getElementById('board-container');
@@ -89,16 +92,14 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                 key={column.id} 
                 className="h-full"
                 onDragOver={onColumnDragOver}
-                onDrop={(e) => onColumnDrop(e, index)}
+                onDrop={(e) => onColumnDrop(e, column.id)}
               >
                 <div 
                   className="flex items-center mb-2 cursor-move"
                   draggable
                   onDragStart={(e) => {
                     e.stopPropagation();
-                    e.dataTransfer.setData('type', 'column');
-                    e.dataTransfer.setData('columnIndex', index.toString());
-                    onColumnDragStart(e, index);
+                    onColumnDragStart(e, column.id);
                   }}
                 >
                   <GripVertical className="h-4 w-4 text-muted-foreground mr-1" />
@@ -125,6 +126,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                   statuses={statuses.map(s => ({ id: s.id, name: s.name, color: s.color }))}
                   users={USERS}
                   onEditColumn={status ? () => onEditColumn(status) : undefined}
+                  onCreateTask={onCreateTask}
                 />
               </div>
             );

@@ -13,8 +13,12 @@ export function useStartupDeletion({ queryClient, toast }: UseStartupDeletionPar
   const deleteStartupMutation = useDeleteStartupMutation();
   
   // Handle startup deletion
-  const handleDeleteStartup = (startupId: string, getStartupById: (id: string) => any) => {
-    const startup = getStartupById(startupId);
+  const handleDeleteStartup = (startupId: string, getStartupById?: (id: string) => any) => {
+    let startup;
+    
+    if (getStartupById) {
+      startup = getStartupById(startupId);
+    }
     
     if (!startup) {
       toast({
