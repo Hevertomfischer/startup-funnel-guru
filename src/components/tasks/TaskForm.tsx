@@ -5,7 +5,6 @@ import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -158,7 +157,7 @@ const TaskForm = ({ onSubmit, onCancel, teamMembers, startups }: TaskFormProps) 
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="">None</SelectItem>
-                      {startups.map(startup => (
+                      {startups && startups.map(startup => (
                         <SelectItem key={startup.id} value={startup.id}>
                           {startup.values.Startup || 'Unnamed Startup'}
                         </SelectItem>
