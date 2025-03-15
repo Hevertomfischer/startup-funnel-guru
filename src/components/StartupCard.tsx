@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Calendar, Clock, Link2, User, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Link2, User, Trash2, Clipboard } from 'lucide-react';
 import { Startup, Status } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -42,6 +41,24 @@ const StartupCard: React.FC<StartupCardProps> = ({
   const dueDate = startup.dueDate ? new Date(startup.dueDate) : undefined;
   const assignedUser = startup.assignedTo && users[startup.assignedTo];
   
+  // Get tasks from localStorage
+  const getOpenTasksCount = () => {
+    try {
+      const storedTasks = localStorage.getItem('workflowTasks');
+      if (!storedTasks) return 0;
+      
+      const tasks = JSON.parse(storedTasks);
+      return tasks.filter(
+        (task: any) => task.relatedStartupId === startup.id && task.status !== 'completed'
+      ).length;
+    } catch (e) {
+      console.error('Error getting open tasks count:', e);
+      return 0;
+    }
+  };
+  
+  const openTasksCount = getOpenTasksCount();
+  
   // Priority colors
   const priorityColors = {
     low: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
@@ -71,6 +88,12 @@ const StartupCard: React.FC<StartupCardProps> = ({
             {startup.values.Startup || 'Unnamed Startup'}
           </CardTitle>
           <div className="flex items-center gap-1">
+            {openTasksCount > 0 && (
+              <Badge className="bg-primary text-primary-foreground" title="Open tasks">
+                <Clipboard className="h-3 w-3 mr-1" />
+                {openTasksCount}
+              </Badge>
+            )}
             <Badge 
               variant="outline" 
               className={`${priorityColors[startup.priority]} text-xs`}

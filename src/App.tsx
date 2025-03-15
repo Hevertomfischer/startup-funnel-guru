@@ -15,6 +15,7 @@ import Team from "./pages/Team";
 import Emails from "./pages/Emails";
 import Reports from "./pages/Reports";
 import Dashboard from "./pages/Dashboard";
+import Tasks from "./pages/Tasks";
 import { initializeWorkflowRules } from "./utils/workflow-utils";
 
 // Initialize workflow rules with mock data if none exist
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="board" element={<Board />} />
             <Route path="list" element={<ListView />} />
             <Route path="workflow" element={<WorkflowEditor />} />
+            <Route path="tasks" element={<Tasks />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />
             <Route path="team" element={<Team />} />
