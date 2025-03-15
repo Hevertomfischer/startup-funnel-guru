@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -330,6 +331,7 @@ const Tasks = () => {
                       <FormLabel>Assign To</FormLabel>
                       <Select
                         onValueChange={field.onChange}
+                        value={field.value}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -357,6 +359,7 @@ const Tasks = () => {
                       <FormLabel>Priority</FormLabel>
                       <Select
                         onValueChange={field.onChange}
+                        value={field.value}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -397,7 +400,8 @@ const Tasks = () => {
                       <FormLabel>Related Startup</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value || ""}
+                        defaultValue={field.value || ""}
                       >
                         <FormControl>
                           <SelectTrigger>
