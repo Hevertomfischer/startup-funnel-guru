@@ -28,6 +28,7 @@ interface BoardColumnProps {
   statuses: any[];
   users: any;
   onEditColumn?: () => void;
+  onCreateTask: (startup: any) => void;
 }
 
 const BoardColumn: React.FC<BoardColumnProps> = ({
@@ -51,7 +52,8 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   showCompactCards,
   statuses,
   users,
-  onEditColumn
+  onEditColumn,
+  onCreateTask
 }) => {
   // Filter startups to only include those in this column
   const columnStartups = startups || [];
@@ -172,6 +174,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
                 onClick={() => onCardClick(startup)}
                 onDelete={onDeleteStartup}
                 compact={showCompactCards}
+                onCreateTask={() => onCreateTask(startup)}
               />
             </div>
           );
