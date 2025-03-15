@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { useTeamMembersQuery } from '@/hooks/use-team-members';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Rule name is required'),
@@ -56,6 +57,7 @@ const ACTION_TYPES = [
   { value: 'updateField', label: 'Update Field' },
   { value: 'sendEmail', label: 'Send Email' },
   { value: 'createNotification', label: 'Create Notification' },
+  { value: 'createTask', label: 'Create Task' },
 ];
 
 const WorkflowRuleForm: React.FC<WorkflowRuleFormProps> = ({ rule, onSave, onCancel, statuses }) => {
@@ -66,6 +68,8 @@ const WorkflowRuleForm: React.FC<WorkflowRuleFormProps> = ({ rule, onSave, onCan
   const [actions, setActions] = useState<WorkflowAction[]>(
     rule?.actions || [{ type: 'createNotification', config: { message: '' } }]
   );
+
+  const { data: teamMembers = [] } = useTeamMembersQuery();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -433,6 +437,75 @@ const WorkflowRuleForm: React.FC<WorkflowRuleFormProps> = ({ rule, onSave, onCan
                     onChange={(e) => updateActionConfig(index, 'message', e.target.value)}
                     placeholder="Enter notification message"
                   />
+                </div>
+              )}
+
+              {action.type === 'createTask' && (
+                <div className="space-y-3">
+                  <div>
+                    <FormLabel>Task Title</FormLabel>
+                    <Input
+                      value={action.config.taskTitle || ''}
+                      onChange={(e) => updateActionConfig(index, 'taskTitle', e.target.value)}
+                      placeholder="Enter task title"
+                    />
+                  </div>
+                  
+                  <div>
+                    <FormLabel>Task Description</FormLabel>
+                    <Textarea
+                      value={action.config.taskDescription || ''}
+                      onChange={(e) => updateActionConfig(index, 'taskDescription', e.target.value)}
+                      placeholder="Enter task description"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <FormLabel>Assign To</FormLabel>
+                      <Select
+                        value={action.config.assignTo || ''}
+                        onValueChange={(value) => updateActionConfig(index, 'assignTo', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select team member" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teamMembers.map(member => (
+                            <SelectItem key={member.id} value={member.id}>
+                              {member.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <FormLabel>Priority</FormLabel>
+                      <Select
+                        value={action.config.taskPriority || 'medium'}
+                        onValueChange={(value) => updateActionConfig(index, 'taskPriority', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <FormLabel>Due Date</FormLabel>
+                    <Input
+                      type="date"
+                      value={action.config.taskDueDate || ''}
+                      onChange={(e) => updateActionConfig(index, 'taskDueDate', e.target.value)}
+                    />
+                  </div>
                 </div>
               )}
             </div>

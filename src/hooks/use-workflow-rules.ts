@@ -1,14 +1,25 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { WorkflowRule, WorkflowCondition, WorkflowAction, Status, Startup } from '@/types';
+import { WorkflowRule, WorkflowCondition, WorkflowAction, Status, Startup, Task } from '@/types';
 import { useUpdateStartupMutation } from './use-supabase-query';
 import { mockWorkflowRules, initializeWorkflowRules } from '@/utils/workflow-utils';
+import { useTeamMembersQuery } from './use-team-members';
 
 // Initialize rules with mock data if none exist
 const getWorkflowRules = (): WorkflowRule[] => {
   initializeWorkflowRules();
   return JSON.parse(localStorage.getItem('workflowRules') || '[]');
+};
+
+// Function to get tasks from local storage
+const getTasks = (): Task[] => {
+  return JSON.parse(localStorage.getItem('workflowTasks') || '[]');
+};
+
+// Function to save tasks to local storage
+const saveTasks = (tasks: Task[]): void => {
+  localStorage.setItem('workflowTasks', JSON.stringify(tasks));
 };
 
 export const saveWorkflowRules = (rules: WorkflowRule[]): void => {
@@ -17,12 +28,16 @@ export const saveWorkflowRules = (rules: WorkflowRule[]): void => {
 
 export const useWorkflowRules = () => {
   const [rules, setRules] = useState<WorkflowRule[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const { toast } = useToast();
   const updateStartupMutation = useUpdateStartupMutation();
+  const { data: teamMembers = [] } = useTeamMembersQuery();
 
   useEffect(() => {
     // Load rules from storage on initialization
     setRules(getWorkflowRules());
+    // Load tasks from storage
+    setTasks(getTasks());
   }, []);
 
   // Evaluate if a condition is met
@@ -70,6 +85,44 @@ export const useWorkflowRules = () => {
     }
   };
 
+  // Create a new task
+  const createTask = (
+    title: string,
+    description: string,
+    assignedTo: string,
+    priority: 'low' | 'medium' | 'high',
+    dueDate: string | undefined,
+    startupId: string
+  ): Task => {
+    const newTask: Task = {
+      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title,
+      description,
+      assignedTo,
+      priority: priority || 'medium',
+      status: 'pending',
+      relatedStartupId: startupId,
+      createdAt: new Date(),
+      dueDate: dueDate ? new Date(dueDate) : undefined
+    };
+
+    // Add task to tasks array
+    const updatedTasks = [...tasks, newTask];
+    setTasks(updatedTasks);
+    saveTasks(updatedTasks);
+
+    // Find team member name for notification
+    const assignedMember = teamMembers.find(member => member.id === assignedTo);
+
+    // Show notification
+    toast({
+      title: "Task Created",
+      description: `Task "${title}" assigned to ${assignedMember?.name || 'a team member'}`,
+    });
+
+    return newTask;
+  };
+
   // Execute actions when conditions are met
   const executeActions = async (
     actions: WorkflowAction[],
@@ -106,6 +159,18 @@ export const useWorkflowRules = () => {
             title: "Workflow Notification",
             description: action.config.message || 'Workflow rule triggered',
           });
+          break;
+        case 'createTask':
+          if (action.config.taskTitle && action.config.assignTo) {
+            createTask(
+              action.config.taskTitle,
+              action.config.taskDescription || '',
+              action.config.assignTo,
+              action.config.taskPriority || 'medium',
+              action.config.taskDueDate,
+              startup.id
+            );
+          }
           break;
       }
     }
@@ -160,6 +225,7 @@ export const useWorkflowRules = () => {
   return {
     rules,
     setRules,
+    tasks,
     processStartup,
     saveRules: (newRules: WorkflowRule[]) => {
       setRules(newRules);

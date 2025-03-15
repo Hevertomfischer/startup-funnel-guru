@@ -81,6 +81,30 @@ export const mockWorkflowRules: WorkflowRule[] = [
       }
     ],
     active: false
+  },
+  {
+    id: '4',
+    name: 'Create task when startup moves to Due Diligence',
+    conditions: [
+      {
+        fieldId: 'statusId',
+        operator: 'changed',
+        value: null
+      }
+    ],
+    actions: [
+      {
+        type: 'createTask',
+        config: {
+          taskTitle: 'Review startup financials',
+          taskDescription: 'Perform detailed financial analysis and prepare report',
+          assignTo: '', // This will be assigned in the UI
+          taskPriority: 'high',
+          taskDueDate: '' // Will be set in UI
+        }
+      }
+    ],
+    active: false
   }
 ];
 

@@ -74,14 +74,31 @@ export interface WorkflowCondition {
   value: any;
 }
 
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate?: Date;
+  assignedTo?: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  relatedStartupId?: string;
+  createdAt: Date;
+}
+
 export interface WorkflowAction {
-  type: 'updateField' | 'sendEmail' | 'createNotification';
+  type: 'updateField' | 'sendEmail' | 'createNotification' | 'createTask';
   config: {
     fieldId?: string;
     value?: any;
     emailTemplate?: string;
     emailTo?: string;
     message?: string;
+    taskTitle?: string;
+    taskDescription?: string;
+    taskDueDate?: string;
+    assignTo?: string;
+    taskPriority?: 'low' | 'medium' | 'high';
   };
 }
 

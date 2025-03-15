@@ -10,13 +10,15 @@ import { Label } from '@/components/ui/label';
 import { useWorkflowRules } from '@/hooks/use-workflow-rules';
 import { useToast } from '@/hooks/use-toast';
 import { useStatusesQuery } from '@/hooks/use-supabase-query';
+import { useTeamMembersQuery } from '@/hooks/use-team-members';
 import WorkflowRuleForm from '@/components/workflow/WorkflowRuleForm';
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
 
 const WorkflowEditor = () => {
-  const { rules, saveRules } = useWorkflowRules();
+  const { rules, saveRules, tasks } = useWorkflowRules();
   const { toast } = useToast();
   const { data: statuses = [] } = useStatusesQuery();
+  const { data: teamMembers = [] } = useTeamMembersQuery();
   
   const [editingRule, setEditingRule] = useState<WorkflowRule | undefined>(undefined);
   const [isCreating, setIsCreating] = useState(false);
@@ -109,6 +111,12 @@ const WorkflowEditor = () => {
     return operatorMap[operator] || operator;
   };
 
+  const getTeamMemberName = (id?: string) => {
+    if (!id) return '';
+    const member = teamMembers.find(m => m.id === id);
+    return member ? member.name : '';
+  };
+
   const getActionLabel = (action: any): string => {
     switch (action.type) {
       case 'updateField':
@@ -117,6 +125,8 @@ const WorkflowEditor = () => {
         return `Send email using "${action.config.emailTemplate}" template to ${action.config.emailTo}`;
       case 'createNotification':
         return `Create notification: "${action.config.message}"`;
+      case 'createTask':
+        return `Create task "${action.config.taskTitle}" assigned to ${getTeamMemberName(action.config.assignTo)}`;
       default:
         return 'Unknown action';
     }
@@ -142,6 +152,9 @@ const WorkflowEditor = () => {
             <p className="text-sm text-amber-800">
               Workflow rules run automatically when conditions are met. Test rules thoroughly before enabling them.
             </p>
+            <p className="text-sm text-amber-800 mt-1">
+              Task creation will assign tasks to team members when conditions are met. View and manage tasks in the Tasks page.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -156,6 +169,11 @@ const WorkflowEditor = () => {
                   <Badge variant={rule.active ? "default" : "outline"}>
                     {rule.active ? "Active" : "Inactive"}
                   </Badge>
+                  {rule.actions.some(action => action.type === 'createTask') && (
+                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
+                      Creates Tasks
+                    </Badge>
+                  )}
                 </div>
               </div>
               <div className="border-l flex items-center px-4">
