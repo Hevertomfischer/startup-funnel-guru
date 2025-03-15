@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Calendar, Clock, Link2, User, Trash2, Clipboard } from 'lucide-react';
+import { Calendar, Clock, Link2, User, Trash2, Clipboard, ListTodo } from 'lucide-react';
 import { Startup, Status } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -90,7 +91,7 @@ const StartupCard: React.FC<StartupCardProps> = ({
           <div className="flex items-center gap-1">
             {openTasksCount > 0 && (
               <Badge className="bg-primary text-primary-foreground" title="Open tasks">
-                <Clipboard className="h-3 w-3 mr-1" />
+                <ListTodo className="h-3 w-3 mr-1" />
                 {openTasksCount}
               </Badge>
             )}
