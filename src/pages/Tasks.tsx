@@ -99,6 +99,14 @@ const Tasks = () => {
     return startup ? (startup.values.Startup || 'Unnamed Startup') : null;
   };
 
+  // Convert formattedStartups to the format expected by TaskForm
+  const formattedStartupsForForm = formattedStartups.map(startup => ({
+    id: startup.id,
+    values: {
+      Startup: startup.values.Startup || 'Unnamed Startup'
+    }
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -141,7 +149,7 @@ const Tasks = () => {
             onSubmit={createTask}
             onCancel={() => setIsCreateDialogOpen(false)}
             teamMembers={teamMembers}
-            startups={formattedStartups}
+            startups={formattedStartupsForForm}
           />
         </DialogContent>
       </Dialog>
