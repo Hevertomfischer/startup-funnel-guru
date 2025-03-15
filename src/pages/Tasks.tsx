@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,7 +58,7 @@ const Tasks = () => {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { data: teamMembers = [] } = useTeamMembersQuery();
-  const { startups } = useStartupData();
+  const { formattedStartups } = useStartupData();
   
   const form = useForm<TaskFormValues>({
     defaultValues: {
@@ -73,12 +72,10 @@ const Tasks = () => {
   });
 
   useEffect(() => {
-    // Load tasks from localStorage
     const storedTasks = localStorage.getItem('workflowTasks');
     if (storedTasks) {
       try {
         const parsedTasks = JSON.parse(storedTasks);
-        // Convert string dates to Date objects
         const formattedTasks = parsedTasks.map((task: any) => ({
           ...task,
           createdAt: new Date(task.createdAt),
@@ -93,7 +90,6 @@ const Tasks = () => {
   }, []);
 
   useEffect(() => {
-    // Filter tasks based on current filter setting
     if (filterStatus === 'all') {
       setFilteredTasks(tasks);
     } else {
@@ -151,7 +147,7 @@ const Tasks = () => {
 
   const getStartupName = (id?: string) => {
     if (!id) return null;
-    const startup = startups.find(s => s.id === id);
+    const startup = formattedStartups.find(s => s.id === id);
     return startup ? (startup.values.Startup || 'Unnamed Startup') : null;
   };
 
@@ -292,7 +288,6 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* Create Task Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -411,7 +406,7 @@ const Tasks = () => {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="">None</SelectItem>
-                          {startups.map(startup => (
+                          {formattedStartups.map(startup => (
                             <SelectItem key={startup.id} value={startup.id}>
                               {startup.values.Startup || 'Unnamed Startup'}
                             </SelectItem>
