@@ -13,48 +13,25 @@ export function useStartupDeletion({ queryClient, toast }: UseStartupDeletionPar
   const deleteStartupMutation = useDeleteStartupMutation();
   
   // Handle startup deletion
-  const handleDeleteStartup = (startupId: string, getStartupById?: (id: string) => any) => {
-    let startup;
-    
-    if (getStartupById) {
-      startup = getStartupById(startupId);
-    }
-    
-    if (!startup) {
-      toast({
-        title: "Error",
-        description: "Startup not found",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Confirm deletion
-    if (confirm(`Are you sure you want to delete "${startup.name}"?`)) {
-      deleteStartupMutation.mutate(startupId, {
-        onSuccess: () => {
-          toast({
-            title: "Startup deleted",
-            description: `${startup.name} has been removed`
-          });
-          
-          // Invalidate queries to update the UI
-          if (startup.status_id) {
-            queryClient.invalidateQueries({ 
-              queryKey: ['startups', 'status', startup.status_id] 
-            });
-          }
-          queryClient.invalidateQueries({ queryKey: ['startups'] });
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Error",
-            description: `Failed to delete startup: ${(error as Error).message}`,
-            variant: "destructive"
-          });
-        }
-      });
-    }
+  const handleDeleteStartup = (startupId: string) => {
+    deleteStartupMutation.mutate(startupId, {
+      onSuccess: () => {
+        toast({
+          title: "Startup deleted",
+          description: "Startup has been removed"
+        });
+        
+        // Invalidate all startup queries to update the UI
+        queryClient.invalidateQueries({ queryKey: ['startups'] });
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Error",
+          description: `Failed to delete startup: ${(error as Error).message}`,
+          variant: "destructive"
+        });
+      }
+    });
   };
 
   return {
