@@ -101,10 +101,8 @@ export function useBoardState() {
     navigate('/tasks', { state: { createTask: true, startupId: startup.id } });
   }, [navigate]);
   
-  // Function to handle startup deletion - forwards the startupId to handleDeleteStartup
-  const handleStartupDeletion = useCallback((startupId: string) => {
-    handleDeleteStartup(startupId);
-  }, [handleDeleteStartup]);
+  // Function to handle startup deletion - now we're just directly using handleDeleteStartup 
+  // which should already accept the startup ID as a parameter
   
   return {
     // Board state
@@ -123,7 +121,7 @@ export function useBoardState() {
     handleDrop,
     handleDragEnd,
     draggingStartupId,
-    handleDeleteStartup: handleStartupDeletion, // Usar a função compatível
+    handleDeleteStartup, // Using the function directly now
     handleCreateTask,
     
     // Column drag handlers
