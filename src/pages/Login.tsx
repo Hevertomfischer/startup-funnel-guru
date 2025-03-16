@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [activeTab, setActiveTab] = useState('login');
   const [passwordsMatch, setPasswordsMatch] = useState(true);
+  const [showConfirmationInfo, setShowConfirmationInfo] = useState(false);
   
   const { signIn, signUp, user, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +27,12 @@ const Login = () => {
     // Redirect if user is already logged in
     if (user) {
       navigate('/dashboard');
+    }
+    
+    // Check URL parameters for confirmation error detection
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'email_not_confirmed') {
+      setShowConfirmationInfo(true);
     }
   }, [user, navigate]);
 
@@ -60,8 +68,32 @@ const Login = () => {
     
     setPasswordsMatch(true);
     await signUp(email, password);
+    // Show confirmation info after signup
+    setShowConfirmationInfo(true);
     // Switch to login tab after signup
     setActiveTab('login');
+  };
+
+  const handleResendConfirmation = async () => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Email enviado",
+        description: "Um novo email de confirmação foi enviado",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao reenviar email",
+        description: error.message || "Não foi possível reenviar o email de confirmação",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -71,6 +103,24 @@ const Login = () => {
           <h1 className="text-3xl font-bold">Startups Dashboard</h1>
           <p className="text-muted-foreground mt-2">Gerencie seus investimentos em startups</p>
         </div>
+        
+        {showConfirmationInfo && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex flex-col gap-2">
+              <span>Você precisa confirmar seu email antes de fazer login.</span>
+              <span>Verifique sua caixa de entrada e clique no link de confirmação.</span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleResendConfirmation}
+                disabled={!email}
+              >
+                Reenviar email de confirmação
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Card>
           <CardHeader>

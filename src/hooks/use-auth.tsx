@@ -94,7 +94,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email não confirmado",
+            description: "Por favor, verifique seu email e confirme sua conta antes de fazer login",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro de login",
+            description: error.message || "Falha na autenticação",
+            variant: "destructive",
+          });
+        }
+        throw error;
+      }
       
       toast({
         title: "Login bem-sucedido",
@@ -103,11 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       navigate('/dashboard');
     } catch (error: any) {
-      toast({
-        title: "Erro de login",
-        description: error.message || "Falha na autenticação",
-        variant: "destructive",
-      });
+      console.error('Sign in error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -194,6 +205,7 @@ export const useAuth = () => {
 export const useRequireAuth = (adminOnly = false) => {
   const { user, isLoading, isAdmin, profile } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isLoading) {
