@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -59,10 +58,8 @@ export function useBoardState() {
     setSearchTerm
   } = useBoardSearch();
   
-  // Get the startup deletion handler
-  const {
-    handleDeleteStartup
-  } = useStartupDeletion({
+  // Get the startup deletion handler - Fix the error by correctly using useStartupDeletion
+  const { handleDeleteStartup } = useStartupDeletion({
     queryClient,
     toast
   });
@@ -118,7 +115,7 @@ export function useBoardState() {
     handleDrop,
     handleDragEnd,
     draggingStartupId,
-    handleDeleteStartup, 
+    handleDeleteStartup, // Now properly passed from useStartupDeletion
     handleCreateTask,
     
     // Column drag handlers
