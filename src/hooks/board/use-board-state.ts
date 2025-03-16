@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -101,10 +100,8 @@ export function useBoardState() {
     navigate('/tasks', { state: { createTask: true, startupId: startup.id } });
   }, [navigate]);
   
-  // Modified function to be compatible with what's expected in BoardView
+  // Function to handle startup deletion - forwards the startupId to handleDeleteStartup
   const handleStartupDeletion = useCallback((startupId: string) => {
-    // We need to call handleDeleteStartup without the getStartupById parameter
-    // as expected by its signature in use-startup-deletion.ts
     handleDeleteStartup(startupId);
   }, [handleDeleteStartup]);
   
