@@ -51,6 +51,13 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
   onColumnDrop,
   onCreateTask
 }) => {
+  // Log para depuração
+  console.log('BoardContainer props:', { 
+    columnCount: columns.length, 
+    statusCount: statuses.length,
+    columnQueriesKeys: Object.keys(columnQueries)
+  });
+
   const scrollContainer = (direction: 'left' | 'right') => {
     const container = document.getElementById('board-container');
     if (container) {
@@ -85,7 +92,16 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
               data: []
             };
             
+            // Certifique-se de que a data é um array
             const startups = Array.isArray(query.data) ? query.data : [];
+            
+            // Log para depuração
+            console.log(`Column ${column.id} (${column.title}):`, {
+              hasData: !!query.data,
+              startupCount: startups.length,
+              isLoading: query.isLoading,
+              isError: query.isError
+            });
             
             return (
               <div 

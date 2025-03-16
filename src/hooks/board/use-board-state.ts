@@ -123,7 +123,7 @@ export function useBoardState() {
     handleDrop,
     handleDragEnd,
     draggingStartupId,
-    handleDeleteStartup: handleStartupDeletion, // Use compatible function
+    handleDeleteStartup: handleStartupDeletion, // Usar a função compatível
     handleCreateTask,
     
     // Column drag handlers

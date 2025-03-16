@@ -21,7 +21,12 @@ export function useBoardColumns() {
   // Update columns when statuses are loaded
   useEffect(() => {
     if (statuses.length > 0) {
-      const newColumns = statuses.map(status => ({
+      // Sort statuses by position
+      const sortedStatuses = [...statuses].sort((a, b) => 
+        (a.position ?? 0) - (b.position ?? 0)
+      );
+      
+      const newColumns = sortedStatuses.map(status => ({
         id: status.id,
         title: status.name,
         startupIds: [],

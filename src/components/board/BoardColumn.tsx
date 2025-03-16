@@ -55,8 +55,19 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   onEditColumn,
   onCreateTask
 }) => {
-  // Filter startups to only include those in this column
-  const columnStartups = startups || [];
+  // Certifique-se de que startups é um array e não é nulo
+  const safeStartups = Array.isArray(startups) ? startups : [];
+  
+  // Certifique-se de que startupIds é um array e não é nulo
+  const safeStartupIds = Array.isArray(startupIds) ? startupIds : [];
+  
+  // Console log para debug
+  console.log(`BoardColumn ${id} (${title}):`, { 
+    startupCount: safeStartups.length,
+    startupIdCount: safeStartupIds.length,
+    isLoading,
+    isError
+  });
   
   // Map startup data to the format expected by StartupCard
   const mapStartupToCardFormat = (startup: any): Startup => ({
@@ -100,7 +111,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
           />
           <h3 className="font-medium">{title}</h3>
           <div className="flex items-center justify-center rounded-full bg-muted w-6 h-6 text-xs font-medium">
-            {startupIds?.length || 0}
+            {safeStartupIds?.length || 0}
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -149,22 +160,20 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
           </div>
         )}
         
-        {!isLoading && !isError && startupIds && startupIds.length > 0 && startupIds.map(startupId => {
-          const startup = columnStartups.find((s: any) => s.id === startupId);
-          
+        {!isLoading && !isError && safeStartups.length > 0 && safeStartups.map(startup => {
           if (!startup) return null;
           
           const cardStartup = mapStartupToCardFormat(startup);
           
           return (
             <div
-              key={startupId}
+              key={startup.id}
               draggable
-              onDragStart={(e) => onDragStart(e, startupId)}
+              onDragStart={(e) => onDragStart(e, startup.id)}
               onDragEnd={onDragEnd}
               className={cn(
                 "transition-opacity duration-200",
-                draggingStartupId === startupId ? "opacity-50" : "opacity-100"
+                draggingStartupId === startup.id ? "opacity-50" : "opacity-100"
               )}
             >
               <StartupCard 
@@ -180,7 +189,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
           );
         })}
         
-        {!isLoading && !isError && (!startupIds || startupIds.length === 0) && (
+        {!isLoading && !isError && safeStartups.length === 0 && (
           <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
             Drop startups here
           </div>

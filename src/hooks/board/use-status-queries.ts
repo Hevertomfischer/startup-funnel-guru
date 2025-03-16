@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useStartupsByStatus } from '../use-startups-by-status';
 
 export const useStatusQueries = ({ statuses, columns }: { statuses: any[], columns: any[] }) => {
@@ -59,6 +59,30 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
     
     return result;
   }, [queryResults]);
+  
+  // Update the startupIds in columns based on query data
+  useEffect(() => {
+    if (columns.length > 0) {
+      // Only update if we have columns and data
+      const updatedColumns = columns.map(column => {
+        const query = queries[column.id];
+        if (query && query.data) {
+          // Extract IDs from the query data
+          const startupIds = query.data.map((startup: any) => startup.id);
+          return {
+            ...column,
+            startupIds: startupIds
+          };
+        }
+        return column;
+      });
+
+      // Update columns with startupIds
+      if (updatedColumns.some((col, i) => col.startupIds.length !== columns[i].startupIds.length)) {
+        console.log('Updating columns with startupIds', updatedColumns);
+      }
+    }
+  }, [columns, queries]);
   
   // Check if any real query (not placeholder) is loading
   const isLoading = useMemo(() => {
