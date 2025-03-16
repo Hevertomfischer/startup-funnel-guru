@@ -101,9 +101,6 @@ export function useBoardState() {
     navigate('/tasks', { state: { createTask: true, startupId: startup.id } });
   }, [navigate]);
   
-  // Function to handle startup deletion - now we're just directly using handleDeleteStartup 
-  // which should already accept the startup ID as a parameter
-  
   return {
     // Board state
     columns,
@@ -121,7 +118,7 @@ export function useBoardState() {
     handleDrop,
     handleDragEnd,
     draggingStartupId,
-    handleDeleteStartup, // Using the function directly now
+    handleDeleteStartup, 
     handleCreateTask,
     
     // Column drag handlers
