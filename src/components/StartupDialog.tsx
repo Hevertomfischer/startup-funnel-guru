@@ -38,8 +38,28 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
   
   const handleFormSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
+    // Prepare data for Supabase
+    const startupData = {
+      // Map form values to database schema
+      name: data.values.Startup,
+      status_id: data.statusId,
+      priority: data.priority,
+      assigned_to: data.assignedTo,
+      due_date: data.dueDate,
+      website: data.values["Site da Startup"],
+      problem_solved: data.values["Problema que Resolve"],
+      sector: data.values.Setor,
+      business_model: data.values["Modelo de Negócio"],
+      mrr: data.values.MRR,
+      client_count: data.values["Quantidade de Clientes"],
+      // If it's an update, include the id
+      ...(startup?.id && { id: startup.id }),
+      // For updates, track previous status
+      ...(startup?.status_id && { old_status_id: startup.status_id })
+    };
+    
     try {
-      onSubmit(data);
+      onSubmit(startupData);
     } catch (error) {
       console.error('Error in startup form submission:', error);
     }

@@ -17,6 +17,7 @@ import { FormActions } from './FormActions';
 import { FormNavigation } from './FormNavigation';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Status } from '@/types';
+import { toast } from 'sonner';
 
 interface StartupFormProps {
   startup?: any;
@@ -33,16 +34,39 @@ const StartupForm: React.FC<StartupFormProps> = ({
   onCancel,
   isSubmitting,
 }) => {
-  // Default values for the form
-  const defaultValues = {
-    priority: startup?.priority || 'medium',
-    statusId: startup?.statusId || '',
-    dueDate: startup?.dueDate || '',
-    assignedTo: startup?.assignedTo || '',
-    values: {
-      ...startup?.values || {}
-    },
+  console.log('StartupForm rendered with startup:', startup?.id);
+  
+  // Map the database values to our form structure
+  const mapStartupToFormValues = (startup: any): StartupFormValues => {
+    if (!startup) return {
+      priority: 'medium',
+      statusId: statuses[0]?.id || '',
+      values: {}
+    };
+    
+    return {
+      priority: startup.priority || 'medium',
+      statusId: startup.status_id || statuses[0]?.id || '',
+      dueDate: startup.due_date || '',
+      assignedTo: startup.assigned_to || '',
+      values: {
+        Startup: startup.name || '',
+        'Site da Startup': startup.website || '',
+        'Problema que Resolve': startup.problem_solved || '',
+        Setor: startup.sector || '',
+        'Modelo de Negócio': startup.business_model || '',
+        MRR: startup.mrr || '',
+        'Quantidade de Clientes': startup.client_count || '',
+        // Add other fields as needed
+        ...(startup.values || {})
+      },
+    };
   };
+  
+  // Default values for the form
+  const defaultValues = mapStartupToFormValues(startup);
+  
+  console.log('StartupForm defaultValues:', defaultValues);
 
   const form = useForm<StartupFormValues>({
     resolver: zodResolver(startupFormSchema),
@@ -52,6 +76,15 @@ const StartupForm: React.FC<StartupFormProps> = ({
 
   const [activeTab, setActiveTab] = useState('basic');
   const [progress, setProgress] = useState(0);
+
+  // Reset form when startup changes
+  useEffect(() => {
+    if (startup) {
+      const mappedValues = mapStartupToFormValues(startup);
+      console.log('Resetting form with values:', mappedValues);
+      form.reset(mappedValues);
+    }
+  }, [startup, form, statuses]);
 
   // Calculate form completion progress
   useEffect(() => {
@@ -98,6 +131,13 @@ const StartupForm: React.FC<StartupFormProps> = ({
 
   const handleSubmit = form.handleSubmit((data) => {
     console.log('Form submit data:', data);
+    
+    // Validação básica
+    if (!data.values.Startup) {
+      toast.error('Nome da startup é obrigatório');
+      return;
+    }
+    
     onSubmit(data);
   });
 
