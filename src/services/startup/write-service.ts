@@ -64,11 +64,13 @@ export const updateStartup = async (
   id: string,
   startup: Partial<Startup> & { 
     attachments?: any[],
-    old_status_id?: string // Add explicit type for old_status_id
+    old_status_id?: string
   }
 ): Promise<Startup | null> => {
   try {
     console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
+    
+    // Extract attachments and old_status_id from the input data
     const { attachments, old_status_id, ...startupData } = startup;
     
     // Ensure status_id is not null or undefined before updating
@@ -113,6 +115,7 @@ export const updateStartup = async (
     
     console.log('Prepared data for Supabase update:', preparedData);
     
+    // Update the startup in the database
     const { data, error } = await supabase
       .from('startups')
       .update(preparedData)
@@ -127,6 +130,7 @@ export const updateStartup = async (
     
     console.log('Startup updated in Supabase:', data);
     
+    // Handle attachments if provided
     if (attachments && attachments.length > 0) {
       for (const file of attachments) {
         if (!file.id) {

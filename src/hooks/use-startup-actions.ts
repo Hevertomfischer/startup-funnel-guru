@@ -49,11 +49,11 @@ export function useStartupActions() {
           });
         }
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("Error creating startup:", error);
         toast({
           title: "Error",
-          description: `Failed to create startup: ${error.message}`,
+          description: `Failed to create startup: ${error.message || 'Unknown error'}`,
           variant: "destructive"
         });
       }
@@ -99,11 +99,11 @@ export function useStartupActions() {
             });
           }
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Error updating startup:", error);
           toast({
             title: "Error",
-            description: `Failed to update startup: ${error.message}`,
+            description: `Failed to update startup: ${error.message || 'Unknown error'}`,
             variant: "destructive"
           });
         }
