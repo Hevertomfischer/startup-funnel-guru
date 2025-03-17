@@ -36,7 +36,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initializeAuth = async () => {
       setIsLoading(true);
       try {
+        console.log('Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Auth session:', session?.user?.email || 'No session');
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -106,25 +108,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         if (error.message.includes('Email not confirmed')) {
-          toast({
-            title: "Email não confirmado",
-            description: "Por favor, verifique seu email e confirme sua conta antes de fazer login",
-            variant: "destructive",
+          toast.error("Email não confirmado", {
+            description: "Por favor, verifique seu email e confirme sua conta antes de fazer login"
           });
         } else {
-          toast({
-            title: "Erro de login",
-            description: error.message || "Falha na autenticação",
-            variant: "destructive",
+          toast.error("Erro de login", {
+            description: error.message || "Falha na autenticação"
           });
         }
         throw error;
       }
       
       if (data.user) {
-        toast({
-          title: "Login bem-sucedido",
-          description: "Você foi autenticado com sucesso",
+        toast.success("Login bem-sucedido", {
+          description: "Você foi autenticado com sucesso"
         });
         
         navigate('/dashboard');
@@ -148,15 +145,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
       
-      toast({
-        title: "Registro bem-sucedido",
-        description: "Verifique seu email para confirmar o cadastro",
+      toast.success("Registro bem-sucedido", {
+        description: "Verifique seu email para confirmar o cadastro"
       });
     } catch (error: any) {
-      toast({
-        title: "Erro no registro",
-        description: error.message || "Falha no registro",
-        variant: "destructive",
+      toast.error("Erro no registro", {
+        description: error.message || "Falha no registro"
       });
       throw error;
     } finally {
@@ -170,15 +164,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true);
       await supabase.auth.signOut();
       navigate('/login');
-      toast({
-        title: "Logout realizado",
-        description: "Você saiu da sua conta",
+      toast.success("Logout realizado", {
+        description: "Você saiu da sua conta"
       });
     } catch (error: any) {
-      toast({
-        title: "Erro ao sair",
-        description: error.message || "Falha ao desconectar",
-        variant: "destructive",
+      toast.error("Erro ao sair", {
+        description: error.message || "Falha ao desconectar"
       });
     } finally {
       setIsLoading(false);

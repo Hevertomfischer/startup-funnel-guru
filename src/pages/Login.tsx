@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -21,16 +22,20 @@ export default function Login() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (user) {
+    console.log('Login page - Auth state:', { user: !!user, isLoading });
+    
+    if (user && !isLoading) {
+      console.log('User already authenticated, redirecting to dashboard');
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoginError(null);
       setEmailNotConfirmed(false);
+      console.log('Attempting login with:', email);
       await signIn(email, password);
     } catch (error: any) {
       console.error('Login error:', error);
@@ -62,6 +67,25 @@ export default function Login() {
       setIsResending(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="text-center">
+          <Skeleton className="h-12 w-12 rounded-full mx-auto mb-4" />
+          <Skeleton className="h-4 w-48 mx-auto mb-2" />
+          <Skeleton className="h-3 w-32 mx-auto" />
+          <p className="text-muted-foreground mt-4">Verificando autenticação...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If already authenticated, return null (will redirect in useEffect)
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -151,4 +175,4 @@ export default function Login() {
       </div>
     </div>
   );
-}
+};

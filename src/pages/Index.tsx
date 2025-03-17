@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import ViewToggle from '@/components/ViewToggle';
 import { ViewMode } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('board');
@@ -21,19 +22,30 @@ const Index = () => {
   };
 
   useEffect(() => {
-    // Redirect to login if not authenticated
+    // Redirect to login if not authenticated and not currently loading
     if (!isLoading && !user) {
+      console.log('No user detected, redirecting to login page');
       navigate('/login');
     }
   }, [user, isLoading, navigate]);
 
-  // Show loading or redirect to login if not authenticated
+  // Show loading state while checking authentication
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center">Carregando...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center flex-col gap-4">
+        <div className="text-center">
+          <Skeleton className="h-12 w-12 rounded-full mx-auto mb-4" />
+          <Skeleton className="h-4 w-48 mx-auto mb-2" />
+          <Skeleton className="h-3 w-32 mx-auto" />
+        </div>
+        <p className="text-muted-foreground">Carregando aplicação...</p>
+      </div>
+    );
   }
 
+  // If not loading and no user, return null (will redirect in useEffect)
   if (!user) {
-    return null; // Will redirect in the useEffect
+    return null;
   }
 
   return (
