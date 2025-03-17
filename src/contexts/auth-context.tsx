@@ -2,10 +2,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { Session, User } from '@supabase/supabase-js';
 import { Profile } from '@/types/auth';
-import { toast } from 'sonner';
+import { signIn, signUp, signOut, fetchProfile } from '@/services/auth-service';
+import { useProfile } from '@/hooks/use-profile';
 
 // Define the auth context type
 type AuthContextType = {
@@ -26,29 +26,30 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  const { toast: toastLegacy } = useToast();
+  
+  // Use the profile hook
+  const { profile, isLoading: profileLoading, isAdmin } = useProfile(user);
+  
+  const isLoading = authLoading || profileLoading;
 
   useEffect(() => {
     // Get initial session
     const initializeAuth = async () => {
-      setIsLoading(true);
+      setAuthLoading(true);
       try {
         console.log('Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
         console.log('Auth session:', session?.user?.email || 'No session');
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        }
       } catch (error) {
         console.error('Error initializing auth:', error);
       } finally {
-        setIsLoading(false);
+        setAuthLoading(false);
+        setInitialLoadComplete(true);
       }
     };
 
@@ -60,14 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-        
-        setIsLoading(false);
+        setAuthLoading(false);
       }
     );
 
@@ -77,107 +71,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Fetch user profile from our profiles table
-  const fetchProfile = async (userId: string) => {
+  // Auth functions
+  const handleSignIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return;
-      }
-
-      setProfile(data as Profile);
-    } catch (error) {
-      console.error('Unexpected error fetching profile:', error);
-    }
-  };
-
-  // Sign in with email and password
-  const signIn = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        if (error.message.includes('Email not confirmed')) {
-          toast.error("Email não confirmado", {
-            description: "Por favor, verifique seu email e confirme sua conta antes de fazer login"
-          });
-        } else {
-          toast.error("Erro de login", {
-            description: error.message || "Falha na autenticação"
-          });
-        }
-        throw error;
-      }
-      
-      if (data.user) {
-        toast.success("Login bem-sucedido", {
-          description: "Você foi autenticado com sucesso"
-        });
-        
+      setAuthLoading(true);
+      const { data, error } = await signIn(email, password);
+      if (error) throw error;
+      if (data?.user) {
         navigate('/dashboard');
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
       throw error;
     } finally {
-      setIsLoading(false);
+      setAuthLoading(false);
     }
   };
 
-  // Sign up with email and password
-  const signUp = async (email: string, password: string) => {
+  const handleSignUp = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
+      setAuthLoading(true);
+      const { error } = await signUp(email, password);
       if (error) throw error;
-      
-      toast.success("Registro bem-sucedido", {
-        description: "Verifique seu email para confirmar o cadastro"
-      });
     } catch (error: any) {
-      toast.error("Erro no registro", {
-        description: error.message || "Falha no registro"
-      });
       throw error;
     } finally {
-      setIsLoading(false);
+      setAuthLoading(false);
     }
   };
 
-  // Sign out
-  const signOut = async () => {
+  const handleSignOut = async () => {
     try {
-      setIsLoading(true);
-      await supabase.auth.signOut();
+      setAuthLoading(true);
+      const { error } = await signOut();
+      if (error) throw error;
       navigate('/login');
-      toast.success("Logout realizado", {
-        description: "Você saiu da sua conta"
-      });
     } catch (error: any) {
-      toast.error("Erro ao sair", {
-        description: error.message || "Falha ao desconectar"
-      });
+      console.error('Sign out error:', error);
     } finally {
-      setIsLoading(false);
+      setAuthLoading(false);
     }
   };
-
-  // Determine if user is admin
-  const isAdmin = profile?.role === 'admin';
 
   return (
     <AuthContext.Provider
@@ -187,9 +121,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         profile,
         isLoading,
         isAdmin,
-        signIn,
-        signUp,
-        signOut,
+        signIn: handleSignIn,
+        signUp: handleSignUp,
+        signOut: handleSignOut,
       }}
     >
       {children}
