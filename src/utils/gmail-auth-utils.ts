@@ -62,7 +62,7 @@ export const openAuthPopupWindow = (authUrl: string): Window | null => {
   const left = window.screenX + (window.outerWidth - width) / 2;
   const top = window.screenY + (window.outerHeight - height) / 2;
 
-  console.log('Opening auth popup window');
+  console.log('Opening auth popup window for URL:', authUrl);
   
   const popup = window.open(
     authUrl,
@@ -73,10 +73,15 @@ export const openAuthPopupWindow = (authUrl: string): Window | null => {
   if (!popup || popup.closed || typeof popup.closed === 'undefined') {
     // Popup was blocked, try direct navigation
     console.log('Popup blocked, redirecting directly');
-    window.location.href = authUrl;
     toast.info('Abrindo janela de autenticação do Gmail', {
       description: 'Se não aparecer, verifique se os pop-ups estão permitidos neste site.'
     });
+    
+    // Wait a moment then navigate to the auth URL
+    setTimeout(() => {
+      window.location.href = authUrl;
+    }, 1000);
+    
     return null;
   }
   

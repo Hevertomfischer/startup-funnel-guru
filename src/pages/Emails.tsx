@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useGmailAuth } from '@/hooks/use-gmail-auth';
@@ -44,12 +45,28 @@ const Emails = () => {
     error: authError,
     authStage,
     startGmailAuth, 
-    disconnect 
+    disconnect,
+    checkUrlForTokens 
   } = useGmailAuth();
 
   // Track auth attempts for debugging
   const [authAttempts, setAuthAttempts] = useState(0);
   const [lastAuthTimestamp, setLastAuthTimestamp] = useState<string | null>(null);
+
+  // Check for tokens in URL on page load
+  useEffect(() => {
+    // Check if there are tokens in the URL (this happens after redirect from Google)
+    const hasTokensInUrl = window.location.search.includes('access_token') || 
+                           window.location.search.includes('refresh_token');
+    
+    if (hasTokensInUrl) {
+      console.log('Tokens detected in URL, processing...');
+      const success = checkUrlForTokens();
+      if (success) {
+        toast.success('Gmail conectado com sucesso!');
+      }
+    }
+  }, []);
 
   // Handle auth attempt tracking
   const handleAuthStart = () => {
@@ -76,10 +93,10 @@ const Emails = () => {
   
   const handleSendTemplate = (template: EmailTemplate) => {
     if (!isAuthenticated) {
-      toast.error('Gmail authentication required', {
-        description: 'Please connect your Gmail account first',
+      toast.error('Autenticação com Gmail necessária', {
+        description: 'Por favor, conecte sua conta do Gmail primeiro',
         action: {
-          label: 'Connect',
+          label: 'Conectar',
           onClick: handleAuthStart
         }
       });
@@ -107,30 +124,30 @@ const Emails = () => {
     return (
       <Alert variant={authError ? "destructive" : "default"} className="mb-4">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Gmail Authentication Status</AlertTitle>
+        <AlertTitle>Status da Autenticação Gmail</AlertTitle>
         <AlertDescription>
           <div className="space-y-2 mt-2">
-            <div><strong>Stage:</strong> {authStage || 'not_started'}</div>
+            <div><strong>Estágio:</strong> {authStage || 'não_iniciado'}</div>
             {authError && (
               <div>
-                <strong>Error:</strong> {
+                <strong>Erro:</strong> {
                   typeof authError === 'object' && authError !== null && 'message' in authError 
                     ? authError.message 
                     : String(authError)
                 }
               </div>
             )}
-            <div><strong>Auth attempts:</strong> {authAttempts}</div>
-            {lastAuthTimestamp && <div><strong>Last attempt:</strong> {new Date(lastAuthTimestamp).toLocaleString()}</div>}
+            <div><strong>Tentativas de autenticação:</strong> {authAttempts}</div>
+            {lastAuthTimestamp && <div><strong>Última tentativa:</strong> {new Date(lastAuthTimestamp).toLocaleString()}</div>}
             <div className="flex gap-2 mt-2">
               <Badge variant={isAuthenticated ? "default" : "outline"}>
-                {isAuthenticated ? "Authenticated" : "Not Authenticated"}
+                {isAuthenticated ? "Autenticado" : "Não Autenticado"}
               </Badge>
               <Badge variant={isAuthLoading ? "default" : "outline"}>
-                {isAuthLoading ? "Loading..." : "Idle"}
+                {isAuthLoading ? "Carregando..." : "Pronto"}
               </Badge>
               <Badge variant={accessToken ? "default" : "outline"}>
-                {accessToken ? "Token Present" : "No Token"}
+                {accessToken ? "Token Presente" : "Sem Token"}
               </Badge>
             </div>
           </div>

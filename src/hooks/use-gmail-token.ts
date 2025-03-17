@@ -28,6 +28,12 @@ export const useGmailToken = () => {
     newRefreshToken: string, 
     expiresInSeconds: string | number
   ) => {
+    console.log('Setting tokens from external source:', {
+      accessTokenLength: newAccessToken.length,
+      refreshTokenLength: newRefreshToken.length,
+      expiresIn: expiresInSeconds
+    });
+    
     setAccessToken(newAccessToken);
     setRefreshToken(newRefreshToken);
     
@@ -44,13 +50,23 @@ export const useGmailToken = () => {
 
   // Refresh the access token using the refresh token
   const refreshAccessToken = async () => {
-    if (!refreshToken) return false;
+    if (!refreshToken) {
+      console.log('No refresh token available, cannot refresh');
+      return false;
+    }
     
     try {
       setIsLoading(true);
       setTokenStatus("refreshing_token");
       
-      const { access_token, expires_in } = await refreshGmailToken(refreshToken);
+      console.log('Refreshing token with refresh token length:', refreshToken.length);
+      const response = await refreshGmailToken(refreshToken);
+      
+      if (!response || !response.access_token) {
+        throw new Error('Resposta inválida ao atualizar token');
+      }
+      
+      const { access_token, expires_in } = response;
       
       console.log('Token refreshed, new access token length:', access_token.length);
       setAccessToken(access_token);
@@ -70,12 +86,19 @@ export const useGmailToken = () => {
       setError(error);
       setTokenStatus("refresh_error");
       
-      // Clear tokens if refresh fails
-      clearAllTokens();
-      
-      toast.error('Failed to refresh Gmail authentication', {
-        description: 'Please reconnect your Gmail account'
-      });
+      // Clear tokens if refresh fails due to invalid grant
+      if (error.message && error.message.includes('invalid_grant')) {
+        console.log('Invalid grant error, clearing tokens');
+        clearAllTokens();
+        
+        toast.error('Sessão do Gmail expirada', {
+          description: 'Por favor, reconecte sua conta Gmail'
+        });
+      } else {
+        toast.error('Falha ao atualizar autenticação do Gmail', {
+          description: 'Por favor, reconecte sua conta Gmail'
+        });
+      }
       
       return false;
     } finally {
@@ -97,7 +120,10 @@ export const useGmailToken = () => {
   // Initially check token validation and refresh when needed
   useEffect(() => {
     const checkAndRefreshToken = async () => {
-      if (!refreshToken) return;
+      if (!refreshToken) {
+        console.log('No refresh token available, skipping token check');
+        return;
+      }
       
       console.log('Gmail Auth - Checking token expiration:');
       console.log('Current time:', new Date(Date.now()).toISOString());
@@ -106,14 +132,17 @@ export const useGmailToken = () => {
       console.log('Access token exists:', !!accessToken);
       
       if (isTokenExpiredOrExpiring(expiresAt) || !accessToken) {
+        console.log('Token expired or missing, refreshing...');
         await refreshAccessToken();
+      } else {
+        console.log('Token is still valid, no refresh needed');
       }
     };
 
     checkAndRefreshToken();
     
-    // Set up periodic token check
-    const interval = setInterval(checkAndRefreshToken, 60 * 1000); // Check every minute
+    // Set up periodic token check every 5 minutes
+    const interval = setInterval(checkAndRefreshToken, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [refreshToken, expiresAt, accessToken]);
