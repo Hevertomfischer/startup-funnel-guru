@@ -22,7 +22,7 @@ export const getStartupHistory = async (startupId: string) => {
 // Buscar histórico de status de uma startup
 export const getStartupStatusHistory = async (startupId: string) => {
   try {
-    // Buscar histórico de status com nome do status
+    // Buscar histórico de status com nome do status, especificando as colunas para evitar ambiguidade
     const { data, error } = await supabase
       .from('startup_status_history')
       .select(`
@@ -33,8 +33,8 @@ export const getStartupStatusHistory = async (startupId: string) => {
         entered_at,
         exited_at,
         duration_seconds,
-        statuses:status_id(name, color),
-        previous_statuses:previous_status_id(name, color)
+        statuses!status_id(name, color),
+        previous_statuses:statuses!previous_status_id(name, color)
       `)
       .eq('startup_id', startupId)
       .order('entered_at', { ascending: false });
@@ -55,7 +55,7 @@ export const getTimeInEachColumn = async (startupId: string) => {
       .from('startup_status_history')
       .select(`
         status_id,
-        statuses:status_id(name, color)
+        statuses!status_id(name, color)
       `)
       .eq('startup_id', startupId)
       .order('entered_at', { ascending: true });
