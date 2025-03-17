@@ -5,9 +5,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTabs,
+  DialogTabsContent,
+  DialogTabsList,
+  DialogTabsTrigger
 } from '@/components/ui/dialog';
 import StartupForm from './StartupForm';
 import { Status } from '@/types';
+import StartupHistoryTab from './startup-history/StartupHistoryTab';
 
 interface StartupDialogProps {
   open: boolean;
@@ -100,19 +105,46 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
     }
   };
   
+  // Determine if we should show the history tab (only for existing startups)
+  const showHistoryTab = startup?.id ? true : false;
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <StartupForm
-          startup={startup}
-          statuses={statuses}
-          onSubmit={handleFormSubmit}
-          onCancel={() => onOpenChange(false)}
-          isSubmitting={isSubmitting}
-        />
+        
+        {showHistoryTab ? (
+          <DialogTabs defaultValue="form">
+            <DialogTabsList className="grid grid-cols-2">
+              <DialogTabsTrigger value="form">Formulário</DialogTabsTrigger>
+              <DialogTabsTrigger value="history">Histórico</DialogTabsTrigger>
+            </DialogTabsList>
+            
+            <DialogTabsContent value="form">
+              <StartupForm
+                startup={startup}
+                statuses={statuses}
+                onSubmit={handleFormSubmit}
+                onCancel={() => onOpenChange(false)}
+                isSubmitting={isSubmitting}
+              />
+            </DialogTabsContent>
+            
+            <DialogTabsContent value="history">
+              <StartupHistoryTab startupId={startup.id} />
+            </DialogTabsContent>
+          </DialogTabs>
+        ) : (
+          <StartupForm
+            startup={startup}
+            statuses={statuses}
+            onSubmit={handleFormSubmit}
+            onCancel={() => onOpenChange(false)}
+            isSubmitting={isSubmitting}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

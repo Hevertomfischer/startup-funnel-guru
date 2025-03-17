@@ -166,6 +166,96 @@ export type Database = {
           },
         ]
       }
+      startup_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          startup_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          startup_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          startup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_history_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_status_history: {
+        Row: {
+          duration_seconds: number | null
+          entered_at: string
+          exited_at: string | null
+          id: string
+          previous_status_id: string | null
+          startup_id: string
+          status_id: string
+        }
+        Insert: {
+          duration_seconds?: number | null
+          entered_at?: string
+          exited_at?: string | null
+          id?: string
+          previous_status_id?: string | null
+          startup_id: string
+          status_id: string
+        }
+        Update: {
+          duration_seconds?: number | null
+          entered_at?: string
+          exited_at?: string | null
+          id?: string
+          previous_status_id?: string | null
+          startup_id?: string
+          status_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_status_history_previous_status_id_fkey"
+            columns: ["previous_status_id"]
+            isOneToOne: false
+            referencedRelation: "statuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_status_history_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_status_history_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       startups: {
         Row: {
           accumulated_revenue_current_year: number | null
