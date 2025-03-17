@@ -64,8 +64,8 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       business_model: data.values["Modelo de Negócio"] || null,
       
       // Ensure numeric fields are properly converted
-      mrr: data.values.MRR ? Number(data.values.MRR) : null,
-      client_count: data.values["Quantidade de Clientes"] ? Number(data.values["Quantidade de Clientes"]) : null,
+      mrr: data.values.MRR !== undefined ? Number(data.values.MRR) : null,
+      client_count: data.values["Quantidade de Clientes"] !== undefined ? Number(data.values["Quantidade de Clientes"]) : null,
       
       // New fields mapped from form to database
       ceo_name: data.values["Nome do CEO"] || null,
@@ -85,13 +85,13 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       attention_points: data.values["Pontos de Atenção"] || null,
       scangels_value_add: data.values["Como a SCAngels pode agregar valor na Startup"] || null,
       no_investment_reason: data.values["Motivo Não Investimento"] || null,
-      accumulated_revenue_current_year: data.values["Receita Acumulada no Ano corrente"] || null,
-      total_revenue_last_year: data.values["Receita Total do último Ano"] || null,
-      total_revenue_previous_year: data.values["Receita total do penúltimo Ano"] || null,
-      partner_count: data.values["Quantidade de Sócios"] || null,
-      tam: data.values.TAM || null,
-      sam: data.values.SAM || null,
-      som: data.values.SOM || null,
+      accumulated_revenue_current_year: data.values["Receita Acumulada no Ano corrente"] !== undefined ? Number(data.values["Receita Acumulada no Ano corrente"]) : null,
+      total_revenue_last_year: data.values["Receita Total do último Ano"] !== undefined ? Number(data.values["Receita Total do último Ano"]) : null,
+      total_revenue_previous_year: data.values["Receita total do penúltimo Ano"] !== undefined ? Number(data.values["Receita total do penúltimo Ano"]) : null,
+      partner_count: data.values["Quantidade de Sócios"] !== undefined ? Number(data.values["Quantidade de Sócios"]) : null,
+      tam: data.values.TAM !== undefined ? Number(data.values.TAM) : null,
+      sam: data.values.SAM !== undefined ? Number(data.values.SAM) : null,
+      som: data.values.SOM !== undefined ? Number(data.values.SOM) : null,
       origin_lead: data.values["Origem Lead"] || null,
       referred_by: data.values["Quem Indicou"] || null,
       observations: data.values["Observações"] || null,
@@ -99,7 +99,7 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       // If it's an update, include the id
       ...(startup?.id && { id: startup.id }),
       // Add old_status_id explicitly for the history tracking
-      ...(startup?.status_id && { old_status_id: startup.status_id })
+      ...(startup?.statusId && { old_status_id: startup.statusId })
     };
     
     console.log('Mapped startup data to send to Supabase:', startupData);

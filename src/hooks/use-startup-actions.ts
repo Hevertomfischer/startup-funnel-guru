@@ -37,7 +37,17 @@ export function useStartupActions() {
           description: `${data.name} has been added successfully`
         });
         setShowCreateDialog(false);
+        
+        // Invalidate multiple queries to ensure all views are updated
         queryClient.invalidateQueries({ queryKey: ['startups'] });
+        
+        // Specifically invalidate the status-specific query to update Board View
+        if (data.status_id) {
+          console.log("Invalidating query for status:", data.status_id);
+          queryClient.invalidateQueries({ 
+            queryKey: ['startups', 'status', data.status_id] 
+          });
+        }
       },
       onError: (error) => {
         console.error("Error creating startup:", error);
@@ -67,7 +77,27 @@ export function useStartupActions() {
             description: `${data.name} has been updated successfully`
           });
           setShowEditDialog(false);
+          
+          // Invalidate multiple queries to ensure all views are updated
           queryClient.invalidateQueries({ queryKey: ['startups'] });
+          
+          // Specifically invalidate the status-specific query to update Board View
+          if (data.status_id) {
+            queryClient.invalidateQueries({ 
+              queryKey: ['startups', 'status', data.status_id] 
+            });
+          }
+          
+          // Also invalidate previous status query if status was changed
+          if (data.old_status_id && data.old_status_id !== data.status_id) {
+            queryClient.invalidateQueries({ 
+              queryKey: ['startups', 'status', data.old_status_id] 
+            });
+          } else if (selectedStartup.status_id && selectedStartup.status_id !== data.status_id) {
+            queryClient.invalidateQueries({ 
+              queryKey: ['startups', 'status', selectedStartup.status_id] 
+            });
+          }
         },
         onError: (error) => {
           console.error("Error updating startup:", error);

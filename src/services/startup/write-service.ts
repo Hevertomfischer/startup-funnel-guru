@@ -108,11 +108,6 @@ export const updateStartup = async (
       }
     }
     
-    // Put back the old_status_id if it exists
-    if (old_status_id) {
-      preparedData.old_status_id = old_status_id;
-    }
-    
     // Process numeric fields
     preparedData = processStartupNumericFields(preparedData);
     
