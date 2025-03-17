@@ -1,21 +1,25 @@
 
 import React from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form } from "@/components/ui/form";
-import { Status } from '@/types';
-import { startupSchema, StartupFormValues } from './schema';
+import { startupFormSchema, StartupFormValues } from './schema';
+import { Form } from '@/components/ui/form';
 import { BasicInfoSection } from './BasicInfoSection';
+import { TeamSection } from './TeamSection';
+import { CompanyDetailsSection } from './CompanyDetailsSection';
+import { MarketSection } from './MarketSection';
 import { BusinessSection } from './BusinessSection';
+import { AnalysisSection } from './AnalysisSection';
 import { MetricsSection } from './MetricsSection';
+import { FinancialSection } from './FinancialSection';
 import { StatusDescriptionSection } from './StatusDescriptionSection';
-import { AttachmentSection } from './AttachmentSection';
 import { FormActions } from './FormActions';
+import { Status } from '@/types';
 
 interface StartupFormProps {
   startup?: any;
   statuses: Status[];
-  onSubmit: (values: StartupFormValues) => void;
+  onSubmit: (data: any) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
@@ -25,42 +29,44 @@ const StartupForm: React.FC<StartupFormProps> = ({
   statuses,
   onSubmit,
   onCancel,
-  isSubmitting
+  isSubmitting,
 }) => {
-  const form = useForm<StartupFormValues>({
-    resolver: zodResolver(startupSchema),
-    defaultValues: {
-      name: startup?.name || '',
-      problem_solved: startup?.problem_solved || '',
-      description: startup?.description || '',
-      sector: startup?.sector || '',
-      business_model: startup?.business_model || '',
-      website: startup?.website || '',
-      mrr: startup?.mrr || undefined,
-      client_count: startup?.client_count || undefined,
-      priority: startup?.priority || 'medium',
-      status_id: startup?.status_id || statuses[0]?.id || '',
-      attachments: startup?.attachments || [],
+  // Default values for the form
+  const defaultValues = {
+    priority: startup?.priority || 'medium',
+    statusId: startup?.statusId || '',
+    dueDate: startup?.dueDate || '',
+    assignedTo: startup?.assignedTo || '',
+    values: {
+      ...startup?.values || {}
     },
+  };
+
+  const form = useForm<StartupFormValues>({
+    resolver: zodResolver(startupFormSchema),
+    defaultValues,
+  });
+
+  const handleSubmit = form.handleSubmit((data) => {
+    console.log('Form submit data:', data);
+    onSubmit(data);
   });
 
   return (
-    <FormProvider {...form}>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <BasicInfoSection />
-          <BusinessSection />
-          <MetricsSection />
-          <StatusDescriptionSection statuses={statuses} />
-          <AttachmentSection />
-          <FormActions 
-            onCancel={onCancel} 
-            isSubmitting={isSubmitting} 
-            isEditMode={!!startup} 
-          />
-        </form>
-      </Form>
-    </FormProvider>
+    <Form {...form}>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <StatusDescriptionSection form={form} statuses={statuses} />
+        <BasicInfoSection form={form} />
+        <TeamSection form={form} />
+        <CompanyDetailsSection form={form} />
+        <MarketSection form={form} />
+        <BusinessSection form={form} />
+        <FinancialSection form={form} />
+        <MetricsSection form={form} />
+        <AnalysisSection form={form} />
+        <FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+      </form>
+    </Form>
   );
 };
 

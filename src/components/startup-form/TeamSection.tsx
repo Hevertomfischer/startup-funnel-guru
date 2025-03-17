@@ -9,26 +9,25 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { UseFormReturn } from 'react-hook-form';
 import { StartupFormValues } from './schema';
 
-export const BasicInfoSection = ({
+export const TeamSection = ({
   form,
 }: {
   form: UseFormReturn<StartupFormValues>;
 }) => {
   return (
-    <FormSection title="Informações Básicas">
+    <FormSection title="Informações da Equipe">
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={form.control}
-          name="values.Startup"
+          name="values.Nome do CEO"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome da Startup*</FormLabel>
+              <FormLabel>Nome do CEO</FormLabel>
               <FormControl>
-                <Input placeholder="Nome da Startup" {...field} />
+                <Input placeholder="Nome completo do CEO" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -37,12 +36,12 @@ export const BasicInfoSection = ({
 
         <FormField
           control={form.control}
-          name="values.Site da Startup"
+          name="values.E-mail do CEO"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Site da Startup</FormLabel>
+              <FormLabel>E-mail do CEO</FormLabel>
               <FormControl>
-                <Input placeholder="https://exemplo.com.br" {...field} />
+                <Input placeholder="email@exemplo.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -51,12 +50,12 @@ export const BasicInfoSection = ({
 
         <FormField
           control={form.control}
-          name="values.Status Current"
+          name="values.Whatsapp do CEO"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status Atual</FormLabel>
+              <FormLabel>WhatsApp do CEO</FormLabel>
               <FormControl>
-                <Input placeholder="Status atual da startup" {...field} />
+                <Input placeholder="(XX) XXXXX-XXXX" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -65,12 +64,12 @@ export const BasicInfoSection = ({
 
         <FormField
           control={form.control}
-          name="values.Origem Lead"
+          name="values.Linkedin CEO"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Origem do Lead</FormLabel>
+              <FormLabel>LinkedIn do CEO</FormLabel>
               <FormControl>
-                <Input placeholder="Como conhecemos esta startup" {...field} />
+                <Input placeholder="URL do perfil no LinkedIn" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -79,26 +78,21 @@ export const BasicInfoSection = ({
 
         <FormField
           control={form.control}
-          name="values.Quem Indicou"
-          render={({ field }) => (
+          name="values.Quantidade de Sócios"
+          render={({ field: { value, onChange, ...field } }) => (
             <FormItem>
-              <FormLabel>Quem Indicou</FormLabel>
+              <FormLabel>Quantidade de Sócios</FormLabel>
               <FormControl>
-                <Input placeholder="Nome de quem indicou" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="values.Observações"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Observações</FormLabel>
-              <FormControl>
-                <Input placeholder="Observações gerais" {...field} />
+                <Input 
+                  type="number" 
+                  placeholder="Número de sócios" 
+                  value={value === undefined ? '' : value} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    onChange(val === '' ? '' : Number(val));
+                  }}
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

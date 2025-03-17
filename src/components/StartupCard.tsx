@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Clock, Link2, User, Trash2, Clipboard, ListTodo } from 'lucide-react';
+import { Calendar, Clock, Link2, User, Trash2, Clipboard, ListTodo, MapPin, Users, DollarSign } from 'lucide-react';
 import { Startup, Status } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -67,6 +67,12 @@ const StartupCard: React.FC<StartupCardProps> = ({
     low: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
     medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
     high: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  };
+
+  // Format currency for financial values
+  const formatCurrency = (value?: number) => {
+    if (value === undefined) return '';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -155,18 +161,38 @@ const StartupCard: React.FC<StartupCardProps> = ({
       <CardContent className={compact ? 'p-3 pt-0' : 'px-4 pb-2'}>
         {!compact && (
           <>
-            {startup.values['Setor'] && (
-              <div className="mb-2">
+            {/* Business Information */}
+            <div className="mb-2">
+              {startup.values['Setor'] && (
                 <Badge variant="secondary" className="mr-1 text-xs">
                   {startup.values['Setor']}
                 </Badge>
-                {startup.values['Modelo de Negócio'] && (
-                  <Badge variant="secondary" className="text-xs">
-                    {startup.values['Modelo de Negócio']}
-                  </Badge>
-                )}
+              )}
+              {startup.values['Modelo de Negócio'] && (
+                <Badge variant="secondary" className="mr-1 text-xs">
+                  {startup.values['Modelo de Negócio']}
+                </Badge>
+              )}
+              {startup.values['Mercado'] && (
+                <Badge variant="secondary" className="text-xs">
+                  {startup.values['Mercado']}
+                </Badge>
+              )}
+            </div>
+
+            {/* Location */}
+            {(startup.values['Cidade'] || startup.values['Estado']) && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                <MapPin className="h-3 w-3" />
+                <span>
+                  {[startup.values['Cidade'], startup.values['Estado']]
+                    .filter(Boolean)
+                    .join(', ')}
+                </span>
               </div>
             )}
+            
+            {/* Website */}
             {startup.values['Site da Startup'] && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                 <Link2 className="h-3 w-3" />
@@ -181,13 +207,30 @@ const StartupCard: React.FC<StartupCardProps> = ({
                 </a>
               </div>
             )}
-            {startup.values['MRR'] && (
-              <div className="flex items-center gap-1 text-xs font-medium">
-                MRR: {typeof startup.values['MRR'] === 'number' 
-                  ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(startup.values['MRR']) 
-                  : startup.values['MRR']}
-              </div>
-            )}
+
+            {/* Financial Metrics */}
+            <div className="space-y-1 mt-2">
+              {startup.values['MRR'] !== undefined && (
+                <div className="flex items-center gap-1 text-xs font-medium">
+                  <DollarSign className="h-3 w-3 text-primary" />
+                  MRR: {formatCurrency(startup.values['MRR'])}
+                </div>
+              )}
+              
+              {startup.values['Receita Recorrente Mensal (MRR)'] !== undefined && (
+                <div className="flex items-center gap-1 text-xs font-medium">
+                  <DollarSign className="h-3 w-3 text-primary" />
+                  MRR: {formatCurrency(startup.values['Receita Recorrente Mensal (MRR)'])}
+                </div>
+              )}
+              
+              {startup.values['Quantidade de Clientes'] !== undefined && (
+                <div className="flex items-center gap-1 text-xs">
+                  <Users className="h-3 w-3 text-primary" />
+                  Clientes: {startup.values['Quantidade de Clientes']}
+                </div>
+              )}
+            </div>
           </>
         )}
       </CardContent>

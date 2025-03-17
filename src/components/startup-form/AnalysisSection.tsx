@@ -9,26 +9,27 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
 import { StartupFormValues } from './schema';
 
-export const BusinessSection = ({
+export const AnalysisSection = ({
   form,
 }: {
   form: UseFormReturn<StartupFormValues>;
 }) => {
   return (
-    <FormSection title="Problema e Solução">
+    <FormSection title="Análise de Investimento">
       <div className="grid gap-4">
         <FormField
           control={form.control}
-          name="values.Problema que Resolve"
+          name="values.Pontos Positivos"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Problema que Resolve</FormLabel>
+              <FormLabel>Pontos Positivos</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Descreva o problema que a startup resolve..."
+                  placeholder="Descreva os pontos positivos da startup..."
                   className="min-h-24"
                   {...field}
                 />
@@ -40,13 +41,13 @@ export const BusinessSection = ({
 
         <FormField
           control={form.control}
-          name="values.Como Resolve o Problema"
+          name="values.Pontos de Atenção"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Como Resolve o Problema</FormLabel>
+              <FormLabel>Pontos de Atenção</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Descreva como a startup resolve o problema..."
+                  placeholder="Descreva os pontos que merecem atenção..."
                   className="min-h-24"
                   {...field}
                 />
@@ -58,13 +59,13 @@ export const BusinessSection = ({
         
         <FormField
           control={form.control}
-          name="values.Diferenciais da Startup"
+          name="values.Como a SCAngels pode agregar valor na Startup"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Diferenciais da Startup</FormLabel>
+              <FormLabel>Como a SCAngels pode agregar valor</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Descreva os diferenciais competitivos da startup..."
+                  placeholder="Descreva como a SCAngels pode agregar valor..."
                   className="min-h-24"
                   {...field}
                 />
@@ -76,14 +77,13 @@ export const BusinessSection = ({
         
         <FormField
           control={form.control}
-          name="values.Principais Concorrentes"
+          name="values.Motivo Não Investimento"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Principais Concorrentes</FormLabel>
+              <FormLabel>Motivo para Não Investimento</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Liste os principais concorrentes da startup..."
-                  className="min-h-24"
+                <Input
+                  placeholder="Caso aplicável, motivo para não investir"
                   {...field}
                 />
               </FormControl>
