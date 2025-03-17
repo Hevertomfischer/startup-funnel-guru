@@ -2,10 +2,17 @@
 import React from 'react';
 import { FormField } from "@/components/ui/form";
 import { TextInput, SelectInput } from './FormSection';
-import { useFormContext } from 'react-hook-form';
+import { UseFormReturn } from 'react-hook-form';
+import { StartupFormValues } from './schema';
 
-export const MetricsSection: React.FC = () => {
-  const { control } = useFormContext();
+interface MetricsSectionProps {
+  form: UseFormReturn<StartupFormValues>;
+}
+
+export const MetricsSection: React.FC<MetricsSectionProps> = ({
+  form
+}) => {
+  const { control } = form;
   
   const priorityOptions = [
     { value: 'low', label: 'Baixa' },
@@ -18,7 +25,7 @@ export const MetricsSection: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
-          name="website"
+          name="values.Site da Startup"
           render={({ field }) => (
             <TextInput
               label="Website"
@@ -31,7 +38,7 @@ export const MetricsSection: React.FC = () => {
 
         <FormField
           control={control}
-          name="mrr"
+          name="values.MRR"
           render={({ field }) => (
             <TextInput
               label="Receita Mensal Recorrente (MRR)"
@@ -47,7 +54,7 @@ export const MetricsSection: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
-          name="client_count"
+          name="values.Quantidade de Clientes"
           render={({ field }) => (
             <TextInput
               label="Quantidade de Clientes"
