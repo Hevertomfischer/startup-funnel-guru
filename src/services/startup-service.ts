@@ -61,12 +61,14 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
     // Process numeric fields and ensure they're valid numbers or null
     const preparedData = {
       ...startupData,
-      mrr: typeof startupData.mrr === 'string' ? 
-        (startupData.mrr.trim() === '' ? null : Number(startupData.mrr)) : 
-        startupData.mrr,
-      client_count: typeof startupData.client_count === 'string' ? 
-        (startupData.client_count.trim() === '' ? null : Number(startupData.client_count)) : 
-        startupData.client_count
+      mrr: startupData.mrr !== undefined ? 
+           (typeof startupData.mrr === 'string' ? 
+             (startupData.mrr === '' ? null : Number(startupData.mrr)) : 
+             startupData.mrr) : null,
+      client_count: startupData.client_count !== undefined ? 
+                   (typeof startupData.client_count === 'string' ? 
+                     (startupData.client_count === '' ? null : Number(startupData.client_count)) : 
+                     startupData.client_count) : null
     };
     
     console.log('Prepared data for Supabase insert:', preparedData);
@@ -113,12 +115,14 @@ export const updateStartup = async (id: string, startup: Partial<Startup> & { at
     // Process numeric fields and ensure they're valid numbers or null
     const preparedData = {
       ...startupData,
-      mrr: typeof startupData.mrr === 'string' ? 
-        (startupData.mrr.trim() === '' ? null : Number(startupData.mrr)) : 
-        startupData.mrr,
-      client_count: typeof startupData.client_count === 'string' ? 
-        (startupData.client_count.trim() === '' ? null : Number(startupData.client_count)) : 
-        startupData.client_count
+      mrr: startupData.mrr !== undefined ? 
+           (typeof startupData.mrr === 'string' ? 
+             (startupData.mrr === '' ? null : Number(startupData.mrr)) : 
+             startupData.mrr) : null,
+      client_count: startupData.client_count !== undefined ? 
+                   (typeof startupData.client_count === 'string' ? 
+                     (startupData.client_count === '' ? null : Number(startupData.client_count)) : 
+                     startupData.client_count) : null
     };
     
     console.log('Prepared data for Supabase update:', preparedData);
