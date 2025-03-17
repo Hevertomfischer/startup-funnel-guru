@@ -4,13 +4,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { deleteStartup } from '@/services';
 
-export function useStartupDeletion({
-  queryClient,
-  toast
-}: {
-  queryClient: ReturnType<typeof useQueryClient>;
-  toast: ReturnType<typeof useToast>['toast'];
-}) {
+export function useStartupDeletion() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
   // Function to handle startup deletion
   const handleDeleteStartup = useCallback(async (startupId: string) => {
     if (!startupId) {

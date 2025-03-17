@@ -33,6 +33,8 @@ export function useBoardDialogs() {
     statusToEdit,
     setStatusToEdit,
     handleStatusCreated,
-    handleStatusUpdated
+    handleStatusUpdated,
+    queryClient,
+    toast
   };
 }

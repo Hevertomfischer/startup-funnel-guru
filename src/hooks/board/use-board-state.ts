@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -85,10 +86,7 @@ export function useBoardState() {
     setStatusToEdit,
     handleStatusCreated,
     handleStatusUpdated
-  } = useBoardDialogs({
-    queryClient,
-    toast
-  });
+  } = useBoardDialogs();
 
   // Create task for a specific startup
   const handleCreateTask = useCallback((startup: Startup) => {
