@@ -55,7 +55,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-8">
-        <StatusDescriptionSection form={form} statuses={statuses} />
+        <StatusDescriptionSection statuses={statuses} form={form} />
         <BasicInfoSection form={form} />
         <TeamSection form={form} />
         <CompanyDetailsSection form={form} />
@@ -64,7 +64,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
         <FinancialSection form={form} />
         <MetricsSection form={form} />
         <AnalysisSection form={form} />
-        <FormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+        <FormActions onCancel={onCancel} isSubmitting={isSubmitting} isEditMode={!!startup} />
       </form>
     </Form>
   );

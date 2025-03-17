@@ -1,3 +1,4 @@
+
 export type DataType = 
   | 'shortText' 
   | 'longText' 
@@ -48,7 +49,7 @@ export interface Attachment {
   url: string;
   type: string;
   size?: number;
-  uploadedAt: Date;
+  uploadedAt: string;
 }
 
 export interface StartupFieldValues {
@@ -65,12 +66,14 @@ export interface Startup {
   dueDate?: string;
   timeTracking?: number;
   priority: 'low' | 'medium' | 'high';
+  labels?: string[];
   tags?: string[];
+  attachments?: any[];
 }
 
 export interface StartupValues {
   // General information
-  'Startup'?: string;
+  Startup?: string;
   'Site da Startup'?: string;
   'Status Current'?: string;
   'Origem Lead'?: string;
@@ -124,6 +127,12 @@ export interface StartupValues {
   
   // Scheduling
   'Actual end'?: string;
+  
+  // Alias for compatibility with existing code
+  name?: string;
+  Description?: string;
+  Website?: string;
+  'Problema Resolvido'?: string;
 }
 
 export interface Column {

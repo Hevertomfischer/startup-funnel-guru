@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Status } from '@/types';
+
+interface FormSectionProps {
+  title: string;
+  children: ReactNode;
+}
+
+export const FormSection = ({ title, children }: FormSectionProps) => {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">{title}</h3>
+      {children}
+    </div>
+  );
+};
 
 interface TextInputProps {
   label: string;
