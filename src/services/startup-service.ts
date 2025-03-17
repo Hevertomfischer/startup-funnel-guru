@@ -68,7 +68,15 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
       client_count: startupData.client_count !== undefined ? 
                    (typeof startupData.client_count === 'string' ? 
                      (startupData.client_count === '' ? null : Number(startupData.client_count)) : 
-                     startupData.client_count) : null
+                     startupData.client_count) : null,
+      // Process additional numeric fields
+      accumulated_revenue_current_year: processNumericField(startupData.accumulated_revenue_current_year),
+      total_revenue_last_year: processNumericField(startupData.total_revenue_last_year),
+      total_revenue_previous_year: processNumericField(startupData.total_revenue_previous_year),
+      partner_count: processNumericField(startupData.partner_count),
+      tam: processNumericField(startupData.tam),
+      sam: processNumericField(startupData.sam),
+      som: processNumericField(startupData.som)
     };
     
     console.log('Prepared data for Supabase insert:', preparedData);
@@ -122,7 +130,15 @@ export const updateStartup = async (id: string, startup: Partial<Startup> & { at
       client_count: startupData.client_count !== undefined ? 
                    (typeof startupData.client_count === 'string' ? 
                      (startupData.client_count === '' ? null : Number(startupData.client_count)) : 
-                     startupData.client_count) : null
+                     startupData.client_count) : null,
+      // Process additional numeric fields
+      accumulated_revenue_current_year: processNumericField(startupData.accumulated_revenue_current_year),
+      total_revenue_last_year: processNumericField(startupData.total_revenue_last_year),
+      total_revenue_previous_year: processNumericField(startupData.total_revenue_previous_year),
+      partner_count: processNumericField(startupData.partner_count),
+      tam: processNumericField(startupData.tam),
+      sam: processNumericField(startupData.sam),
+      som: processNumericField(startupData.som)
     };
     
     console.log('Prepared data for Supabase update:', preparedData);
@@ -178,4 +194,16 @@ export const deleteStartup = async (id: string): Promise<boolean> => {
     handleError(error, 'Failed to delete startup');
     return false;
   }
+};
+
+// Helper function to process numeric fields
+const processNumericField = (value: any): number | null => {
+  if (value === undefined || value === null) return null;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    if (value === '') return null;
+    const number = Number(value);
+    return isNaN(number) ? null : number;
+  }
+  return null;
 };

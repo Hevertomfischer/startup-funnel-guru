@@ -168,56 +168,137 @@ export type Database = {
       }
       startups: {
         Row: {
+          accumulated_revenue_current_year: number | null
           assigned_to: string | null
+          attention_points: string | null
           business_model: string | null
+          category: string | null
+          ceo_email: string | null
+          ceo_linkedin: string | null
+          ceo_name: string | null
+          ceo_whatsapp: string | null
+          city: string | null
           client_count: number | null
+          competitors: string | null
           created_at: string
           description: string | null
+          differentials: string | null
           due_date: string | null
+          founding_date: string | null
+          google_drive_link: string | null
           id: string
+          market: string | null
           mrr: number | null
           name: string
+          no_investment_reason: string | null
+          observations: string | null
+          origin_lead: string | null
+          partner_count: number | null
+          positive_points: string | null
           priority: string | null
+          problem_solution: string | null
           problem_solved: string | null
+          referred_by: string | null
+          sam: number | null
+          scangels_value_add: string | null
           sector: string | null
+          som: number | null
+          state: string | null
           status_id: string | null
+          tam: number | null
           time_tracking: number | null
+          total_revenue_last_year: number | null
+          total_revenue_previous_year: number | null
           updated_at: string
           website: string | null
         }
         Insert: {
+          accumulated_revenue_current_year?: number | null
           assigned_to?: string | null
+          attention_points?: string | null
           business_model?: string | null
+          category?: string | null
+          ceo_email?: string | null
+          ceo_linkedin?: string | null
+          ceo_name?: string | null
+          ceo_whatsapp?: string | null
+          city?: string | null
           client_count?: number | null
+          competitors?: string | null
           created_at?: string
           description?: string | null
+          differentials?: string | null
           due_date?: string | null
+          founding_date?: string | null
+          google_drive_link?: string | null
           id?: string
+          market?: string | null
           mrr?: number | null
           name: string
+          no_investment_reason?: string | null
+          observations?: string | null
+          origin_lead?: string | null
+          partner_count?: number | null
+          positive_points?: string | null
           priority?: string | null
+          problem_solution?: string | null
           problem_solved?: string | null
+          referred_by?: string | null
+          sam?: number | null
+          scangels_value_add?: string | null
           sector?: string | null
+          som?: number | null
+          state?: string | null
           status_id?: string | null
+          tam?: number | null
           time_tracking?: number | null
+          total_revenue_last_year?: number | null
+          total_revenue_previous_year?: number | null
           updated_at?: string
           website?: string | null
         }
         Update: {
+          accumulated_revenue_current_year?: number | null
           assigned_to?: string | null
+          attention_points?: string | null
           business_model?: string | null
+          category?: string | null
+          ceo_email?: string | null
+          ceo_linkedin?: string | null
+          ceo_name?: string | null
+          ceo_whatsapp?: string | null
+          city?: string | null
           client_count?: number | null
+          competitors?: string | null
           created_at?: string
           description?: string | null
+          differentials?: string | null
           due_date?: string | null
+          founding_date?: string | null
+          google_drive_link?: string | null
           id?: string
+          market?: string | null
           mrr?: number | null
           name?: string
+          no_investment_reason?: string | null
+          observations?: string | null
+          origin_lead?: string | null
+          partner_count?: number | null
+          positive_points?: string | null
           priority?: string | null
+          problem_solution?: string | null
           problem_solved?: string | null
+          referred_by?: string | null
+          sam?: number | null
+          scangels_value_add?: string | null
           sector?: string | null
+          som?: number | null
+          state?: string | null
           status_id?: string | null
+          tam?: number | null
           time_tracking?: number | null
+          total_revenue_last_year?: number | null
+          total_revenue_previous_year?: number | null
           updated_at?: string
           website?: string | null
         }
