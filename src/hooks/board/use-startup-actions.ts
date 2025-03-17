@@ -89,7 +89,11 @@ export function useStartupActions() {
           }
           
           // Also invalidate previous status query if status was changed
-          if (selectedStartup.status_id && selectedStartup.status_id !== data.status_id) {
+          if (data.old_status_id && data.old_status_id !== data.status_id) {
+            queryClient.invalidateQueries({ 
+              queryKey: ['startups', 'status', data.old_status_id] 
+            });
+          } else if (selectedStartup.status_id && selectedStartup.status_id !== data.status_id) {
             queryClient.invalidateQueries({ 
               queryKey: ['startups', 'status', selectedStartup.status_id] 
             });

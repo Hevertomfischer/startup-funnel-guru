@@ -63,10 +63,10 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
 export const updateStartup = async (id: string, startup: Partial<Startup> & { attachments?: any[] }): Promise<Startup | null> => {
   try {
     console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
-    const { attachments, ...startupData } = startup;
+    const { attachments, old_status_id, ...startupData } = startup;
     
     // Ensure status_id is not null or undefined before updating
-    let preparedData = { ...startupData };
+    let preparedData: any = { ...startupData };
     
     if (startupData.status_id === null || startupData.status_id === undefined) {
       // Get the current startup data to preserve the status_id
@@ -100,6 +100,11 @@ export const updateStartup = async (id: string, startup: Partial<Startup> & { at
         
         preparedData.status_id = firstStatus.id;
       }
+    }
+    
+    // Put back the old_status_id if it exists
+    if (old_status_id) {
+      preparedData.old_status_id = old_status_id;
     }
     
     // Process numeric fields
