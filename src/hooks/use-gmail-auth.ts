@@ -76,12 +76,11 @@ export const useGmailAuth = () => {
     try {
       setAuthStage("starting_auth");
       
-      const response = await getGmailAuthUrl();
-      if (!response || !response.authUrl) {
+      const authUrl = await getGmailAuthUrl();
+      if (!authUrl) {
         throw new Error('Não foi possível obter a URL de autenticação do Gmail');
       }
       
-      const authUrl = response.authUrl;
       console.log('Starting Gmail auth, received auth URL:', authUrl);
       
       setAuthStage("opening_popup");
