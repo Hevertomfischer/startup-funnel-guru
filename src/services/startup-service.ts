@@ -120,6 +120,42 @@ export const updateStartup = async (id: string, startup: Partial<Startup> & { at
     console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
     const { attachments, ...startupData } = startup;
     
+    // Ensure status_id is not null or undefined before updating
+    // If status_id is explicitly null or undefined in the update data, we need to get the current status_id
+    if (startupData.status_id === null || startupData.status_id === undefined) {
+      // Get the current startup data to preserve the status_id
+      const { data: currentStartup, error: fetchError } = await supabase
+        .from('startups')
+        .select('status_id')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) {
+        console.error('Error fetching current startup:', fetchError);
+        throw new Error('Failed to fetch current startup data');
+      }
+      
+      // Use the current status_id if it exists
+      if (currentStartup && currentStartup.status_id) {
+        startupData.status_id = currentStartup.status_id;
+      } else {
+        // If for some reason we still don't have a status_id, get the first available status
+        const { data: firstStatus, error: statusError } = await supabase
+          .from('statuses')
+          .select('id')
+          .order('position', { ascending: true })
+          .limit(1)
+          .single();
+        
+        if (statusError) {
+          console.error('Error fetching first status:', statusError);
+          throw new Error('Failed to fetch default status');
+        }
+        
+        startupData.status_id = firstStatus.id;
+      }
+    }
+    
     // Process numeric fields and ensure they're valid numbers or null
     const preparedData = {
       ...startupData,

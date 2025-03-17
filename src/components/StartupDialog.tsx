@@ -44,6 +44,12 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
   const handleFormSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
     
+    // Validar que o statusId existe e é válido
+    if (!data.statusId && statuses && statuses.length > 0) {
+      console.warn('No status ID provided, using first available status');
+      data.statusId = statuses[0].id;
+    }
+    
     // Prepare data for Supabase
     const startupData = {
       // Map form values to database schema
