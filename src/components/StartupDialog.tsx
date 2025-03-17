@@ -98,7 +98,7 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       
       // If it's an update, include the id
       ...(startup?.id && { id: startup.id }),
-      // For updates, track previous status
+      // Track old status ID for history
       ...(startup?.status_id && { old_status_id: startup.status_id })
     };
     
