@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -60,10 +59,7 @@ export function useBoardState() {
   } = useBoardSearch();
   
   // Get the startup deletion handler
-  const { handleDeleteStartup } = useStartupDeletion({
-    queryClient,
-    toast
-  });
+  const { handleDeleteStartup } = useStartupDeletion();
   
   // Get all the startup dialog handlers
   const {
