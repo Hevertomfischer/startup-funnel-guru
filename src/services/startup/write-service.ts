@@ -5,10 +5,14 @@ import type { Startup } from '@/integrations/supabase/client';
 import { addAttachment } from '../attachment-service';
 import { processStartupNumericFields } from '../utils/numeric-field-utils';
 
+// Define a type that includes old_status_id for tracking purposes only
+interface StartupWithHistory extends Partial<Startup> {
+  attachments?: any[];
+  old_status_id?: string; // For tracking only, not a database field
+}
+
 /**
  * Creates a new startup in the database
- * @param startup The startup data to create
- * @returns A promise resolving to the created startup or null if failed
  */
 export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' | 'updated_at'> & { attachments?: any[] }): Promise<Startup | null> => {
   try {
@@ -56,27 +60,27 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
 
 /**
  * Updates an existing startup in the database
- * @param id The ID of the startup to update
- * @param startup The startup data to update
- * @returns A promise resolving to the updated startup or null if failed
  */
 export const updateStartup = async (
   id: string,
-  startup: Partial<Startup> & { 
-    attachments?: any[],
-    old_status_id?: string
-  }
+  startup: StartupWithHistory // Use our extended type
 ): Promise<Startup | null> => {
   try {
     console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
     
-    // Extract attachments and old_status_id from the input data
+    // Extract attachments and old_status_id from the input data (they aren't database fields)
     const { attachments, old_status_id, ...startupData } = startup;
     
     // Ensure status_id is not null or undefined before updating
     let preparedData: any = { ...startupData };
     
-    if (startupData.status_id === null || startupData.status_id === undefined) {
+    if (preparedData.statusId && !preparedData.status_id) {
+      // Fix incorrectly named field if present
+      preparedData.status_id = preparedData.statusId;
+      delete preparedData.statusId;
+    }
+    
+    if (preparedData.status_id === null || preparedData.status_id === undefined) {
       // Get the current startup data to preserve the status_id
       const { data: currentStartup, error: fetchError } = await supabase
         .from('startups')

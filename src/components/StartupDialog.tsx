@@ -50,11 +50,11 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       data.statusId = statuses[0].id;
     }
     
-    // Prepare data for Supabase
+    // Prepare data for Supabase - ensure we're using status_id not statusId
     const startupData = {
       // Map form values to database schema
       name: data.values.Startup,
-      status_id: data.statusId,
+      status_id: data.statusId, // Will be converted to status_id in the service
       priority: data.priority,
       assigned_to: data.assignedTo || null,
       due_date: data.dueDate || null,
@@ -63,12 +63,7 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       sector: data.values.Setor || null,
       business_model: data.values["Modelo de Negócio"] || null,
       
-      // Ensure numeric fields are properly converted
-      mrr: data.values.MRR !== undefined && data.values.MRR !== '' ? Number(data.values.MRR) : null,
-      client_count: data.values["Quantidade de Clientes"] !== undefined && data.values["Quantidade de Clientes"] !== '' ? 
-        Number(data.values["Quantidade de Clientes"]) : null,
-      
-      // New fields mapped from form to database
+      // Map all other fields
       ceo_name: data.values["Nome do CEO"] || null,
       ceo_email: data.values["E-mail do CEO"] || null,
       ceo_whatsapp: data.values["Whatsapp do CEO"] || null,
@@ -86,37 +81,50 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       attention_points: data.values["Pontos de Atenção"] || null,
       scangels_value_add: data.values["Como a SCAngels pode agregar valor na Startup"] || null,
       no_investment_reason: data.values["Motivo Não Investimento"] || null,
-      
-      // Ensure numeric fields are properly converted with null fallbacks
-      accumulated_revenue_current_year: data.values["Receita Acumulada no Ano corrente"] !== undefined && 
-        data.values["Receita Acumulada no Ano corrente"] !== '' ? 
-        Number(data.values["Receita Acumulada no Ano corrente"]) : null,
-      
-      total_revenue_last_year: data.values["Receita Total do último Ano"] !== undefined && 
-        data.values["Receita Total do último Ano"] !== '' ? 
-        Number(data.values["Receita Total do último Ano"]) : null,
-      
-      total_revenue_previous_year: data.values["Receita total do penúltimo Ano"] !== undefined && 
-        data.values["Receita total do penúltimo Ano"] !== '' ? 
-        Number(data.values["Receita total do penúltimo Ano"]) : null,
-      
-      partner_count: data.values["Quantidade de Sócios"] !== undefined && data.values["Quantidade de Sócios"] !== '' ? 
-        Number(data.values["Quantidade de Sócios"]) : null,
-      
-      tam: data.values.TAM !== undefined && data.values.TAM !== '' ? Number(data.values.TAM) : null,
-      sam: data.values.SAM !== undefined && data.values.SAM !== '' ? Number(data.values.SAM) : null,
-      som: data.values.SOM !== undefined && data.values.SOM !== '' ? Number(data.values.SOM) : null,
-      
       origin_lead: data.values["Origem Lead"] || null,
       referred_by: data.values["Quem Indicou"] || null,
       observations: data.values["Observações"] || null,
       
+      // For numeric fields, explicitly convert to numbers when not null or empty
+      // This prevents type errors with string values
+      mrr: data.values.MRR !== undefined && data.values.MRR !== '' ? 
+        parseFloat(data.values.MRR) : null,
+      
+      client_count: data.values["Quantidade de Clientes"] !== undefined && 
+        data.values["Quantidade de Clientes"] !== '' ? 
+        parseInt(data.values["Quantidade de Clientes"], 10) : null,
+      
+      accumulated_revenue_current_year: data.values["Receita Acumulada no Ano corrente"] !== undefined && 
+        data.values["Receita Acumulada no Ano corrente"] !== '' ? 
+        parseFloat(data.values["Receita Acumulada no Ano corrente"]) : null,
+      
+      total_revenue_last_year: data.values["Receita Total do último Ano"] !== undefined && 
+        data.values["Receita Total do último Ano"] !== '' ? 
+        parseFloat(data.values["Receita Total do último Ano"]) : null,
+      
+      total_revenue_previous_year: data.values["Receita total do penúltimo Ano"] !== undefined && 
+        data.values["Receita total do penúltimo Ano"] !== '' ? 
+        parseFloat(data.values["Receita total do penúltimo Ano"]) : null,
+      
+      partner_count: data.values["Quantidade de Sócios"] !== undefined && 
+        data.values["Quantidade de Sócios"] !== '' ? 
+        parseInt(data.values["Quantidade de Sócios"], 10) : null,
+      
+      tam: data.values.TAM !== undefined && data.values.TAM !== '' ? 
+        parseFloat(data.values.TAM) : null,
+      
+      sam: data.values.SAM !== undefined && data.values.SAM !== '' ? 
+        parseFloat(data.values.SAM) : null,
+      
+      som: data.values.SOM !== undefined && data.values.SOM !== '' ? 
+        parseFloat(data.values.SOM) : null,
+      
       // If it's an update, include the id
       ...(startup?.id && { id: startup.id }),
       
-      // Add old_status_id explicitly for the history tracking
-      // If this is an edit and status is changing, store the original status_id
-      old_status_id: startup?.status_id && data.statusId !== startup.status_id ? startup.status_id : undefined
+      // Important: Track old status_id for history but don't try to update a column that doesn't exist
+      ...(startup?.status_id && data.statusId !== startup.status_id ? 
+        { old_status_id: startup.status_id } : {})
     };
     
     console.log('Mapped startup data to send to Supabase:', startupData);

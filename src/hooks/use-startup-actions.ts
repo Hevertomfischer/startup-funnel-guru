@@ -5,7 +5,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { 
   useCreateStartupMutation, 
   useUpdateStartupMutation
-} from './use-supabase-query';
+} from '@/hooks/use-supabase-query';
+import { Startup } from '@/integrations/supabase/client';
 
 export function useStartupActions() {
   const { toast } = useToast();
@@ -14,10 +15,8 @@ export function useStartupActions() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   
-  // Create new startup mutation
+  // Create and update mutations
   const createStartupMutation = useCreateStartupMutation();
-  
-  // Update startup mutation
   const updateStartupMutation = useUpdateStartupMutation();
   
   const handleAddStartup = (statusId: string) => {
@@ -38,10 +37,9 @@ export function useStartupActions() {
         });
         setShowCreateDialog(false);
         
-        // Invalidate multiple queries to ensure all views are updated
+        // Invalidate queries
         queryClient.invalidateQueries({ queryKey: ['startups'] });
         
-        // Specifically invalidate the status-specific query to update Board View
         if (data.status_id) {
           console.log("Invalidating query for status:", data.status_id);
           queryClient.invalidateQueries({ 
@@ -61,14 +59,32 @@ export function useStartupActions() {
   };
   
   const handleEditStartup = (startup: any) => {
+    // Store the complete startup object for reference
     setSelectedStartup(startup);
     setShowEditDialog(true);
   };
   
   const handleUpdateStartup = (data: any) => {
     console.log("Updating startup with data:", data);
+    
+    // Make sure we have the proper status_id field name
+    if (!data.status_id && data.statusId) {
+      data.status_id = data.statusId;
+      delete data.statusId; // Remove the incorrect field
+    }
+    
+    // If we need to track old status, explicitly add it as status history field
+    // but don't try to update the database field that doesn't exist
+    const oldStatusId = selectedStartup?.status_id;
+    const currentStatusId = data.status_id;
+    const trackOldStatus = oldStatusId && currentStatusId && oldStatusId !== currentStatusId;
+    
+    // Don't pass old_status_id to the database update
+    // It will be used only for cache invalidation
+    const { old_status_id, ...updateData } = data;
+    
     updateStartupMutation.mutate(
-      { id: selectedStartup.id, startup: data },
+      { id: selectedStartup.id, startup: updateData },
       {
         onSuccess: (response) => {
           console.log("Startup updated successfully:", response);
@@ -78,10 +94,9 @@ export function useStartupActions() {
           });
           setShowEditDialog(false);
           
-          // Invalidate multiple queries to ensure all views are updated
+          // Invalidate queries
           queryClient.invalidateQueries({ queryKey: ['startups'] });
           
-          // Specifically invalidate the status-specific query to update Board View
           if (data.status_id) {
             queryClient.invalidateQueries({ 
               queryKey: ['startups', 'status', data.status_id] 
@@ -89,13 +104,9 @@ export function useStartupActions() {
           }
           
           // Also invalidate previous status query if status was changed
-          if (data.old_status_id && data.old_status_id !== data.status_id) {
+          if (trackOldStatus) {
             queryClient.invalidateQueries({ 
-              queryKey: ['startups', 'status', data.old_status_id] 
-            });
-          } else if (selectedStartup.status_id && selectedStartup.status_id !== data.status_id) {
-            queryClient.invalidateQueries({ 
-              queryKey: ['startups', 'status', selectedStartup.status_id] 
+              queryKey: ['startups', 'status', oldStatusId] 
             });
           }
         },
