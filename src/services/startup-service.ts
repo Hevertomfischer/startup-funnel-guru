@@ -1,3 +1,4 @@
+
 import { supabase, handleError } from './base-service';
 import { toast } from 'sonner';
 import type { Startup } from '@/integrations/supabase/client';
@@ -54,6 +55,7 @@ export const getStartup = async (id: string): Promise<Startup | null> => {
 
 export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' | 'updated_at'> & { attachments?: any[] }): Promise<Startup | null> => {
   try {
+    console.log('Creating startup in Supabase with data:', startup);
     const { attachments, ...startupData } = startup;
     
     const { data, error } = await supabase
@@ -62,7 +64,12 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase insert error:', error);
+      throw error;
+    }
+    
+    console.log('Startup created in Supabase:', data);
     
     if (attachments && attachments.length > 0) {
       for (const file of attachments) {
@@ -79,6 +86,7 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
     toast.success('Startup created successfully');
     return data;
   } catch (error: any) {
+    console.error('Error in createStartup function:', error);
     handleError(error, 'Failed to create startup');
     return null;
   }
@@ -86,6 +94,7 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
 
 export const updateStartup = async (id: string, startup: Partial<Startup> & { attachments?: any[] }): Promise<Startup | null> => {
   try {
+    console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
     const { attachments, ...startupData } = startup;
     
     const { data, error } = await supabase
@@ -95,7 +104,12 @@ export const updateStartup = async (id: string, startup: Partial<Startup> & { at
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase update error:', error);
+      throw error;
+    }
+    
+    console.log('Startup updated in Supabase:', data);
     
     if (attachments && attachments.length > 0) {
       for (const file of attachments) {
@@ -114,6 +128,7 @@ export const updateStartup = async (id: string, startup: Partial<Startup> & { at
     toast.success('Startup updated successfully');
     return data;
   } catch (error: any) {
+    console.error('Error in updateStartup function:', error);
     handleError(error, 'Failed to update startup');
     return null;
   }

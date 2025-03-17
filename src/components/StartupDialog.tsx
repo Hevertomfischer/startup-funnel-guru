@@ -50,13 +50,15 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       problem_solved: data.values["Problema que Resolve"],
       sector: data.values.Setor,
       business_model: data.values["Modelo de Negócio"],
-      mrr: data.values.MRR,
-      client_count: data.values["Quantidade de Clientes"],
+      mrr: data.values.MRR ? Number(data.values.MRR) : null,
+      client_count: data.values["Quantidade de Clientes"] ? Number(data.values["Quantidade de Clientes"]) : null,
       // If it's an update, include the id
       ...(startup?.id && { id: startup.id }),
       // For updates, track previous status
       ...(startup?.status_id && { old_status_id: startup.status_id })
     };
+    
+    console.log('Mapped startup data to send to Supabase:', startupData);
     
     try {
       onSubmit(startupData);
