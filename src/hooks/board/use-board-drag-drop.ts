@@ -84,8 +84,8 @@ export function useBoardDragDrop({
       // Convert startup to the format expected by workflow rules
       const startupForWorkflow: Startup = {
         id: startup.id,
-        createdAt: new Date(startup.created_at),
-        updatedAt: new Date(startup.updated_at),
+        createdAt: startup.created_at || new Date().toISOString(),
+        updatedAt: startup.updated_at || new Date().toISOString(),
         statusId: columnId, // Use the new status id
         values: { ...startup }, // Include all fields
         labels: [], // Would be populated in production

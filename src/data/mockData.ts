@@ -64,8 +64,8 @@ export const USERS = {
 export const MOCK_STARTUPS: Startup[] = [
   {
     id: '1',
-    createdAt: new Date('2023-06-15'),
-    updatedAt: new Date('2023-07-10'),
+    createdAt: '2023-06-15T00:00:00Z',
+    updatedAt: '2023-07-10T00:00:00Z',
     statusId: 'screening',
     values: {
       'Startup': 'TechFlow',
@@ -81,14 +81,14 @@ export const MOCK_STARTUPS: Startup[] = [
     labels: ['saas', 'b2b'],
     priority: 'high',
     assignedTo: 'user1',
-    dueDate: new Date('2023-08-15'),
+    dueDate: '2023-08-15T00:00:00Z',
     timeTracking: 240,
     attachments: [],
   },
   {
     id: '2',
-    createdAt: new Date('2023-05-20'),
-    updatedAt: new Date('2023-06-30'),
+    createdAt: '2023-05-20T00:00:00Z',
+    updatedAt: '2023-06-30T00:00:00Z',
     statusId: 'analysis',
     values: {
       'Startup': 'FinSmart',
@@ -104,14 +104,14 @@ export const MOCK_STARTUPS: Startup[] = [
     labels: ['fintech', 'b2b'],
     priority: 'medium',
     assignedTo: 'user2',
-    dueDate: new Date('2023-07-25'),
+    dueDate: '2023-07-25T00:00:00Z',
     timeTracking: 180,
     attachments: [],
   },
   {
     id: '3',
-    createdAt: new Date('2023-07-05'),
-    updatedAt: new Date('2023-07-15'),
+    createdAt: '2023-07-05T00:00:00Z',
+    updatedAt: '2023-07-15T00:00:00Z',
     statusId: 'prospect',
     values: {
       'Startup': 'EduMatch',
@@ -127,14 +127,14 @@ export const MOCK_STARTUPS: Startup[] = [
     labels: ['edtech', 'marketplace'],
     priority: 'medium',
     assignedTo: 'user3',
-    dueDate: new Date('2023-08-10'),
+    dueDate: '2023-08-10T00:00:00Z',
     timeTracking: 120,
     attachments: [],
   },
   {
     id: '4',
-    createdAt: new Date('2023-04-10'),
-    updatedAt: new Date('2023-06-20'),
+    createdAt: '2023-04-10T00:00:00Z',
+    updatedAt: '2023-06-20T00:00:00Z',
     statusId: 'meeting',
     values: {
       'Startup': 'HealthTrack',
@@ -150,14 +150,14 @@ export const MOCK_STARTUPS: Startup[] = [
     labels: ['healthtech', 'b2c'],
     priority: 'high',
     assignedTo: 'user1',
-    dueDate: new Date('2023-07-05'),
+    dueDate: '2023-07-05T00:00:00Z',
     timeTracking: 300,
     attachments: [],
   },
   {
     id: '5',
-    createdAt: new Date('2023-03-15'),
-    updatedAt: new Date('2023-06-15'),
+    createdAt: '2023-03-15T00:00:00Z',
+    updatedAt: '2023-06-15T00:00:00Z',
     statusId: 'negotiation',
     values: {
       'Startup': 'DeliveryHub',
@@ -173,14 +173,14 @@ export const MOCK_STARTUPS: Startup[] = [
     labels: ['saas', 'marketplace'],
     priority: 'medium',
     assignedTo: 'user2',
-    dueDate: new Date('2023-06-25'),
+    dueDate: '2023-06-25T00:00:00Z',
     timeTracking: 450,
     attachments: [],
   },
   {
     id: '6',
-    createdAt: new Date('2023-02-20'),
-    updatedAt: new Date('2023-06-10'),
+    createdAt: '2023-02-20T00:00:00Z',
+    updatedAt: '2023-06-10T00:00:00Z',
     statusId: 'invested',
     values: {
       'Startup': 'SmartContract',
@@ -202,8 +202,8 @@ export const MOCK_STARTUPS: Startup[] = [
   },
   {
     id: '7',
-    createdAt: new Date('2023-05-10'),
-    updatedAt: new Date('2023-06-05'),
+    createdAt: '2023-05-10T00:00:00Z',
+    updatedAt: '2023-06-05T00:00:00Z',
     statusId: 'rejected',
     values: {
       'Startup': 'EcoPackage',

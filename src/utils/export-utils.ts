@@ -4,6 +4,7 @@
  */
 
 import { Startup } from '@/types';
+import { format } from 'date-fns';
 
 /**
  * Convert startup data to CSV format and trigger download
@@ -33,7 +34,8 @@ export const exportStartupsToCSV = (startups: Startup[]) => {
       startup.values.MRR || '',
       startup.values['Quantidade de Clientes'] || '',
       startup.priority || '',
-      startup.createdAt.toLocaleDateString()
+      // Format the createdAt date using date-fns
+      format(new Date(startup.createdAt), 'dd/MM/yyyy')
     ].join(',');
   });
 

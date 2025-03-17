@@ -16,8 +16,8 @@ export const useStartupData = () => {
     if (startupsData && Array.isArray(startupsData)) {
       const formatted = startupsData.map(startup => ({
         id: startup.id,
-        createdAt: startup.created_at ? startup.created_at : new Date().toISOString(),
-        updatedAt: startup.updated_at ? startup.updated_at : new Date().toISOString(),
+        createdAt: startup.created_at || new Date().toISOString(),
+        updatedAt: startup.updated_at || new Date().toISOString(),
         statusId: startup.status_id || '',
         values: {
           Startup: startup.name,
@@ -36,7 +36,7 @@ export const useStartupData = () => {
         labels: [],
         priority: startup.priority as 'low' | 'medium' | 'high' || 'medium',
         assignedTo: startup.assigned_to,
-        dueDate: startup.due_date || undefined,
+        dueDate: startup.due_date,
         timeTracking: startup.time_tracking || 0,
         attachments: []
       }));

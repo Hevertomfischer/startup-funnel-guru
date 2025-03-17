@@ -55,7 +55,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-8">
-        <StatusDescriptionSection statuses={statuses} form={form} />
+        <StatusDescriptionSection form={form} statuses={statuses} />
         <BasicInfoSection form={form} />
         <TeamSection form={form} />
         <CompanyDetailsSection form={form} />

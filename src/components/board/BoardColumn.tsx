@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Loader2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,25 +54,17 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   onEditColumn,
   onCreateTask
 }) => {
-  // Certifique-se de que startups é um array e não é nulo
+  // Ensure startups is an array and not null
   const safeStartups = Array.isArray(startups) ? startups : [];
   
-  // Certifique-se de que startupIds é um array e não é nulo
+  // Ensure startupIds is an array and not null
   const safeStartupIds = Array.isArray(startupIds) ? startupIds : [];
-  
-  // Console log para debug
-  console.log(`BoardColumn ${id} (${title}):`, { 
-    startupCount: safeStartups.length,
-    startupIdCount: safeStartupIds.length,
-    isLoading,
-    isError
-  });
   
   // Map startup data to the format expected by StartupCard
   const mapStartupToCardFormat = (startup: any): Startup => ({
     id: startup.id,
-    createdAt: startup.created_at ? new Date(startup.created_at) : new Date(),
-    updatedAt: startup.updated_at ? new Date(startup.updated_at) : new Date(),
+    createdAt: startup.created_at ? startup.created_at : new Date().toISOString(),
+    updatedAt: startup.updated_at ? startup.updated_at : new Date().toISOString(),
     statusId: startup.status_id || '',
     values: {
       Startup: startup.name,
@@ -87,7 +78,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
     labels: [],
     priority: startup.priority as 'low' | 'medium' | 'high',
     assignedTo: startup.assigned_to,
-    dueDate: startup.due_date ? new Date(startup.due_date) : undefined,
+    dueDate: startup.due_date,
     timeTracking: startup.time_tracking,
     attachments: []
   });

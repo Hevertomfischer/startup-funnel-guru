@@ -111,6 +111,7 @@ export interface StartupValues {
   'Pontos de Atenção'?: string;
   'Como a SCAngels pode agregar valor na Startup'?: string;
   'Motivo Não Investimento'?: string;
+  'Motivo da Não continuidade'?: string;
   
   // Financial metrics
   'Quantidade de Clientes'?: number;
