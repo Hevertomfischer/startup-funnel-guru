@@ -58,9 +58,22 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
     console.log('Creating startup in Supabase with data:', startup);
     const { attachments, ...startupData } = startup;
     
+    // Process numeric fields and ensure they're valid numbers or null
+    const preparedData = {
+      ...startupData,
+      mrr: typeof startupData.mrr === 'string' ? 
+        (startupData.mrr.trim() === '' ? null : Number(startupData.mrr)) : 
+        startupData.mrr,
+      client_count: typeof startupData.client_count === 'string' ? 
+        (startupData.client_count.trim() === '' ? null : Number(startupData.client_count)) : 
+        startupData.client_count
+    };
+    
+    console.log('Prepared data for Supabase insert:', preparedData);
+    
     const { data, error } = await supabase
       .from('startups')
-      .insert(startupData)
+      .insert(preparedData)
       .select()
       .single();
     
@@ -97,9 +110,22 @@ export const updateStartup = async (id: string, startup: Partial<Startup> & { at
     console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
     const { attachments, ...startupData } = startup;
     
+    // Process numeric fields and ensure they're valid numbers or null
+    const preparedData = {
+      ...startupData,
+      mrr: typeof startupData.mrr === 'string' ? 
+        (startupData.mrr.trim() === '' ? null : Number(startupData.mrr)) : 
+        startupData.mrr,
+      client_count: typeof startupData.client_count === 'string' ? 
+        (startupData.client_count.trim() === '' ? null : Number(startupData.client_count)) : 
+        startupData.client_count
+    };
+    
+    console.log('Prepared data for Supabase update:', preparedData);
+    
     const { data, error } = await supabase
       .from('startups')
-      .update(startupData)
+      .update(preparedData)
       .eq('id', id)
       .select()
       .single();
