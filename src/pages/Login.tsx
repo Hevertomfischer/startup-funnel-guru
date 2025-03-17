@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,15 +15,30 @@ export default function Login() {
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
-  const { signIn, isLoading } = useAuth();
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const { signIn, isLoading, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setLoginError(null);
+      setEmailNotConfirmed(false);
       await signIn(email, password);
     } catch (error: any) {
+      console.error('Login error:', error);
+      
       if (error?.message?.includes('Email not confirmed')) {
         setEmailNotConfirmed(true);
+      } else {
+        setLoginError(error?.message || 'Falha na autenticação');
       }
     }
   };
@@ -73,6 +88,14 @@ export default function Login() {
                 {isResending ? 'Enviando...' : resendSuccess ? 'Email reenviado' : 'Reenviar email de confirmação'}
               </Button>
             </AlertDescription>
+          </Alert>
+        )}
+
+        {loginError && (
+          <Alert variant="destructive">
+            <InfoIcon className="h-4 w-4" />
+            <AlertTitle>Erro de login</AlertTitle>
+            <AlertDescription>{loginError}</AlertDescription>
           </Alert>
         )}
 
