@@ -13,5 +13,5 @@ export const useAuth = () => {
   return useAuthContext();
 };
 
-// Re-export the useRequireAuth functionality
-export { useRoleGuard as useRequireAuth } from './use-role-guard';
+// Re-export the useRoleGuard functionality
+export { useRoleGuard } from '@/hooks/use-role-guard';
