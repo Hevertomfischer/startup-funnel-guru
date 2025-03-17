@@ -2,7 +2,17 @@
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ClipboardList, User, Building2, TrendingUp, BarChartBig, FileText, FileSpreadsheet, PercentSquare } from 'lucide-react';
+import { 
+  ClipboardList, 
+  User, 
+  Building2, 
+  TrendingUp, 
+  BarChartBig, 
+  FileText, 
+  FileSpreadsheet, 
+  PercentSquare,
+  Info
+} from 'lucide-react';
 
 interface FormNavigationProps {
   activeTab: string;
@@ -24,7 +34,7 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
     { id: 'business', label: 'Negócio', icon: <BarChartBig className="h-4 w-4" /> },
     { id: 'financial', label: 'Financeiro', icon: <FileSpreadsheet className="h-4 w-4" /> },
     { id: 'metrics', label: 'Métricas', icon: <PercentSquare className="h-4 w-4" /> },
-    { id: 'analysis', label: 'Análise', icon: <ClipboardList className="h-4 w-4" /> },
+    { id: 'analysis', label: 'Análise', icon: <Info className="h-4 w-4" /> },
   ];
   
   return (
@@ -38,7 +48,7 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
       
       <Progress value={progress} className="h-2" />
       
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex w-full h-auto flex-wrap mb-2 bg-muted/50">
           {tabs.map((tab) => (
             <TabsTrigger 

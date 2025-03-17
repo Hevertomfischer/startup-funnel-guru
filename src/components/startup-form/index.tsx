@@ -15,7 +15,7 @@ import { FinancialSection } from './FinancialSection';
 import { StatusDescriptionSection } from './StatusDescriptionSection';
 import { FormActions } from './FormActions';
 import { FormNavigation } from './FormNavigation';
-import { TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Status } from '@/types';
 
 interface StartupFormProps {
@@ -47,6 +47,7 @@ const StartupForm: React.FC<StartupFormProps> = ({
   const form = useForm<StartupFormValues>({
     resolver: zodResolver(startupFormSchema),
     defaultValues,
+    mode: 'onChange'
   });
 
   const [activeTab, setActiveTab] = useState('basic');
@@ -100,6 +101,10 @@ const StartupForm: React.FC<StartupFormProps> = ({
     onSubmit(data);
   });
 
+  useEffect(() => {
+    console.log('Current active tab:', activeTab);
+  }, [activeTab]);
+
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -110,41 +115,43 @@ const StartupForm: React.FC<StartupFormProps> = ({
         />
         
         <div className="mt-4">
-          <TabsContent value="status" className="m-0">
-            <StatusDescriptionSection form={form} statuses={statuses} />
-          </TabsContent>
-          
-          <TabsContent value="basic" className="m-0">
-            <BasicInfoSection form={form} />
-          </TabsContent>
-          
-          <TabsContent value="team" className="m-0">
-            <TeamSection form={form} />
-          </TabsContent>
-          
-          <TabsContent value="company" className="m-0">
-            <CompanyDetailsSection form={form} />
-          </TabsContent>
-          
-          <TabsContent value="market" className="m-0">
-            <MarketSection form={form} />
-          </TabsContent>
-          
-          <TabsContent value="business" className="m-0">
-            <BusinessSection form={form} />
-          </TabsContent>
-          
-          <TabsContent value="financial" className="m-0">
-            <FinancialSection form={form} />
-          </TabsContent>
-          
-          <TabsContent value="metrics" className="m-0">
-            <MetricsSection form={form} />
-          </TabsContent>
-          
-          <TabsContent value="analysis" className="m-0">
-            <AnalysisSection form={form} />
-          </TabsContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue={activeTab}>
+            <TabsContent value="status" className="m-0">
+              <StatusDescriptionSection form={form} statuses={statuses} />
+            </TabsContent>
+            
+            <TabsContent value="basic" className="m-0">
+              <BasicInfoSection form={form} />
+            </TabsContent>
+            
+            <TabsContent value="team" className="m-0">
+              <TeamSection form={form} />
+            </TabsContent>
+            
+            <TabsContent value="company" className="m-0">
+              <CompanyDetailsSection form={form} />
+            </TabsContent>
+            
+            <TabsContent value="market" className="m-0">
+              <MarketSection form={form} />
+            </TabsContent>
+            
+            <TabsContent value="business" className="m-0">
+              <BusinessSection form={form} />
+            </TabsContent>
+            
+            <TabsContent value="financial" className="m-0">
+              <FinancialSection form={form} />
+            </TabsContent>
+            
+            <TabsContent value="metrics" className="m-0">
+              <MetricsSection form={form} />
+            </TabsContent>
+            
+            <TabsContent value="analysis" className="m-0">
+              <AnalysisSection form={form} />
+            </TabsContent>
+          </Tabs>
         </div>
         
         <FormActions onCancel={onCancel} isSubmitting={isSubmitting} isEditMode={!!startup} />
