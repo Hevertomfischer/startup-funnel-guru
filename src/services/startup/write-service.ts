@@ -60,7 +60,13 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
  * @param startup The startup data to update
  * @returns A promise resolving to the updated startup or null if failed
  */
-export const updateStartup = async (id: string, startup: Partial<Startup> & { attachments?: any[] }): Promise<Startup | null> => {
+export const updateStartup = async (
+  id: string,
+  startup: Partial<Startup> & { 
+    attachments?: any[],
+    old_status_id?: string // Add explicit type for old_status_id
+  }
+): Promise<Startup | null> => {
   try {
     console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
     const { attachments, old_status_id, ...startupData } = startup;
