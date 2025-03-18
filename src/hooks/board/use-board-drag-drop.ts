@@ -56,6 +56,17 @@ export function useBoardDragDrop({
       
       console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
       
+      // Update the columns state immediately for better UX
+      const newColumns = columns.map(col => ({
+        ...col,
+        startupIds: col.id === columnId 
+          ? [...col.startupIds, startupId] 
+          : col.startupIds.filter(id => id !== startupId)
+      }));
+      
+      // Update the columns state
+      setColumns(newColumns);
+      
       // CRITICAL FIX: Send only the absolute minimal required data
       // This reduces the chance of type mismatches and other issues
       updateStartupMutation.mutate({
@@ -67,21 +78,23 @@ export function useBoardDragDrop({
       }, {
         onSuccess: () => {
           console.log('Mutation successful for startup', startupId);
-          // Create a new columns array with the updated startupIds
-          const newColumns = columns.map(col => ({
-            ...col,
-            startupIds: col.id === columnId 
-              ? [...col.startupIds, startupId] 
-              : col.startupIds.filter(id => id !== startupId)
-          }));
-          
-          // Important: preserve the original column order
-          setColumns(newColumns);
           
           const newStatus = statuses.find(s => s.id === columnId);
           toast({
             title: "Startup moved",
             description: `Startup moved to ${newStatus?.name || 'new status'}`,
+          });
+        },
+        onError: (error) => {
+          console.error('Error updating startup status:', error);
+          
+          // Revert the UI change in case of error
+          setColumns(columns);
+          
+          toast({
+            title: "Failed to move startup",
+            description: "An error occurred. Please try again.",
+            variant: "destructive"
           });
         }
       });
