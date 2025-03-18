@@ -63,7 +63,7 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
  */
 export const updateStartup = async (
   id: string,
-  startup: StartupWithHistory // Use our extended type
+  startup: StartupWithHistory
 ): Promise<Startup | null> => {
   try {
     console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
@@ -71,17 +71,17 @@ export const updateStartup = async (
     // Extract attachments and old_status_id from the input data (they aren't database fields)
     const { attachments, old_status_id, ...startupData } = startup;
     
-    // Ensure status_id is not null or undefined before updating
+    // Create a clean data object for the update
     let preparedData: any = { ...startupData };
     
-    // Fix potential statusId vs status_id naming inconsistency
+    // Always ensure we're using the correct field name
     if (preparedData.statusId && !preparedData.status_id) {
       preparedData.status_id = preparedData.statusId;
       delete preparedData.statusId;
     }
     
-    if (preparedData.status_id === null || preparedData.status_id === undefined) {
-      // Get the current startup data to preserve the status_id
+    // If status_id is missing, get it from the current database record
+    if (!preparedData.status_id) {
       const { data: currentStartup, error: fetchError } = await supabase
         .from('startups')
         .select('status_id')
@@ -93,11 +93,10 @@ export const updateStartup = async (
         throw new Error('Failed to fetch current startup data');
       }
       
-      // Use the current status_id if it exists
       if (currentStartup && currentStartup.status_id) {
         preparedData.status_id = currentStartup.status_id;
       } else {
-        // If for some reason we still don't have a status_id, get the first available status
+        // Fallback to first status if needed
         const { data: firstStatus, error: statusError } = await supabase
           .from('statuses')
           .select('id')
@@ -117,11 +116,23 @@ export const updateStartup = async (
     // Process numeric fields
     preparedData = processStartupNumericFields(preparedData);
     
-    // Important: Don't pass changed_by to the update query
-    // The trigger function will handle this using the current user's ID from the JWT
-    if (preparedData.changed_by) {
-      delete preparedData.changed_by;
+    // CRITICAL: Remove these fields which can cause type errors with the database
+    // The database trigger will handle changed_by using the JWT
+    delete preparedData.changed_by;
+    
+    // Make sure we're not sending string values for UUID fields
+    if (typeof preparedData.status_id !== 'string') {
+      preparedData.status_id = String(preparedData.status_id);
     }
+    
+    if (preparedData.assigned_to && typeof preparedData.assigned_to !== 'string') {
+      preparedData.assigned_to = String(preparedData.assigned_to);
+    }
+    
+    // Remove any other non-column fields that might cause issues
+    delete preparedData.old_status_id;
+    delete preparedData.values;
+    delete preparedData.labels;
     
     console.log('Prepared data for Supabase update:', preparedData);
     

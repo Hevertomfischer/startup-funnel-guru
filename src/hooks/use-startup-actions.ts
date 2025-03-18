@@ -29,13 +29,14 @@ export function useStartupActions() {
   const handleCreateStartup = (data: any) => {
     console.log("Creating startup with data:", data);
     
-    // Ensure we're using status_id, not statusId
-    if (data.statusId && !data.status_id) {
-      data.status_id = data.statusId;
-      delete data.statusId;
+    // Always ensure we're using status_id, not statusId - normalize field names
+    let preparedData = { ...data };
+    if (preparedData.statusId && !preparedData.status_id) {
+      preparedData.status_id = preparedData.statusId;
+      delete preparedData.statusId;
     }
     
-    createStartupMutation.mutate(data, {
+    createStartupMutation.mutate(preparedData, {
       onSuccess: (response) => {
         console.log("Startup created successfully:", response);
         toast({
@@ -47,10 +48,10 @@ export function useStartupActions() {
         // Invalidate queries
         queryClient.invalidateQueries({ queryKey: ['startups'] });
         
-        if (data.status_id) {
-          console.log("Invalidating query for status:", data.status_id);
+        if (preparedData.status_id) {
+          console.log("Invalidating query for status:", preparedData.status_id);
           queryClient.invalidateQueries({ 
-            queryKey: ['startups', 'status', data.status_id] 
+            queryKey: ['startups', 'status', preparedData.status_id] 
           });
         }
       },
@@ -74,46 +75,47 @@ export function useStartupActions() {
   const handleUpdateStartup = (data: any) => {
     console.log("Updating startup with data:", data);
     
-    // Make sure we have the proper status_id field name
-    if (data.statusId && !data.status_id) {
-      data.status_id = data.statusId;
-      delete data.statusId; // Remove the incorrect field
+    // Create a clean copy of the data
+    let preparedData = { ...data };
+    
+    // Always ensure we're using status_id, not statusId
+    if (preparedData.statusId && !preparedData.status_id) {
+      preparedData.status_id = preparedData.statusId;
+      delete preparedData.statusId;
     }
     
-    // If we need to track old status, explicitly add it as status history field
-    // but don't try to update the database field that doesn't exist
+    // Store previous status_id for cache invalidation if status changed
     const oldStatusId = selectedStartup?.status_id;
-    const currentStatusId = data.status_id;
-    const trackOldStatus = oldStatusId && currentStatusId && oldStatusId !== currentStatusId;
+    const currentStatusId = preparedData.status_id;
+    const statusChanged = oldStatusId && currentStatusId && oldStatusId !== currentStatusId;
     
-    // Prepare data with old_status_id if needed
-    const updateData = {
-      ...data,
-      ...(trackOldStatus ? { old_status_id: oldStatusId } : {})
-    };
+    // If tracking status changes for history, add old_status_id
+    if (statusChanged) {
+      preparedData.old_status_id = oldStatusId;
+    }
     
     updateStartupMutation.mutate(
-      { id: selectedStartup.id, startup: updateData },
+      { id: selectedStartup.id, startup: preparedData },
       {
         onSuccess: (response) => {
           console.log("Startup updated successfully:", response);
           toast({
             title: "Startup updated",
-            description: `${data.name} has been updated successfully`
+            description: `${preparedData.name || 'Startup'} has been updated successfully`
           });
           setShowEditDialog(false);
           
           // Invalidate queries
           queryClient.invalidateQueries({ queryKey: ['startups'] });
           
-          if (data.status_id) {
+          if (currentStatusId) {
             queryClient.invalidateQueries({ 
-              queryKey: ['startups', 'status', data.status_id] 
+              queryKey: ['startups', 'status', currentStatusId] 
             });
           }
           
           // Also invalidate previous status query if status was changed
-          if (trackOldStatus) {
+          if (statusChanged) {
             queryClient.invalidateQueries({ 
               queryKey: ['startups', 'status', oldStatusId] 
             });

@@ -51,16 +51,17 @@ export function useBoardDragDrop({
     const startup = getStartupById(startupId);
     
     if (startup && startup.status_id !== columnId) {
-      // Save the previous status for workflow rules
-      const previousValues = { 
-        statusId: startup.status_id,
-        // Add any other fields here that might be relevant for workflow conditions
-      };
+      // Save the previous status for workflow rules and history tracking
+      const oldStatusId = startup.status_id;
       
       // Update the startup's status in Supabase
+      // IMPORTANT: We're only sending the minimum required data to avoid type errors
       updateStartupMutation.mutate({
         id: startupId,
-        startup: { status_id: columnId }
+        startup: { 
+          status_id: columnId,
+          old_status_id: oldStatusId
+        }
       });
       
       // Create a new columns array with the updated startupIds
@@ -94,7 +95,7 @@ export function useBoardDragDrop({
       };
       
       // Process the startup through workflow rules
-      processStartup(startupForWorkflow, previousValues, statuses);
+      processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
     }
     
     setDraggingStartupId(null);

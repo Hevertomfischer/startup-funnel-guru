@@ -54,7 +54,7 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
     const startupData = {
       // Map form values to database schema
       name: data.values.Startup,
-      status_id: data.statusId, // Will be converted to status_id in the service
+      status_id: data.statusId, // Will be normalized in the service
       priority: data.priority,
       assigned_to: data.assignedTo || null,
       due_date: data.dueDate || null,
@@ -121,10 +121,6 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       
       // If it's an update, include the id
       ...(startup?.id && { id: startup.id }),
-      
-      // Important: Track old status_id for history but don't try to update a column that doesn't exist
-      ...(startup?.status_id && data.statusId !== startup.status_id ? 
-        { old_status_id: startup.status_id } : {})
     };
     
     console.log('Mapped startup data to send to Supabase:', startupData);
