@@ -1,10 +1,9 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useUpdateStartupMutation } from '../use-supabase-query';
+import { useUpdateStartupMutation } from '../queries/use-startup-queries';
 import { Column, Startup } from '@/types';
 import { useWorkflowRules } from '../use-workflow-rules';
-import { useQueryClient } from '@tanstack/react-query';
 
 type UseBoardDragDropParams = {
   columns: Column[];

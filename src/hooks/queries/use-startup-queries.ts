@@ -83,7 +83,7 @@ export const useUpdateStartupMutation = () => {
       
       // If status changed, also invalidate previous status
       const oldStatus = variables.startup.old_status_id;
-      if (oldStatus && oldStatus !== data.status_id) {
+      if (oldStatus && oldStatus !== data?.status_id) {
         queryClient.invalidateQueries({ 
           queryKey: ['startups', 'status', oldStatus]
         });
