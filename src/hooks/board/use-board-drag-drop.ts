@@ -47,6 +47,11 @@ export function useBoardDragDrop({
     if (type !== 'startup') return;
     
     const startupId = e.dataTransfer.getData('text/plain');
+    if (!startupId || !columnId) {
+      console.error('Missing required data:', { startupId, columnId });
+      return;
+    }
+    
     const startup = getStartupById(startupId);
     
     if (!startup) {
@@ -77,7 +82,7 @@ export function useBoardDragDrop({
         newStatusId: columnId,
         oldStatusId: oldStatusId
       }, {
-        onSuccess: () => {
+        onSuccess: (data) => {
           console.log('Status update successful for startup', startupId);
           
           const newStatus = statuses.find(s => s.id === columnId);
@@ -86,33 +91,36 @@ export function useBoardDragDrop({
             description: `Startup moved to ${newStatus?.name || 'new status'}`,
           });
           
-          // Trigger workflow rules after startup status change
-          // Convert startup to the format expected by workflow rules
-          const startupForWorkflow: Startup = {
-            id: startup.id,
-            createdAt: startup.created_at || new Date().toISOString(),
-            updatedAt: startup.updated_at || new Date().toISOString(),
-            statusId: columnId, // Use the new status id
-            values: { ...startup }, // Include all fields
-            labels: [], // Would be populated in production
-            priority: startup.priority || 'medium',
-            attachments: []
-          };
-          
-          // Process the startup through workflow rules
-          processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
+          // Only trigger workflow rules if we have a successful response
+          if (data) {
+            // Convert startup to the format expected by workflow rules
+            const startupForWorkflow: Startup = {
+              id: startup.id,
+              createdAt: startup.created_at || new Date().toISOString(),
+              updatedAt: startup.updated_at || new Date().toISOString(),
+              statusId: columnId, // Use the new status id
+              values: { ...startup }, // Include all fields
+              labels: [], // Would be populated in production
+              priority: startup.priority || 'medium',
+              attachments: []
+            };
+            
+            // Process the startup through workflow rules
+            processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
+          }
         },
         onError: (error) => {
           console.error('Error updating startup status:', error);
           
-          // Revert the UI change in case of error
-          setColumns(columns);
-          
+          // Show the error message
           toast({
             title: "Failed to move startup",
-            description: "An error occurred. Please try again.",
+            description: error instanceof Error ? error.message : "An error occurred. Please try again.",
             variant: "destructive"
           });
+          
+          // Revert the UI change in case of error
+          setColumns(columns);
         }
       });
     }

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getStartups, 
@@ -128,9 +129,17 @@ export const useUpdateStartupStatusMutation = () => {
       id: string; 
       newStatusId: string; 
       oldStatusId?: string 
-    }) => updateStartupStatus(id, newStatusId, oldStatusId),
+    }) => {
+      console.log(`Mutation starting: Update startup ${id} from ${oldStatusId} to ${newStatusId}`);
+      return updateStartupStatus(id, newStatusId, oldStatusId);
+    },
     onSuccess: (data, variables) => {
       console.log("Status update succeeded:", data);
+      
+      if (!data) {
+        console.warn("Status update succeeded but no data returned");
+        return;
+      }
       
       // Invalidate generic startups query
       queryClient.invalidateQueries({ queryKey: ['startups'] });
@@ -157,9 +166,13 @@ export const useUpdateStartupStatusMutation = () => {
       // Invalidate queries to ensure UI is up-to-date
       queryClient.invalidateQueries({ queryKey: ['startups'] });
       queryClient.invalidateQueries({ queryKey: ['startup', variables.id] });
-      queryClient.invalidateQueries({ 
-        queryKey: ['startups', 'status', variables.newStatusId]
-      });
+      
+      if (variables.newStatusId) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['startups', 'status', variables.newStatusId]
+        });
+      }
+      
       if (variables.oldStatusId) {
         queryClient.invalidateQueries({ 
           queryKey: ['startups', 'status', variables.oldStatusId]

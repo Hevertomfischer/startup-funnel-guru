@@ -182,11 +182,27 @@ export const updateStartupStatus = async (
   oldStatusId?: string
 ): Promise<Startup | null> => {
   try {
+    // Validate inputs to avoid DB errors
+    if (!id || typeof id !== 'string') {
+      throw new Error('Invalid startup ID');
+    }
+    
+    if (!newStatusId || typeof newStatusId !== 'string') {
+      throw new Error('Invalid status ID');
+    }
+    
+    // UUID validation check - could be more thorough but this catches the basic issues
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(id) || !uuidPattern.test(newStatusId)) {
+      throw new Error(`Invalid UUID format: ${!uuidPattern.test(id) ? 'startup ID' : 'status ID'}`);
+    }
+    
     console.log(`Updating startup ${id} status from ${oldStatusId} to ${newStatusId}`);
     
     // Create a minimal update with only the status_id field
+    // No changed_by field here - the database trigger will handle this with the current user
     const updateData = { 
-      status_id: newStatusId 
+      status_id: newStatusId
     };
     
     // Update just the status_id field
