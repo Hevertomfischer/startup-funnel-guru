@@ -54,8 +54,8 @@ export function useBoardDragDrop({
       // Save the previous status for workflow rules and history tracking
       const oldStatusId = startup.status_id;
       
-      // CRITICAL FIX: Simplify the update payload to avoid type issues
-      // Only send the startup ID and the new status_id as STRINGS
+      // CRITICAL FIX: Send only the minimal required data
+      // This reduces the chance of type mismatches and other issues
       updateStartupMutation.mutate({
         id: startupId,
         startup: { 

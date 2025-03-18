@@ -113,7 +113,9 @@ export function useStartupActions() {
     }
     
     // Ensure assigned_to is a string or null
-    if (preparedData.assigned_to && typeof preparedData.assigned_to !== 'string') {
+    if (preparedData.assigned_to === undefined || preparedData.assigned_to === '') {
+      preparedData.assigned_to = null;
+    } else if (preparedData.assigned_to && typeof preparedData.assigned_to !== 'string') {
       preparedData.assigned_to = String(preparedData.assigned_to);
     }
     
