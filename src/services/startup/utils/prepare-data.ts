@@ -10,9 +10,13 @@ export function prepareStartupData(data: any): any {
   // Create a clean copy of the data without any non-database fields
   const cleanData = { ...data };
   
+  // CRITICAL: Always remove changed_by field as this is handled by database triggers
+  if ('changed_by' in cleanData) {
+    delete cleanData.changed_by;
+  }
+  
   // Remove virtual fields not in the database schema
   const fieldsToRemove = [
-    'changed_by',  // Critical: Remove changed_by as it's handled by database triggers
     'values',
     'labels',
     'old_status_id',

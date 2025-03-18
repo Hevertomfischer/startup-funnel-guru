@@ -33,11 +33,6 @@ export const useUpdateStartupStatusMutation = () => {
     onSuccess: (data, variables) => {
       console.log("Status update succeeded:", data);
       
-      if (!data) {
-        console.warn("Status update succeeded but no data returned");
-        return;
-      }
-      
       // Invalidate generic startups query
       queryClient.invalidateQueries({ queryKey: ['startups'] });
       

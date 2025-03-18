@@ -31,10 +31,15 @@ export const updateStartupStatus = async (
     console.log(`Updating startup ${id} status from ${oldStatusId} to ${newStatusId}`);
     
     // Create a minimal update with only the status_id field
-    // IMPORTANT: Don't set changed_by here - the database trigger will handle this automatically
     const updateData = { 
       status_id: newStatusId
     };
+    
+    // CRITICAL: Explicitly remove changed_by if it somehow exists
+    // This ensures it will be set by the database trigger
+    if ('changed_by' in updateData) {
+      delete updateData.changed_by;
+    }
     
     // Update just the status_id field
     const { data, error } = await supabase

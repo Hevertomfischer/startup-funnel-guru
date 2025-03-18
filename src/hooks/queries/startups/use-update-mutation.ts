@@ -10,8 +10,7 @@ export const useUpdateStartupMutation = () => {
     mutationFn: ({ id, startup }: { id: string; startup: any }) => {
       console.log("Update mutation starting with data:", startup);
       
-      // IMPORTANT: Remove changed_by if it exists to avoid type conflicts
-      // The database trigger will handle this automatically
+      // CRITICAL: Always remove changed_by field completely
       if (startup && 'changed_by' in startup) {
         delete startup.changed_by;
       }
@@ -23,7 +22,6 @@ export const useUpdateStartupMutation = () => {
     },
     onSuccess: (data, variables) => {
       console.log("Update mutation succeeded with data:", data);
-      console.log("Update variables:", variables);
       
       // Invalidate generic startups query
       queryClient.invalidateQueries({ queryKey: ['startups'] });

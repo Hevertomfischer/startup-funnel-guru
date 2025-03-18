@@ -19,7 +19,7 @@ export const updateStartup = async (
     // Extract attachments from the input data (they aren't database fields)
     const { attachments, ...startupData } = startup;
     
-    // IMPORTANT: Remove changed_by - it's a UUID field that should be handled by database triggers
+    // CRITICAL: Always remove changed_by field completely
     if ('changed_by' in startupData) {
       delete startupData.changed_by;
     }
@@ -36,7 +36,6 @@ export const updateStartup = async (
     }
     
     // Update the startup in the database
-    // Note: We don't set changed_by here - it's handled by database triggers
     const { data, error } = await supabase
       .from('startups')
       .update(preparedData)
