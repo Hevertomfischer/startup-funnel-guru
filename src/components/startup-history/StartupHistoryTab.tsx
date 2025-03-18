@@ -1,47 +1,39 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, History, Clock } from 'lucide-react';
-import { getStartupHistory, getStartupStatusHistory, getTimeInEachColumn } from '@/services/startup-history-service';
 import StartupChangesHistory from './StartupChangesHistory';
 import StartupStatusTimeline from './StartupStatusTimeline';
 import StartupTimeInColumns from './StartupTimeInColumns';
+import { 
+  useStartupHistoryQuery, 
+  useStartupStatusHistoryQuery,
+  useTimeInColumnsQuery 
+} from '@/hooks/queries/use-startup-detail-queries';
 
 interface StartupHistoryTabProps {
   startupId: string;
 }
 
 const StartupHistoryTab: React.FC<StartupHistoryTabProps> = ({ startupId }) => {
-  const [changesHistory, setChangesHistory] = useState<any[]>([]);
-  const [statusHistory, setStatusHistory] = useState<any[]>([]);
-  const [timeInColumns, setTimeInColumns] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use React Query hooks to fetch history data
+  const { 
+    data: changesHistory = [], 
+    isLoading: isChangesLoading 
+  } = useStartupHistoryQuery(startupId);
+  
+  const { 
+    data: statusHistory = [], 
+    isLoading: isStatusLoading 
+  } = useStartupStatusHistoryQuery(startupId);
+  
+  const { 
+    data: timeInColumns = [], 
+    isLoading: isTimeLoading 
+  } = useTimeInColumnsQuery(startupId);
 
-  useEffect(() => {
-    const fetchHistoryData = async () => {
-      setIsLoading(true);
-      try {
-        const [changesData, statusData, columnTimeData] = await Promise.all([
-          getStartupHistory(startupId),
-          getStartupStatusHistory(startupId),
-          getTimeInEachColumn(startupId)
-        ]);
-        
-        setChangesHistory(changesData);
-        setStatusHistory(statusData);
-        setTimeInColumns(columnTimeData);
-      } catch (error) {
-        console.error('Erro ao buscar dados de histórico:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (startupId) {
-      fetchHistoryData();
-    }
-  }, [startupId]);
+  const isLoading = isChangesLoading || isStatusLoading || isTimeLoading;
 
   if (isLoading) {
     return (
@@ -64,11 +56,11 @@ const StartupHistoryTab: React.FC<StartupHistoryTabProps> = ({ startupId }) => {
           <TabsList className="mb-4">
             <TabsTrigger value="changes">
               <History className="h-4 w-4 mr-2" />
-              Alterações
+              Alterações ({changesHistory.length})
             </TabsTrigger>
             <TabsTrigger value="status">
               <Clock className="h-4 w-4 mr-2" />
-              Linha do Tempo
+              Linha do Tempo ({statusHistory.length})
             </TabsTrigger>
             <TabsTrigger value="time">
               <Clock className="h-4 w-4 mr-2" />

@@ -11,6 +11,8 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { User } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StartupChangesHistoryProps {
   history: any[];
@@ -84,6 +86,7 @@ const StartupChangesHistory: React.FC<StartupChangesHistoryProps> = ({ history }
             <TableHead>Campo</TableHead>
             <TableHead>Valor Anterior</TableHead>
             <TableHead>Novo Valor</TableHead>
+            <TableHead className="w-[100px]">Alterado por</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -100,6 +103,25 @@ const StartupChangesHistory: React.FC<StartupChangesHistoryProps> = ({ history }
               </TableCell>
               <TableCell className="max-w-[200px] truncate">
                 {formatValue(record.new_value)}
+              </TableCell>
+              <TableCell>
+                {record.profiles ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-1" />
+                          <span className="truncate">{record.profiles.full_name || record.profiles.email}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{record.profiles.email}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <span className="text-muted-foreground text-sm">Sistema</span>
+                )}
               </TableCell>
             </TableRow>
           ))}

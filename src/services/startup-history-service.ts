@@ -7,7 +7,16 @@ export const getStartupHistory = async (startupId: string) => {
   try {
     const { data, error } = await supabase
       .from('startup_history')
-      .select('*')
+      .select(`
+        id,
+        startup_id,
+        field_name,
+        old_value,
+        new_value,
+        changed_by,
+        created_at,
+        profiles:changed_by(full_name, email)
+      `)
       .eq('startup_id', startupId)
       .order('created_at', { ascending: false });
     
