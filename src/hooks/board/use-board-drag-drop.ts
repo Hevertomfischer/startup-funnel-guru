@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateStartupStatusMutation } from '../queries/use-startup-queries';
 import { Column, Startup } from '@/types';
-import { useWorkflowRules } from '../use-workflow-rules';
+import { useWorkflowRules } from '../workflow';
 
 type UseBoardDragDropParams = {
   columns: Column[];
@@ -25,10 +24,8 @@ export function useBoardDragDrop({
   const [draggingColumnId, setDraggingColumnId] = useState<string | null>(null);
   const { processStartup } = useWorkflowRules();
   
-  // Mutations for updating startups - using our specialized status update mutation
   const updateStartupStatusMutation = useUpdateStartupStatusMutation();
   
-  // Drag and drop handlers for startups
   const handleDragStart = (e: React.DragEvent, startupId: string) => {
     e.dataTransfer.setData('text/plain', startupId);
     e.dataTransfer.setData('type', 'startup');
@@ -42,7 +39,6 @@ export function useBoardDragDrop({
   const handleDrop = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
     
-    // Check if this is a startup being dragged
     const type = e.dataTransfer.getData('type');
     if (type !== 'startup') return;
     
@@ -60,12 +56,10 @@ export function useBoardDragDrop({
     }
     
     if (startup && startup.status_id !== columnId) {
-      // Save the previous status for workflow rules and history tracking
       const oldStatusId = startup.status_id;
       
       console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
       
-      // Update the columns state immediately for better UX
       const newColumns = columns.map(col => ({
         ...col,
         startupIds: col.id === columnId 
@@ -73,10 +67,8 @@ export function useBoardDragDrop({
           : col.startupIds.filter(id => id !== startupId)
       }));
       
-      // Update the columns state
       setColumns(newColumns);
       
-      // Use our specialized mutation for status updates
       updateStartupStatusMutation.mutate({
         id: startupId,
         newStatusId: columnId,
@@ -91,35 +83,30 @@ export function useBoardDragDrop({
             description: `Startup moved to ${newStatus?.name || 'new status'}`,
           });
           
-          // Only trigger workflow rules if we have a successful response
           if (data) {
-            // Convert startup to the format expected by workflow rules
             const startupForWorkflow: Startup = {
               id: startup.id,
               createdAt: startup.created_at || new Date().toISOString(),
               updatedAt: startup.updated_at || new Date().toISOString(),
-              statusId: columnId, // Use the new status id
-              values: { ...startup }, // Include all fields
-              labels: [], // Would be populated in production
+              statusId: columnId,
+              values: { ...startup },
+              labels: [],
               priority: startup.priority || 'medium',
               attachments: []
             };
             
-            // Process the startup through workflow rules
             processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
           }
         },
         onError: (error) => {
           console.error('Error updating startup status:', error);
           
-          // Show the error message
           toast({
             title: "Failed to move startup",
             description: error instanceof Error ? error.message : "An error occurred. Please try again.",
             variant: "destructive"
           });
           
-          // Revert the UI change in case of error
           setColumns(columns);
         }
       });
@@ -132,7 +119,6 @@ export function useBoardDragDrop({
     setDraggingStartupId(null);
   };
 
-  // Column drag and drop handlers
   const handleColumnDragStart = (e: React.DragEvent, columnId: string) => {
     e.dataTransfer.setData('text/plain', columnId);
     e.dataTransfer.setData('type', 'column');
@@ -146,30 +132,25 @@ export function useBoardDragDrop({
   const handleColumnDrop = (e: React.DragEvent, targetColumnId: string) => {
     e.preventDefault();
     
-    // Check if this is a column being dragged
     const type = e.dataTransfer.getData('type');
     if (type !== 'column') return;
     
     const sourceColumnId = e.dataTransfer.getData('text/plain');
     
     if (sourceColumnId !== targetColumnId) {
-      // Find the indices of the source and target columns
       const sourceIndex = columns.findIndex(col => col.id === sourceColumnId);
       const targetIndex = columns.findIndex(col => col.id === targetColumnId);
       
       if (sourceIndex !== -1 && targetIndex !== -1) {
-        // Create a new array and move the column
         const newColumns = [...columns];
         const [movedColumn] = newColumns.splice(sourceIndex, 1);
         newColumns.splice(targetIndex, 0, movedColumn);
         
-        // Update the positions of all columns
         const columnsWithNewPositions = newColumns.map((col, index) => ({
           ...col,
           position: index
         }));
         
-        // Update the state with the new columns array
         setColumns(columnsWithNewPositions);
       }
     }
