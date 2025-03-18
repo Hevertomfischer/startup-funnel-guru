@@ -74,8 +74,8 @@ export const updateStartup = async (
     // Ensure status_id is not null or undefined before updating
     let preparedData: any = { ...startupData };
     
+    // Fix potential statusId vs status_id naming inconsistency
     if (preparedData.statusId && !preparedData.status_id) {
-      // Fix incorrectly named field if present
       preparedData.status_id = preparedData.statusId;
       delete preparedData.statusId;
     }
@@ -116,6 +116,12 @@ export const updateStartup = async (
     
     // Process numeric fields
     preparedData = processStartupNumericFields(preparedData);
+    
+    // Important: Don't pass changed_by to the update query
+    // The trigger function will handle this using the current user's ID from the JWT
+    if (preparedData.changed_by) {
+      delete preparedData.changed_by;
+    }
     
     console.log('Prepared data for Supabase update:', preparedData);
     

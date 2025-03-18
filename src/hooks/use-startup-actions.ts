@@ -28,6 +28,13 @@ export function useStartupActions() {
   
   const handleCreateStartup = (data: any) => {
     console.log("Creating startup with data:", data);
+    
+    // Ensure we're using status_id, not statusId
+    if (data.statusId && !data.status_id) {
+      data.status_id = data.statusId;
+      delete data.statusId;
+    }
+    
     createStartupMutation.mutate(data, {
       onSuccess: (response) => {
         console.log("Startup created successfully:", response);
@@ -68,7 +75,7 @@ export function useStartupActions() {
     console.log("Updating startup with data:", data);
     
     // Make sure we have the proper status_id field name
-    if (!data.status_id && data.statusId) {
+    if (data.statusId && !data.status_id) {
       data.status_id = data.statusId;
       delete data.statusId; // Remove the incorrect field
     }
@@ -79,9 +86,11 @@ export function useStartupActions() {
     const currentStatusId = data.status_id;
     const trackOldStatus = oldStatusId && currentStatusId && oldStatusId !== currentStatusId;
     
-    // Don't pass old_status_id to the database update
-    // It will be used only for cache invalidation
-    const { old_status_id, ...updateData } = data;
+    // Prepare data with old_status_id if needed
+    const updateData = {
+      ...data,
+      ...(trackOldStatus ? { old_status_id: oldStatusId } : {})
+    };
     
     updateStartupMutation.mutate(
       { id: selectedStartup.id, startup: updateData },
