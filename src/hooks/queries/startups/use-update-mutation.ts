@@ -7,8 +7,20 @@ export const useUpdateStartupMutation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, startup }: { id: string; startup: any }) => 
-      updateStartup(id, startup),
+    mutationFn: ({ id, startup }: { id: string; startup: any }) => {
+      console.log("Update mutation starting with data:", startup);
+      
+      // IMPORTANT: Remove changed_by if it exists to avoid type conflicts
+      // The database trigger will handle this automatically
+      if (startup && 'changed_by' in startup) {
+        delete startup.changed_by;
+      }
+      
+      // Ensure IDs are properly formatted
+      const formattedId = typeof id === 'string' ? id : String(id);
+      
+      return updateStartup(formattedId, startup);
+    },
     onSuccess: (data, variables) => {
       console.log("Update mutation succeeded with data:", data);
       console.log("Update variables:", variables);

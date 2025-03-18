@@ -21,7 +21,14 @@ export const useUpdateStartupStatusMutation = () => {
       oldStatusId?: string 
     }) => {
       console.log(`Mutation starting: Update startup ${id} from ${oldStatusId} to ${newStatusId}`);
-      return updateStartupStatus(id, newStatusId, oldStatusId);
+      
+      // Ensure UUIDs are properly formatted as strings
+      const formattedId = typeof id === 'string' ? id : String(id);
+      const formattedNewStatusId = typeof newStatusId === 'string' ? newStatusId : String(newStatusId);
+      const formattedOldStatusId = oldStatusId ? (typeof oldStatusId === 'string' ? oldStatusId : String(oldStatusId)) : undefined;
+      
+      // Call the service with properly formatted IDs
+      return updateStartupStatus(formattedId, formattedNewStatusId, formattedOldStatusId);
     },
     onSuccess: (data, variables) => {
       console.log("Status update succeeded:", data);
