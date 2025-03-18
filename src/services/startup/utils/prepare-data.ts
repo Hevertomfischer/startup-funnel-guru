@@ -1,5 +1,5 @@
 
-import { processStartupNumericFields } from '../utils/numeric-field-utils';
+import { processStartupNumericFields } from './numeric-field-utils';
 
 /**
  * Prepares data for Supabase by removing non-column fields and ensuring proper types
