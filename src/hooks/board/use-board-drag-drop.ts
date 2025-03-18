@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useUpdateStartupMutation } from '../queries/use-startup-queries';
+import { useUpdateStartupStatusMutation } from '../queries/use-startup-queries';
 import { Column, Startup } from '@/types';
 import { useWorkflowRules } from '../use-workflow-rules';
 
@@ -25,8 +25,8 @@ export function useBoardDragDrop({
   const [draggingColumnId, setDraggingColumnId] = useState<string | null>(null);
   const { processStartup } = useWorkflowRules();
   
-  // Mutations for updating startups
-  const updateStartupMutation = useUpdateStartupMutation();
+  // Mutations for updating startups - using our specialized status update mutation
+  const updateStartupStatusMutation = useUpdateStartupStatusMutation();
   
   // Drag and drop handlers for startups
   const handleDragStart = (e: React.DragEvent, startupId: string) => {
@@ -49,6 +49,11 @@ export function useBoardDragDrop({
     const startupId = e.dataTransfer.getData('text/plain');
     const startup = getStartupById(startupId);
     
+    if (!startup) {
+      console.error('Startup not found:', startupId);
+      return;
+    }
+    
     if (startup && startup.status_id !== columnId) {
       // Save the previous status for workflow rules and history tracking
       const oldStatusId = startup.status_id;
@@ -66,23 +71,36 @@ export function useBoardDragDrop({
       // Update the columns state
       setColumns(newColumns);
       
-      // CRITICAL FIX: Send only the absolute minimal required data
-      // This reduces the chance of type mismatches and other issues
-      updateStartupMutation.mutate({
+      // Use our specialized mutation for status updates
+      updateStartupStatusMutation.mutate({
         id: startupId,
-        startup: { 
-          status_id: columnId,
-          old_status_id: oldStatusId
-        }
+        newStatusId: columnId,
+        oldStatusId: oldStatusId
       }, {
         onSuccess: () => {
-          console.log('Mutation successful for startup', startupId);
+          console.log('Status update successful for startup', startupId);
           
           const newStatus = statuses.find(s => s.id === columnId);
           toast({
             title: "Startup moved",
             description: `Startup moved to ${newStatus?.name || 'new status'}`,
           });
+          
+          // Trigger workflow rules after startup status change
+          // Convert startup to the format expected by workflow rules
+          const startupForWorkflow: Startup = {
+            id: startup.id,
+            createdAt: startup.created_at || new Date().toISOString(),
+            updatedAt: startup.updated_at || new Date().toISOString(),
+            statusId: columnId, // Use the new status id
+            values: { ...startup }, // Include all fields
+            labels: [], // Would be populated in production
+            priority: startup.priority || 'medium',
+            attachments: []
+          };
+          
+          // Process the startup through workflow rules
+          processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
         },
         onError: (error) => {
           console.error('Error updating startup status:', error);
@@ -97,22 +115,6 @@ export function useBoardDragDrop({
           });
         }
       });
-      
-      // Trigger workflow rules after startup status change
-      // Convert startup to the format expected by workflow rules
-      const startupForWorkflow: Startup = {
-        id: startup.id,
-        createdAt: startup.created_at || new Date().toISOString(),
-        updatedAt: startup.updated_at || new Date().toISOString(),
-        statusId: columnId, // Use the new status id
-        values: { ...startup }, // Include all fields
-        labels: [], // Would be populated in production
-        priority: startup.priority || 'medium',
-        attachments: []
-      };
-      
-      // Process the startup through workflow rules
-      processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
     }
     
     setDraggingStartupId(null);

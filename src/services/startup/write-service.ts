@@ -5,29 +5,46 @@ import type { Startup } from '@/integrations/supabase/client';
 import { addAttachment } from '../attachment-service';
 import { processStartupNumericFields } from '../utils/numeric-field-utils';
 
-// Define a type that includes old_status_id for tracking purposes only
-interface StartupWithHistory extends Partial<Startup> {
-  attachments?: any[];
-  old_status_id?: string; // For tracking only, not a database field
-}
-
 /**
  * Prepares data for Supabase by removing non-column fields and ensuring proper types
  */
 function prepareStartupData(data: any): any {
   console.log('prepareStartupData input data:', data);
-  // Create a clean copy of the data
+  
+  // Create a clean copy of the data without any non-database fields
   const cleanData = { ...data };
   
-  // CRITICAL: Remove these fields which can cause type errors with the database
-  delete cleanData.changed_by;
-  delete cleanData.values;
-  delete cleanData.labels;
-  delete cleanData.old_status_id;
-  delete cleanData.attachments;
+  // Remove virtual fields not in the database schema
+  const fieldsToRemove = [
+    'changed_by',
+    'values',
+    'labels',
+    'old_status_id',
+    'attachments',
+    'statusId', // Remove incorrect field name if present
+    'assignedTo', // Remove incorrect field name if present
+  ];
   
-  // Ensure status_id is a string
-  if (cleanData.status_id && typeof cleanData.status_id !== 'string') {
+  // Remove all non-database fields
+  fieldsToRemove.forEach(field => {
+    if (field in cleanData) {
+      delete cleanData[field];
+    }
+  });
+  
+  // Convert camelCase fields to snake_case if present
+  if ('statusId' in data && !('status_id' in cleanData)) {
+    cleanData.status_id = data.statusId;
+  }
+  
+  if ('assignedTo' in data && !('assigned_to' in cleanData)) {
+    cleanData.assigned_to = data.assignedTo;
+  }
+  
+  // Ensure status_id is a string or null (critical fix)
+  if (cleanData.status_id === undefined || cleanData.status_id === '') {
+    cleanData.status_id = null;
+  } else if (cleanData.status_id && typeof cleanData.status_id !== 'string') {
     cleanData.status_id = String(cleanData.status_id);
   }
   
@@ -38,7 +55,7 @@ function prepareStartupData(data: any): any {
     cleanData.assigned_to = String(cleanData.assigned_to);
   }
   
-  // Process numeric fields
+  // Process numeric fields (ensuring correct types)
   const processed = processStartupNumericFields(cleanData);
   console.log('prepareStartupData result:', processed);
   return processed;
@@ -93,10 +110,11 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
 
 /**
  * Updates an existing startup in the database
+ * For minimal updates like drag-and-drop status changes, prefer using updateStartupStatus
  */
 export const updateStartup = async (
   id: string,
-  startup: StartupWithHistory
+  startup: Partial<Startup> & { attachments?: any[] }
 ): Promise<Startup | null> => {
   try {
     console.log('updateStartup called with id:', id, 'and data:', startup);
@@ -150,6 +168,45 @@ export const updateStartup = async (
   } catch (error: any) {
     console.error('Error in updateStartup function:', error);
     handleError(error, 'Failed to update startup');
+    return null;
+  }
+};
+
+/**
+ * Updates just the status of a startup - this is a specialized function for drag & drop
+ * operations which need to only update the status field 
+ */
+export const updateStartupStatus = async (
+  id: string, 
+  newStatusId: string, 
+  oldStatusId?: string
+): Promise<Startup | null> => {
+  try {
+    console.log(`Updating startup ${id} status from ${oldStatusId} to ${newStatusId}`);
+    
+    // Create a minimal update with only the status_id field
+    const updateData = { 
+      status_id: newStatusId 
+    };
+    
+    // Update just the status_id field
+    const { data, error } = await supabase
+      .from('startups')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Failed to update startup status:', error);
+      throw error;
+    }
+    
+    console.log('Successfully updated startup status:', data);
+    return data;
+  } catch (error: any) {
+    console.error('Error in updateStartupStatus function:', error);
+    handleError(error, 'Failed to update startup status');
     return null;
   }
 };
