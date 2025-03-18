@@ -30,7 +30,8 @@ export const updateStartupStatus = async (
     console.log(`Updating startup ${id} status from ${oldStatusId} to ${newStatusId}`);
     
     // Create a minimal update with only the status_id field
-    // No changed_by field here - the database trigger will handle this with the current user
+    // IMPORTANT: Don't set changed_by here - the database trigger will handle this automatically
+    // using the auth context from the JWT
     const updateData = { 
       status_id: newStatusId
     };

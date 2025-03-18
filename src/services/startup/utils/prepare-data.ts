@@ -12,7 +12,7 @@ export function prepareStartupData(data: any): any {
   
   // Remove virtual fields not in the database schema
   const fieldsToRemove = [
-    'changed_by',
+    'changed_by',  // Important: Remove changed_by as it's handled by database triggers
     'values',
     'labels',
     'old_status_id',

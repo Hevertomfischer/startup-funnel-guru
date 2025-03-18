@@ -31,6 +31,7 @@ export const updateStartup = async (
     }
     
     // Update the startup in the database
+    // Note: We don't set changed_by here - it's handled by database triggers
     const { data, error } = await supabase
       .from('startups')
       .update(preparedData)

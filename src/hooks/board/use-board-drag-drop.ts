@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateStartupStatusMutation } from '../queries/use-startup-queries';
@@ -60,6 +61,7 @@ export function useBoardDragDrop({
       
       console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
       
+      // Optimistically update the UI
       const newColumns = columns.map(col => ({
         ...col,
         startupIds: col.id === columnId 
@@ -69,6 +71,7 @@ export function useBoardDragDrop({
       
       setColumns(newColumns);
       
+      // Make the API call - only passing the minimal data needed
       updateStartupStatusMutation.mutate({
         id: startupId,
         newStatusId: columnId,
@@ -95,6 +98,7 @@ export function useBoardDragDrop({
               attachments: []
             };
             
+            // Run any workflow rules that might apply to this status change
             processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
           }
         },
@@ -107,6 +111,7 @@ export function useBoardDragDrop({
             variant: "destructive"
           });
           
+          // Revert the optimistic update
           setColumns(columns);
         }
       });
