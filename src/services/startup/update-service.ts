@@ -46,6 +46,7 @@ export const updateStartup = async (
     
     if (error) {
       console.error('Supabase update error:', error);
+      toast.error(`Update failed: ${error.message}`);
       throw error;
     }
     

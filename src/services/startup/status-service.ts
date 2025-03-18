@@ -1,6 +1,7 @@
 
 import { supabase, handleError } from '../base-service';
 import type { Startup } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 /**
  * Updates just the status of a startup - this is a specialized function for drag & drop
@@ -46,10 +47,12 @@ export const updateStartupStatus = async (
     
     if (error) {
       console.error('Failed to update startup status:', error);
+      toast.error(`Failed to update status: ${error.message}`);
       throw error;
     }
     
     console.log('Successfully updated startup status:', data);
+    toast.success('Status updated successfully');
     return data;
   } catch (error: any) {
     console.error('Error in updateStartupStatus function:', error);
