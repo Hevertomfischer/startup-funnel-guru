@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateStartupStatusMutation } from '../queries/use-startup-queries';
 import { Column, Startup } from '@/types';
 import { useWorkflowRules } from '../workflow';
+import { toast } from 'sonner';
 
 type UseBoardDragDropParams = {
   columns: Column[];
@@ -20,7 +20,6 @@ export function useBoardDragDrop({
   statuses,
   getStartupById
 }: UseBoardDragDropParams) {
-  const { toast } = useToast();
   const [draggingStartupId, setDraggingStartupId] = useState<string | null>(null);
   const [draggingColumnId, setDraggingColumnId] = useState<string | null>(null);
   const { processStartup } = useWorkflowRules();
@@ -81,10 +80,7 @@ export function useBoardDragDrop({
           console.log('Status update successful for startup', startupId);
           
           const newStatus = statuses.find(s => s.id === columnId);
-          toast({
-            title: "Startup moved",
-            description: `Startup moved to ${newStatus?.name || 'new status'}`,
-          });
+          toast.success(`Startup moved to ${newStatus?.name || 'new status'}`);
           
           if (data) {
             const startupForWorkflow: Startup = {
@@ -105,11 +101,7 @@ export function useBoardDragDrop({
         onError: (error) => {
           console.error('Error updating startup status:', error);
           
-          toast({
-            title: "Failed to move startup",
-            description: error instanceof Error ? error.message : "An error occurred. Please try again.",
-            variant: "destructive"
-          });
+          toast.error(error instanceof Error ? error.message : "An error occurred. Please try again.");
           
           // Revert the optimistic update
           setColumns(columns);

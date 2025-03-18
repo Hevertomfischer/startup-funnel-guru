@@ -1,4 +1,3 @@
-
 import { StartupFormValues } from './schema';
 import { Status } from '@/types';
 
@@ -21,7 +20,6 @@ export const mapStartupToFormValues = (startup: any, statuses: Status[]): Startu
       Startup: startup.name || '',
       'Site da Startup': startup.website || '',
       'Problema que Resolve': startup.problem_solved || '',
-      'Status Current': startup.status_current || '',
       'Origem Lead': startup.origin_lead || '',
       'Quem Indicou': startup.referred_by || '',
       'Observações': startup.observations || '',
@@ -53,7 +51,7 @@ export const mapStartupToFormValues = (startup: any, statuses: Status[]): Startu
       'TAM': startup.tam || '',
       'SAM': startup.sam || '',
       'SOM': startup.som || '',
-      // Add other fields as needed
+      // Include any other fields that might be in the database
       ...(startup.values || {})
     },
   };

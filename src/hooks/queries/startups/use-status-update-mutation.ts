@@ -1,6 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateStartupStatus } from '@/services';
+import { toast } from 'sonner';
 
 /**
  * Specialized mutation hook for updating startup status
@@ -47,10 +48,14 @@ export const useUpdateStartupStatusMutation = () => {
           queryKey: ['startups', 'status', variables.oldStatusId]
         });
       }
+      
+      toast.success('Startup status updated successfully');
     },
     onError: (error, variables) => {
       console.error("Status update failed:", error);
       console.error("Failed variables:", variables);
+      
+      toast.error('Failed to update startup status');
       
       // Invalidate queries to ensure UI is up-to-date
       queryClient.invalidateQueries({ queryKey: ['startups'] });

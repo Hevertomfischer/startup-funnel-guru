@@ -1,6 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateStartup } from '@/services';
+import { toast } from 'sonner';
 
 export const useUpdateStartupMutation = () => {
   const queryClient = useQueryClient();
@@ -36,6 +37,8 @@ export const useUpdateStartupMutation = () => {
     onError: (error, variables) => {
       console.error("Update mutation failed:", error);
       console.error("Failed update variables:", variables);
+      
+      toast.error(`Failed to update startup: ${error instanceof Error ? error.message : 'Unknown error'}`);
       
       // Even on error, invalidate the queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['startups'] });
