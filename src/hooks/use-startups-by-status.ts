@@ -1,5 +1,5 @@
 
-import { useStartupsByStatusQuery } from './use-supabase-query';
+import { useStartupsByStatusQuery } from './queries/use-startup-queries';
 
 export const useStartupsByStatus = (statusId: string) => {
   // Use the query hook at the top level with a valid statusId
