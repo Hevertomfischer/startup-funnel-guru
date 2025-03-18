@@ -19,6 +19,11 @@ export const updateStartup = async (
     // Extract attachments from the input data (they aren't database fields)
     const { attachments, ...startupData } = startup;
     
+    // IMPORTANT: Remove changed_by - it's a UUID field that should be handled by database triggers
+    if ('changed_by' in startupData) {
+      delete startupData.changed_by;
+    }
+    
     // Prepare the data for update
     const preparedData = prepareStartupData(startupData);
     

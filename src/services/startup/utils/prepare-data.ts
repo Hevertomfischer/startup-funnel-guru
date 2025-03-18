@@ -12,13 +12,14 @@ export function prepareStartupData(data: any): any {
   
   // Remove virtual fields not in the database schema
   const fieldsToRemove = [
-    'changed_by',  // Important: Remove changed_by as it's handled by database triggers
+    'changed_by',  // Critical: Remove changed_by as it's handled by database triggers
     'values',
     'labels',
     'old_status_id',
     'attachments',
     'statusId', // Remove incorrect field name if present
     'assignedTo', // Remove incorrect field name if present
+    'status_current', // Remove if present (not a database column)
   ];
   
   // Remove all non-database fields

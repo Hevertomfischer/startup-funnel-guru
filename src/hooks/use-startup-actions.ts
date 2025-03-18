@@ -7,9 +7,10 @@ import {
   useUpdateStartupMutation
 } from '@/hooks/use-supabase-query';
 import { Startup } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function useStartupActions() {
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const queryClient = useQueryClient();
   const [selectedStartup, setSelectedStartup] = useState<any>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -49,10 +50,7 @@ export function useStartupActions() {
     createStartupMutation.mutate(preparedData, {
       onSuccess: (response) => {
         console.log("Startup created successfully:", response);
-        toast({
-          title: "Startup created",
-          description: `${data.name} has been added successfully`
-        });
+        toast.success(`${data.name || 'Startup'} has been added successfully`);
         setShowCreateDialog(false);
         
         // Invalidate queries
@@ -67,11 +65,7 @@ export function useStartupActions() {
       },
       onError: (error: any) => {
         console.error("Error creating startup:", error);
-        toast({
-          title: "Error",
-          description: `Failed to create startup: ${error.message || 'Unknown error'}`,
-          variant: "destructive"
-        });
+        toast.error(`Failed to create startup: ${error.message || 'Unknown error'}`);
       }
     });
   };
@@ -104,7 +98,7 @@ export function useStartupActions() {
       preparedData.old_status_id = oldStatusId;
     }
     
-    // IMPORTANT: Remove changed_by field to avoid conflicts with the database trigger
+    // CRITICAL FIX: Remove changed_by field to avoid conflicts with the database trigger
     delete preparedData.changed_by;
     
     // Ensure status_id is a string
@@ -129,10 +123,7 @@ export function useStartupActions() {
       {
         onSuccess: (response) => {
           console.log("Startup updated successfully:", response);
-          toast({
-            title: "Startup updated",
-            description: `${preparedData.name || 'Startup'} has been updated successfully`
-          });
+          toast.success(`${preparedData.name || 'Startup'} has been updated successfully`);
           setShowEditDialog(false);
           
           // Invalidate queries
@@ -153,11 +144,7 @@ export function useStartupActions() {
         },
         onError: (error: any) => {
           console.error("Error updating startup:", error);
-          toast({
-            title: "Error",
-            description: `Failed to update startup: ${error.message || 'Unknown error'}`,
-            variant: "destructive"
-          });
+          toast.error(`Failed to update startup: ${error.message || 'Unknown error'}`);
         }
       }
     );

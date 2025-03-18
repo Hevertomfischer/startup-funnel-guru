@@ -50,7 +50,7 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       data.statusId = statuses[0].id;
     }
     
-    // Prepare data for Supabase - ensure we're using status_id not statusId
+    // IMPORTANT: Do not include the changed_by field as it must be handled by DB triggers
     const startupData = {
       // Map form values to database schema
       name: data.values.Startup,
