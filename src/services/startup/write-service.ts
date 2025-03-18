@@ -20,11 +20,11 @@ function prepareStartupData(data: any): any {
   const cleanData = { ...data };
   
   // CRITICAL: Remove these fields which can cause type errors with the database
-  // The database trigger will handle changed_by using the JWT
   delete cleanData.changed_by;
   delete cleanData.values;
   delete cleanData.labels;
   delete cleanData.old_status_id;
+  delete cleanData.attachments;
   
   // Ensure status_id is a string
   if (cleanData.status_id && typeof cleanData.status_id !== 'string') {
@@ -103,10 +103,6 @@ export const updateStartup = async (
     
     // Extract attachments from the input data (they aren't database fields)
     const { attachments, ...startupData } = startup;
-    
-    // For status changes, we need to track the old status for history
-    const oldStatusId = startupData.old_status_id;
-    delete startupData.old_status_id;
     
     // Prepare the data for update
     const preparedData = prepareStartupData(startupData);
