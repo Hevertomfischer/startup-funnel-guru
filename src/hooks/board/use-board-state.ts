@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Startup } from '@/types';
 import { useNavigate } from 'react-router-dom';
-import { useStartupActions } from './use-startup-actions';
+import { useStartupActions } from '@/hooks/use-startup-actions';
 import { useBoardColumns } from './use-board-columns';
 import { useBoardDragDrop } from './use-board-drag-drop';
 import { useBoardDialogs } from './use-board-dialogs';
