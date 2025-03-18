@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getStartups, 
@@ -6,7 +5,8 @@ import {
   getStartup,
   createStartup,
   updateStartup,
-  updateStartupStatus
+  updateStartupStatus,
+  deleteStartup
 } from '@/services';
 
 // Basic startup queries
