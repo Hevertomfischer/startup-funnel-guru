@@ -84,6 +84,7 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       origin_lead: data.values["Origem Lead"] || null,
       referred_by: data.values["Quem Indicou"] || null,
       observations: data.values["Observações"] || null,
+      status_current: data.values["Status Current"] || null,
       
       // For numeric fields, explicitly convert to numbers when not null or empty
       // This prevents type errors with string values

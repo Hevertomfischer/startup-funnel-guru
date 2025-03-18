@@ -19,6 +19,7 @@ export function prepareStartupData(data: any): any {
     'attachments',
     'statusId', // Remove incorrect field name if present
     'assignedTo', // Remove incorrect field name if present
+    'status_current', // This is a virtual field, not in the database
   ];
   
   // Remove all non-database fields
