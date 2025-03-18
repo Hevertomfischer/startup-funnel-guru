@@ -15,6 +15,7 @@ interface StartupWithHistory extends Partial<Startup> {
  * Prepares data for Supabase by removing non-column fields and ensuring proper types
  */
 function prepareStartupData(data: any): any {
+  console.log('prepareStartupData input data:', data);
   // Create a clean copy of the data
   const cleanData = { ...data };
   
@@ -38,7 +39,9 @@ function prepareStartupData(data: any): any {
   }
   
   // Process numeric fields
-  return processStartupNumericFields(cleanData);
+  const processed = processStartupNumericFields(cleanData);
+  console.log('prepareStartupData result:', processed);
+  return processed;
 }
 
 /**
@@ -96,7 +99,7 @@ export const updateStartup = async (
   startup: StartupWithHistory
 ): Promise<Startup | null> => {
   try {
-    console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
+    console.log('updateStartup called with id:', id, 'and data:', startup);
     
     // Extract attachments from the input data (they aren't database fields)
     const { attachments, ...startupData } = startup;
@@ -109,6 +112,12 @@ export const updateStartup = async (
     const preparedData = prepareStartupData(startupData);
     
     console.log('Prepared data for Supabase update:', preparedData);
+    
+    // IMPORTANT FIX: Check if we have any data to update
+    if (Object.keys(preparedData).length === 0) {
+      console.warn('No valid update data provided for startup:', id);
+      return null;
+    }
     
     // Update the startup in the database
     const { data, error } = await supabase

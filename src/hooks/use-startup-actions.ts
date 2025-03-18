@@ -119,6 +119,11 @@ export function useStartupActions() {
       preparedData.assigned_to = String(preparedData.assigned_to);
     }
     
+    console.log('Final data being sent to update mutation:', {
+      id: selectedStartup.id,
+      startup: preparedData
+    });
+    
     updateStartupMutation.mutate(
       { id: selectedStartup.id, startup: preparedData },
       {

@@ -54,7 +54,9 @@ export function useBoardDragDrop({
       // Save the previous status for workflow rules and history tracking
       const oldStatusId = startup.status_id;
       
-      // CRITICAL FIX: Send only the minimal required data
+      console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
+      
+      // CRITICAL FIX: Send only the absolute minimal required data
       // This reduces the chance of type mismatches and other issues
       updateStartupMutation.mutate({
         id: startupId,
@@ -62,23 +64,26 @@ export function useBoardDragDrop({
           status_id: columnId,
           old_status_id: oldStatusId
         }
-      });
-      
-      // Create a new columns array with the updated startupIds
-      const newColumns = columns.map(col => ({
-        ...col,
-        startupIds: col.id === columnId 
-          ? [...col.startupIds, startupId] 
-          : col.startupIds.filter(id => id !== startupId)
-      }));
-      
-      // Important: preserve the original column order
-      setColumns(newColumns);
-      
-      const newStatus = statuses.find(s => s.id === columnId);
-      toast({
-        title: "Startup moved",
-        description: `Startup moved to ${newStatus?.name || 'new status'}`,
+      }, {
+        onSuccess: () => {
+          console.log('Mutation successful for startup', startupId);
+          // Create a new columns array with the updated startupIds
+          const newColumns = columns.map(col => ({
+            ...col,
+            startupIds: col.id === columnId 
+              ? [...col.startupIds, startupId] 
+              : col.startupIds.filter(id => id !== startupId)
+          }));
+          
+          // Important: preserve the original column order
+          setColumns(newColumns);
+          
+          const newStatus = statuses.find(s => s.id === columnId);
+          toast({
+            title: "Startup moved",
+            description: `Startup moved to ${newStatus?.name || 'new status'}`,
+          });
+        }
       });
       
       // Trigger workflow rules after startup status change
