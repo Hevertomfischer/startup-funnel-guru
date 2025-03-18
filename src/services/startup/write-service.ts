@@ -12,6 +12,36 @@ interface StartupWithHistory extends Partial<Startup> {
 }
 
 /**
+ * Prepares data for Supabase by removing non-column fields and ensuring proper types
+ */
+function prepareStartupData(data: any): any {
+  // Create a clean copy of the data
+  const cleanData = { ...data };
+  
+  // CRITICAL: Remove these fields which can cause type errors with the database
+  // The database trigger will handle changed_by using the JWT
+  delete cleanData.changed_by;
+  delete cleanData.values;
+  delete cleanData.labels;
+  delete cleanData.old_status_id;
+  
+  // Ensure status_id is a string
+  if (cleanData.status_id && typeof cleanData.status_id !== 'string') {
+    cleanData.status_id = String(cleanData.status_id);
+  }
+  
+  // Ensure assigned_to is a string or null
+  if (cleanData.assigned_to === undefined || cleanData.assigned_to === '') {
+    cleanData.assigned_to = null;
+  } else if (cleanData.assigned_to && typeof cleanData.assigned_to !== 'string') {
+    cleanData.assigned_to = String(cleanData.assigned_to);
+  }
+  
+  // Process numeric fields
+  return processStartupNumericFields(cleanData);
+}
+
+/**
  * Creates a new startup in the database
  */
 export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' | 'updated_at'> & { attachments?: any[] }): Promise<Startup | null> => {
@@ -19,8 +49,8 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
     console.log('Creating startup in Supabase with data:', startup);
     const { attachments, ...startupData } = startup;
     
-    // Process numeric fields
-    const preparedData = processStartupNumericFields(startupData);
+    // Prepare data for Supabase
+    const preparedData = prepareStartupData(startupData);
     
     console.log('Prepared data for Supabase insert:', preparedData);
     
@@ -68,71 +98,15 @@ export const updateStartup = async (
   try {
     console.log('Updating startup in Supabase with id:', id, 'and data:', startup);
     
-    // Extract attachments and old_status_id from the input data (they aren't database fields)
-    const { attachments, old_status_id, ...startupData } = startup;
+    // Extract attachments from the input data (they aren't database fields)
+    const { attachments, ...startupData } = startup;
     
-    // Create a clean data object for the update
-    let preparedData: any = { ...startupData };
+    // For status changes, we need to track the old status for history
+    const oldStatusId = startupData.old_status_id;
+    delete startupData.old_status_id;
     
-    // Always ensure we're using the correct field name
-    if (preparedData.statusId && !preparedData.status_id) {
-      preparedData.status_id = preparedData.statusId;
-      delete preparedData.statusId;
-    }
-    
-    // If status_id is missing, get it from the current database record
-    if (!preparedData.status_id) {
-      const { data: currentStartup, error: fetchError } = await supabase
-        .from('startups')
-        .select('status_id')
-        .eq('id', id)
-        .single();
-      
-      if (fetchError) {
-        console.error('Error fetching current startup:', fetchError);
-        throw new Error('Failed to fetch current startup data');
-      }
-      
-      if (currentStartup && currentStartup.status_id) {
-        preparedData.status_id = currentStartup.status_id;
-      } else {
-        // Fallback to first status if needed
-        const { data: firstStatus, error: statusError } = await supabase
-          .from('statuses')
-          .select('id')
-          .order('position', { ascending: true })
-          .limit(1)
-          .single();
-        
-        if (statusError) {
-          console.error('Error fetching first status:', statusError);
-          throw new Error('Failed to fetch default status');
-        }
-        
-        preparedData.status_id = firstStatus.id;
-      }
-    }
-    
-    // Process numeric fields
-    preparedData = processStartupNumericFields(preparedData);
-    
-    // CRITICAL: Remove these fields which can cause type errors with the database
-    // The database trigger will handle changed_by using the JWT
-    delete preparedData.changed_by;
-    
-    // Make sure we're not sending string values for UUID fields
-    if (typeof preparedData.status_id !== 'string') {
-      preparedData.status_id = String(preparedData.status_id);
-    }
-    
-    if (preparedData.assigned_to && typeof preparedData.assigned_to !== 'string') {
-      preparedData.assigned_to = String(preparedData.assigned_to);
-    }
-    
-    // Remove any other non-column fields that might cause issues
-    delete preparedData.old_status_id;
-    delete preparedData.values;
-    delete preparedData.labels;
+    // Prepare the data for update
+    const preparedData = prepareStartupData(startupData);
     
     console.log('Prepared data for Supabase update:', preparedData);
     

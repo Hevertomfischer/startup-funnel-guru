@@ -29,11 +29,21 @@ export function useStartupActions() {
   const handleCreateStartup = (data: any) => {
     console.log("Creating startup with data:", data);
     
-    // Always ensure we're using status_id, not statusId - normalize field names
+    // Ensure we're only sending clean data to the API
     let preparedData = { ...data };
+    
+    // Always ensure we're using status_id, not statusId
     if (preparedData.statusId && !preparedData.status_id) {
       preparedData.status_id = preparedData.statusId;
       delete preparedData.statusId;
+    }
+    
+    // IMPORTANT: Remove changed_by field to avoid conflicts with the database trigger
+    delete preparedData.changed_by;
+    
+    // Ensure status_id is a string
+    if (preparedData.status_id && typeof preparedData.status_id !== 'string') {
+      preparedData.status_id = String(preparedData.status_id);
     }
     
     createStartupMutation.mutate(preparedData, {
@@ -92,6 +102,19 @@ export function useStartupActions() {
     // If tracking status changes for history, add old_status_id
     if (statusChanged) {
       preparedData.old_status_id = oldStatusId;
+    }
+    
+    // IMPORTANT: Remove changed_by field to avoid conflicts with the database trigger
+    delete preparedData.changed_by;
+    
+    // Ensure status_id is a string
+    if (preparedData.status_id && typeof preparedData.status_id !== 'string') {
+      preparedData.status_id = String(preparedData.status_id);
+    }
+    
+    // Ensure assigned_to is a string or null
+    if (preparedData.assigned_to && typeof preparedData.assigned_to !== 'string') {
+      preparedData.assigned_to = String(preparedData.assigned_to);
     }
     
     updateStartupMutation.mutate(

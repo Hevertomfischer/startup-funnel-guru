@@ -54,8 +54,8 @@ export function useBoardDragDrop({
       // Save the previous status for workflow rules and history tracking
       const oldStatusId = startup.status_id;
       
-      // Update the startup's status in Supabase
-      // IMPORTANT: We're only sending the minimum required data to avoid type errors
+      // CRITICAL FIX: Simplify the update payload to avoid type issues
+      // Only send the startup ID and the new status_id as STRINGS
       updateStartupMutation.mutate({
         id: startupId,
         startup: { 
