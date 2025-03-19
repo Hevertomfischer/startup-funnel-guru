@@ -57,9 +57,15 @@ export const useUpdateStartupStatusMutation = () => {
         throw new Error(`Formato do ID da startup inválido: ${cleanId}`);
       }
       
+      // ENHANCED ERROR DETECTION: Provide clearer error for common issues
       if (!uuidPattern.test(cleanNewStatusId)) {
         console.error(`Invalid status ID format: ${cleanNewStatusId}`);
-        throw new Error(`Formato do ID do status inválido: ${cleanNewStatusId}`);
+        if (cleanNewStatusId.includes('-') && cleanNewStatusId.length < 36) {
+          // Likely a slug or descriptive ID instead of UUID
+          throw new Error(`Formato do ID do status inválido (recebido: ${cleanNewStatusId}). É necessário um UUID válido.`);
+        } else {
+          throw new Error(`Formato do ID do status inválido: ${cleanNewStatusId}`);
+        }
       }
       
       // Only validate oldStatusId if it's present

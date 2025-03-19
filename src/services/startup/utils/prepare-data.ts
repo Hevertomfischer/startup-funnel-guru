@@ -75,10 +75,11 @@ export function prepareStartupData(data: any): any {
         throw new Error('ID do status vazio após limpeza');
       }
       
-      // Verify UUID format
+      // CRITICAL FIX: Reject non-UUID values like "due-diligence"
       if (!uuidPattern.test(cleanData.status_id)) {
         console.error(`Invalid UUID format for status_id: ${cleanData.status_id}`);
-        throw new Error(`Formato de ID do status inválido: ${cleanData.status_id}`);
+        // Add more detail to error message
+        throw new Error(`Formato de ID do status inválido (deve ser UUID): ${cleanData.status_id}`);
       }
     } else {
       console.error(`Invalid data type for status_id: ${typeof cleanData.status_id}`);
@@ -104,7 +105,7 @@ export function prepareStartupData(data: any): any {
     } else if (cleanData.status_id && typeof cleanData.status_id === 'string') {
       cleanData.status_id = cleanData.status_id.trim();
       
-      // UUID validation for normal updates
+      // CRITICAL FIX: Detect non-UUID values and handle appropriately
       if (!uuidPattern.test(cleanData.status_id)) {
         console.warn(`Invalid UUID format for status_id in normal update: ${cleanData.status_id} - setting to null`);
         cleanData.status_id = null;
