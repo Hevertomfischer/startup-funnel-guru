@@ -1,4 +1,3 @@
-
 import { processStartupNumericFields } from './numeric-field-utils';
 
 /**
@@ -49,12 +48,21 @@ export function prepareStartupData(data: any): any {
   
   // Ensure status_id is a valid UUID or null (critical fix)
   if (cleanData.status_id === undefined || cleanData.status_id === '') {
+    // CRITICAL: For status updates, we can't allow null or undefined
+    if (data.isStatusUpdate === true) {
+      console.error('Attempted to update with null/undefined status_id in a status update operation');
+      throw new Error('Status ID cannot be null or undefined when updating status');
+    }
     cleanData.status_id = null;
   } else if (cleanData.status_id && typeof cleanData.status_id === 'string') {
     // Check if it's a valid UUID format
     if (!uuidPattern.test(cleanData.status_id)) {
       console.error(`Invalid UUID format for status_id: ${cleanData.status_id}`);
-      // If we have an invalid format, convert to null instead of sending invalid data
+      // If we have an invalid format and this is a status update, throw error
+      if (data.isStatusUpdate === true) {
+        throw new Error(`Invalid status ID format: ${cleanData.status_id}`);
+      }
+      // Otherwise convert to null
       cleanData.status_id = null;
     }
   } else if (cleanData.status_id && typeof cleanData.status_id !== 'string') {
@@ -62,15 +70,17 @@ export function prepareStartupData(data: any): any {
     const statusIdStr = String(cleanData.status_id);
     if (!uuidPattern.test(statusIdStr)) {
       console.error(`Invalid UUID format for status_id: ${statusIdStr}`);
+      if (data.isStatusUpdate === true) {
+        throw new Error(`Invalid status ID format: ${statusIdStr}`);
+      }
       cleanData.status_id = null;
     } else {
       cleanData.status_id = statusIdStr;
     }
   }
   
-  // CRITICAL: For updates to startup status, we must ensure we don't send null
-  // This is especially important for the update status function that triggers the history
-  if ('status_id' in cleanData && cleanData.status_id === null && data.isStatusUpdate === true) {
+  // Double check for status updates to ensure we never send null
+  if (data.isStatusUpdate === true && (!cleanData.status_id || cleanData.status_id === null)) {
     console.error('Attempted to update with null status_id in a status update operation');
     throw new Error('Status ID cannot be null when updating status');
   }
