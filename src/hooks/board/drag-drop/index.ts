@@ -13,10 +13,16 @@ export function useBoardDragDrop(params: UseBoardDragDropParams) {
   };
 }
 
-// Export types but avoid re-exporting the conflicting StartupDragState
-export * from './types';
+// Only export the specific types from the main types file
+export { 
+  UseBoardDragDropParams, 
+  ColumnDragState 
+} from './types';
 
-// Export everything from startup-drag except what's already exported
+// Export the StartupDragState from startup-drag/types to avoid conflict
+export { StartupDragState } from './startup-drag/types';
+
+// Export everything from startup-drag except the types that are already exported
 export { 
   useStartupDrag,
   validateDragDropParams,
