@@ -10,6 +10,10 @@ export function prepareStartupData(data: any): any {
   // CRITICAL: Defensive copy that is not a reference to the input
   const cleanData = JSON.parse(JSON.stringify(data || {}));
   
+  // Check if this is a status update operation (special handling) BEFORE removing flags
+  const isStatusUpdate = data.isStatusUpdate === true;
+  console.log('Is status update operation?', isStatusUpdate);
+  
   // CRITICAL: Always remove changed_by field as this is handled by database triggers
   if ('changed_by' in cleanData) {
     delete cleanData.changed_by;
@@ -27,9 +31,6 @@ export function prepareStartupData(data: any): any {
     'isStatusUpdate', // Remove this flag - it's only for our client code
     '__is_status_update', // Remove legacy flag
   ];
-  
-  // Check if this is a status update operation (special handling) BEFORE removing the flag
-  const isStatusUpdate = data.isStatusUpdate === true;
   
   // Remove all non-database fields
   fieldsToRemove.forEach(field => {
@@ -55,7 +56,8 @@ export function prepareStartupData(data: any): any {
   // CRITICAL: UUID validation pattern
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  // CRITICAL: For status updates, ensure that status_id is a valid UUID and never null
+  // CRITICAL: ADDITIONAL PROTECTION - IMPORTANT CHANGE:
+  // For status updates, ensure that status_id is a valid UUID and never null or empty
   if (isStatusUpdate) {
     console.log('Processing a status update with status_id:', cleanData.status_id);
     
@@ -89,12 +91,13 @@ export function prepareStartupData(data: any): any {
       status_id: cleanData.status_id
     };
     
-    // Process numeric fields for consistency
+    // IMPORTANT: Log the final safe data
     console.log('Status update with safe data:', safeUpdateData);
     return safeUpdateData;
   } 
   else {
     // For normal updates (non-status updates)
+    // Handle normal field validations and conversions
     if (cleanData.status_id === undefined || cleanData.status_id === '') {
       console.log('Status ID is empty or undefined in a normal update - setting to null');
       cleanData.status_id = null;

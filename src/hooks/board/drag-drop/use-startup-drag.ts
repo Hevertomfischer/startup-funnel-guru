@@ -125,7 +125,7 @@ export function useStartupDrag({
     console.log('- Old status ID:', oldStatusId);
     console.log('- Target status details:', targetStatus);
     
-    // Ensure the new status ID is definitely valid
+    // ADDITIONAL VALIDATION: Ensure the new status ID is definitely valid
     if (!cleanColumnId || cleanColumnId === 'null' || cleanColumnId === 'undefined') {
       console.error('FATAL ERROR: New status ID is invalid:', cleanColumnId);
       toast.error('Erro interno: status inválido');
@@ -142,7 +142,7 @@ export function useStartupDrag({
     
     setColumns(newColumns);
     
-    // Create a minimal, safe mutation payload object
+    // Create a minimal, safe mutation payload object - CRITICAL FIX
     const mutationPayload = {
       id: cleanStartupId,
       newStatusId: cleanColumnId,

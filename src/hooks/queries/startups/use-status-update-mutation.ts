@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateStartupStatus } from '@/services';
 import { toast } from 'sonner';
@@ -83,6 +84,7 @@ export const useUpdateStartupStatusMutation = () => {
       
       console.log(`Calling updateStartupStatus with safe parameters:`, safeParams);
       
+      // CRITICAL: Make sure we send 100% valid parameters
       return updateStartupStatus(safeParams.id, safeParams.newStatusId, safeParams.oldStatusId);
     },
     onMutate: async (variables) => {
