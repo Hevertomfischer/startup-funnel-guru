@@ -47,7 +47,7 @@ export function useStartupDrag({
       'sourceColumnId': e.dataTransfer.getData('sourceColumnId')
     });
     
-    // CORRIGIDO: Adicionando verificações robustas para os IDs
+    // CRITICAL: Early validation checks - must have valid IDs
     const startupId = e.dataTransfer.getData('text/plain');
     const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
     
@@ -59,99 +59,93 @@ export function useStartupDrag({
       return;
     }
     
-    // Validate the column ID is a valid UUID
+    // CRITICAL: Both IDs must be valid UUIDs
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidPattern.test(columnId)) {
-      console.error('Invalid column ID format:', columnId);
-      toast.error('Não é possível mover o card para esta coluna (ID inválido)');
+    
+    if (!uuidPattern.test(startupId)) {
+      console.error('Invalid startup ID format:', startupId);
+      toast.error('ID da startup inválido');
       return;
     }
     
-    // IMPORTANTE: Verificar explicitamente que columnId existe nos status
+    if (!uuidPattern.test(columnId)) {
+      console.error('Invalid column ID format:', columnId);
+      toast.error('ID da coluna inválido');
+      return;
+    }
+    
+    // CRITICAL: The column ID must be for an existing status
     const targetStatus = statuses.find(status => status.id === columnId);
     if (!targetStatus) {
       console.error('Column ID does not match any existing status:', columnId);
-      toast.error('Não é possível mover o card para esta coluna (status não existe)');
+      toast.error('Status não encontrado');
       return;
     }
     
+    // The startup must exist
     const startup = getStartupById(startupId);
-    
     if (!startup) {
       console.error('Startup not found:', startupId);
-      toast.error('Card não encontrado');
+      toast.error('Startup não encontrada');
       return;
     }
     
-    // Determine the current status ID of the startup
-    let oldStatusId;
+    // CRITICAL: IDs should be sanitized before use
+    const cleanStartupId = startupId.trim();
+    const cleanColumnId = columnId.trim();
+    let oldStatusId = undefined;
     
-    // First try to use sourceColumnId from drag event (most reliable)
+    // Try to get the current status ID from multiple sources:
     if (sourceColumnId && uuidPattern.test(sourceColumnId)) {
-      oldStatusId = sourceColumnId;
+      oldStatusId = sourceColumnId.trim();
       console.log(`Using sourceColumnId from drag event: ${oldStatusId}`);
     }
-    // Then try to get status_id directly from the startup object
     else if (startup.status_id && uuidPattern.test(startup.status_id)) {
-      oldStatusId = startup.status_id;
+      oldStatusId = startup.status_id.trim();
       console.log(`Using status_id from startup object: ${oldStatusId}`);
     } 
-    // If not available or invalid, try to find which column contains this startup
     else {
       const currentColumn = columns.find(col => col.startupIds.includes(startupId));
       if (currentColumn && uuidPattern.test(currentColumn.id)) {
-        oldStatusId = currentColumn.id;
+        oldStatusId = currentColumn.id.trim();
         console.log(`Found startup in column: ${oldStatusId}`);
-      } else {
-        console.warn('Could not determine current status of startup:', startupId);
-        // We'll still try to update with just the new status
       }
     }
     
-    if (oldStatusId === columnId) {
+    // Check if nothing is actually changing
+    if (oldStatusId === cleanColumnId) {
       console.log('Startup is already in this column, no update needed');
       return;
     }
     
-    console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
+    console.log('Moving startup', cleanStartupId, 'from status', oldStatusId, 'to status', cleanColumnId);
     
-    // CRÍTICO: Validação final para garantir que temos um columnId válido
-    if (!columnId || !uuidPattern.test(columnId)) {
-      console.error('Attempted to move startup to an invalid column ID');
-      toast.error('Não é possível mover para uma coluna inválida');
-      return;
-    }
-    
-    // NOVA ABORDAGEM: Verificação direta na base de dados que o status existe
-    // antes mesmo de tentar fazer qualquer atualização
-    
-    // Optimistically update the UI
+    // Optimistically update the UI (more reliable than waiting for API)
     const newColumns = columns.map(col => ({
       ...col,
-      startupIds: col.id === columnId 
-        ? [...col.startupIds, startupId] 
-        : col.startupIds.filter(id => id !== startupId)
+      startupIds: col.id === cleanColumnId 
+        ? [...col.startupIds, cleanStartupId] 
+        : col.startupIds.filter(id => id !== cleanStartupId)
     }));
     
     setColumns(newColumns);
     
-    // Log do que estamos realmente enviando para a mutação
+    // Make the API call with minimal, sanitized data
     console.log('Mutation payload:', {
-      id: startupId,
-      newStatusId: columnId,
+      id: cleanStartupId,
+      newStatusId: cleanColumnId,
       oldStatusId: oldStatusId
     });
     
-    // Make the API call - only passing the minimal data needed
     updateStartupStatusMutation.mutate({
-      id: startupId,
-      newStatusId: columnId,
+      id: cleanStartupId,
+      newStatusId: cleanColumnId,
       oldStatusId: oldStatusId
     }, {
       onSuccess: (data) => {
-        console.log('Status update successful for startup', startupId);
+        console.log('Status update successful for startup', cleanStartupId);
         
-        const newStatus = statuses.find(s => s.id === columnId);
+        const newStatus = statuses.find(s => s.id === cleanColumnId);
         toast.success(`Startup movido para ${newStatus?.name || 'novo status'}`);
         
         if (data) {
@@ -159,7 +153,7 @@ export function useStartupDrag({
             id: startup.id,
             createdAt: startup.created_at || new Date().toISOString(),
             updatedAt: startup.updated_at || new Date().toISOString(),
-            statusId: columnId,
+            statusId: cleanColumnId,
             values: { ...startup },
             labels: [],
             priority: startup.priority || 'medium',
@@ -175,7 +169,7 @@ export function useStartupDrag({
         
         toast.error(error instanceof Error ? error.message : "Ocorreu um erro. Por favor, tente novamente.");
         
-        // Revert the optimistic update
+        // Revert the optimistic update on error
         setColumns(columns);
       }
     });

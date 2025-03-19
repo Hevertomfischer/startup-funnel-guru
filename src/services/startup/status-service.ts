@@ -16,14 +16,19 @@ export const updateStartupStatus = async (
   try {
     console.log(`updateStartupStatus called with id: ${id}, newStatusId: ${newStatusId}, oldStatusId: ${oldStatusId || 'unknown'}`);
     
-    // Validar inputs para evitar erros de BD
-    if (!id || typeof id !== 'string') {
-      throw new Error('ID da startup inválido');
+    // CRITICAL: Early defensive validation
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new Error('ID da startup inválido ou vazio');
     }
     
-    if (!newStatusId || typeof newStatusId !== 'string') {
-      throw new Error('ID do status inválido');
+    if (!newStatusId || typeof newStatusId !== 'string' || newStatusId.trim() === '') {
+      throw new Error('ID do status inválido ou vazio');
     }
+    
+    // Trim and sanitize all inputs
+    id = id.trim();
+    newStatusId = newStatusId.trim();
+    if (oldStatusId) oldStatusId = oldStatusId.trim();
     
     // Validação do formato UUID
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -35,11 +40,6 @@ export const updateStartupStatus = async (
       throw new Error(`Formato UUID inválido para ID do status: ${newStatusId}`);
     }
     
-    // CRÍTICO: Verificação explícita que newStatusId não é null ou string vazia
-    if (!newStatusId.trim()) {
-      throw new Error(`ID do status não pode estar vazio`);
-    }
-    
     if (oldStatusId && !uuidPattern.test(oldStatusId)) {
       console.warn(`Formato UUID inválido para ID do status anterior: ${oldStatusId}. Prosseguindo sem rastrear o status anterior.`);
       oldStatusId = undefined;
@@ -47,10 +47,10 @@ export const updateStartupStatus = async (
     
     console.log(`Atualizando startup ${id} de ${oldStatusId || 'desconhecido'} para ${newStatusId}`);
     
-    // CRÍTICO: Verificar se newStatusId existe antes de prosseguir
+    // CRITICAL: Double-check that statuses table contains this ID before proceeding
     const { data: statusCheck, error: statusError } = await supabase
       .from('statuses')
-      .select('id')
+      .select('id, name')
       .eq('id', newStatusId)
       .single();
       
@@ -60,10 +60,12 @@ export const updateStartupStatus = async (
       return null;
     }
     
+    console.log(`Status verificado e existe: ${statusCheck.name} (${statusCheck.id})`);
+    
     // Verificar se a startup existe e obter seu status atual
     const { data: startupCheck, error: startupError } = await supabase
       .from('startups')
-      .select('id, status_id')
+      .select('id, status_id, name')
       .eq('id', id)
       .single();
       
@@ -72,6 +74,8 @@ export const updateStartupStatus = async (
       toast.error(`Falha ao atualizar status: Startup não existe`);
       return null;
     }
+    
+    console.log(`Startup verificada: ${startupCheck.name} (${startupCheck.id}), status atual: ${startupCheck.status_id || 'nenhum'}`);
     
     // Se oldStatusId não foi fornecido, obter da startup
     if (!oldStatusId && startupCheck.status_id) {
@@ -85,8 +89,13 @@ export const updateStartupStatus = async (
       return startupCheck as Startup;
     }
     
-    // NOVA ABORDAGEM: Atualizar diretamente com função RPC que evita problemas com triggers
-    // Isso permite maior controle sobre como a atualização é processada
+    // APPROACH 1: Try direct update first via RPC (safest approach)
+    console.log('Tentando update via RPC function com parâmetros:', {
+      p_startup_id: id,
+      p_new_status_id: newStatusId,
+      p_old_status_id: oldStatusId || null
+    });
+    
     const { data: updateResult, error: updateError } = await supabase
       .rpc('update_startup_status_safely', { 
         p_startup_id: id,
@@ -97,48 +106,58 @@ export const updateStartupStatus = async (
     if (updateError) {
       console.error('Falha ao atualizar status via função RPC:', updateError);
       
-      // Fallback: Usar o método anterior se a função RPC falhar
-      console.log('Tentando método alternativo de atualização...');
+      // APPROACH 2: Try direct update to status_id field only as fallback
+      console.log('Tentando método alternativo de atualização direta...');
       
-      // Criar uma atualização mínima com apenas o campo status_id
-      const rawUpdateData = { 
-        status_id: newStatusId,
-        isStatusUpdate: true  
-      };
-      
-      // Fazer uma verificação de sanidade aqui para garantir que temos um status_id válido
-      if (!rawUpdateData.status_id || typeof rawUpdateData.status_id !== 'string' || !uuidPattern.test(rawUpdateData.status_id)) {
-        console.error('Dados de atualização inválidos: status_id inválido', rawUpdateData.status_id);
-        throw new Error('ID do status inválido para atualização');
-      }
-      
-      // Preparar dados para garantir que enviamos apenas campos válidos
-      const updateData = prepareStartupData(rawUpdateData);
-      
-      // CRÍTICO: Garantir que nunca enviamos null para status_id
-      if (!updateData.status_id || updateData.status_id === null || updateData.status_id === '') {
-        console.error('Tentativa de atualizar com status_id nulo, abortando operação');
-        throw new Error('Não é possível atualizar startup com status_id nulo');
-      }
-      
-      // Verificação final para garantir que temos um status_id válido
-      console.log('UPDATE DATA ANTES DO UPDATE:', updateData);
-      
-      // Atualizar apenas o campo status_id
-      const { data, error } = await supabase
+      // IMPORTANT: Handle status_id update directly to avoid any potential issues with prepareStartupData
+      const { data: directUpdateData, error: directUpdateError } = await supabase
         .from('startups')
-        .update(updateData)
+        .update({ status_id: newStatusId })
         .eq('id', id)
         .select('*')
         .single();
       
-      if (error) {
-        console.error('Falha ao atualizar status da startup (método alternativo):', error);
-        throw error;
+      if (directUpdateError) {
+        console.error('Falha ao atualizar status diretamente:', directUpdateError);
+        
+        // APPROACH 3: Try using prepareStartupData as last resort
+        console.log('Tentando método final com prepareStartupData...');
+        
+        const rawUpdateData = { 
+          status_id: newStatusId,
+          isStatusUpdate: true  
+        };
+        
+        // Preparar dados para garantir que enviamos apenas campos válidos
+        const updateData = prepareStartupData(rawUpdateData);
+        
+        console.log('UPDATE DATA ANTES DO UPDATE:', updateData);
+        
+        // Verificar explicitamente o valor de status_id
+        if (!updateData.status_id || updateData.status_id !== newStatusId) {
+          console.error('Erro: UpdateData.status_id não corresponde ao newStatusId');
+          throw new Error('Falha na preparação dos dados para atualização');
+        }
+        
+        // Atualizar apenas o campo status_id
+        const { data, error } = await supabase
+          .from('startups')
+          .update(updateData)
+          .eq('id', id)
+          .select('*')
+          .single();
+        
+        if (error) {
+          console.error('Todas as abordagens falharam. Falha ao atualizar status da startup:', error);
+          throw error;
+        }
+        
+        console.log('Status da startup atualizado com sucesso (método fallback):', data);
+        return data as Startup;
       }
       
-      console.log('Status da startup atualizado com sucesso (método alternativo):', data);
-      return data as Startup;
+      console.log('Status da startup atualizado com sucesso (método direto):', directUpdateData);
+      return directUpdateData as Startup;
     }
     
     console.log('Status da startup atualizado com sucesso via RPC:', updateResult);

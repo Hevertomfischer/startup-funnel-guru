@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateStartupStatus } from '@/services';
 import { toast } from 'sonner';
@@ -22,96 +21,85 @@ export const useUpdateStartupStatusMutation = () => {
     }) => {
       console.log(`Mutation starting: Update startup ${id} from ${oldStatusId || 'unknown'} to ${newStatusId}`);
       
-      // MELHORADO: Validação UUID mais completa
+      // CRITICAL: Validação de entrada extremamente rigorosa
+      if (!id) {
+        console.error(`Invalid startup ID: null or undefined`);
+        throw new Error(`ID da startup é obrigatório`);
+      }
+      
+      if (!newStatusId) {
+        console.error(`Invalid status ID: null or undefined`);
+        throw new Error(`ID do status é obrigatório`);
+      }
+      
+      // Sanitize inputs by trimming
+      const cleanId = typeof id === 'string' ? id.trim() : String(id).trim();
+      const cleanNewStatusId = typeof newStatusId === 'string' ? newStatusId.trim() : String(newStatusId).trim();
+      const cleanOldStatusId = oldStatusId && typeof oldStatusId === 'string' ? oldStatusId.trim() : undefined;
+      
+      // Validate all inputs after sanitization
+      if (cleanId === '') {
+        console.error(`Empty startup ID after trimming`);
+        throw new Error(`ID da startup não pode estar vazio`);
+      }
+      
+      if (cleanNewStatusId === '') {
+        console.error(`Empty status ID after trimming`);
+        throw new Error(`ID do status não pode estar vazio`);
+      }
+      
+      // CRITICAL: UUID validation - only accept valid UUIDs
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       
-      // CRÍTICO: Verificar explicitamente se os valores não são null/undefined antes de validar
-      if (!id) {
-        console.error(`Invalid startup ID: ${id} (null or undefined)`);
-        throw new Error(`ID da startup inválido`);
+      if (!uuidPattern.test(cleanId)) {
+        console.error(`Invalid startup ID format: ${cleanId}`);
+        throw new Error(`Formato do ID da startup inválido: ${cleanId}`);
       }
       
-      if (!newStatusId) {
-        console.error(`Invalid status ID: ${newStatusId} (null or undefined)`);
-        throw new Error(`ID do status inválido`);
+      if (!uuidPattern.test(cleanNewStatusId)) {
+        console.error(`Invalid status ID format: ${cleanNewStatusId}`);
+        throw new Error(`Formato do ID do status inválido: ${cleanNewStatusId}`);
       }
       
-      // CRÍTICO: Verificar explicitamente se newStatusId é uma string vazia após trim
-      if (typeof newStatusId === 'string') {
-        newStatusId = newStatusId.trim();
-        if (newStatusId === '') {
-          console.error('Status ID is empty after trimming');
-          throw new Error('ID do status não pode estar vazio');
-        }
-      } else {
-        console.error(`Status ID is not a string: ${typeof newStatusId}`);
-        throw new Error('ID do status deve ser uma string');
+      // Only validate oldStatusId if it's present
+      if (cleanOldStatusId !== undefined && !uuidPattern.test(cleanOldStatusId)) {
+        console.warn(`Invalid old status ID format: ${cleanOldStatusId}. Setting to undefined.`);
+        // Keep undefined to allow service to fetch from DB
       }
       
-      // Verificar se os valores são UUIDs válidos
-      if (!uuidPattern.test(id)) {
-        console.error(`Invalid startup ID format: ${id}`);
-        throw new Error(`Formato do ID da startup inválido: ${id}`);
-      }
-      
-      if (!uuidPattern.test(newStatusId)) {
-        console.error(`Invalid status ID format: ${newStatusId}`);
-        throw new Error(`Formato do ID do status inválido: ${newStatusId}`);
-      }
-      
-      // CRÍTICO: Verificar novamente se newStatusId não é null ou vazio
-      if (!newStatusId) {
-        console.error('Status ID cannot be null or empty or whitespace');
-        throw new Error('ID do status não pode estar vazio');
-      }
-      
-      // Garantir que oldStatusId é um UUID válido ou undefined, nunca null
-      if (oldStatusId) {
-        oldStatusId = oldStatusId.trim();
-        if (!uuidPattern.test(oldStatusId)) {
-          console.warn(`Invalid old status ID format: ${oldStatusId}. Setting to undefined.`);
-          oldStatusId = undefined;
-        }
-      }
-      
-      // NOVA ABORDAGEM: Criar um objeto limpo e seguro para a chamada da API
+      // Finally create a clean object with validated data
       const safeParams = {
-        id: id.trim(),
-        newStatusId: newStatusId.trim(),
-        oldStatusId: oldStatusId && uuidPattern.test(oldStatusId) ? oldStatusId.trim() : undefined
+        id: cleanId,
+        newStatusId: cleanNewStatusId,
+        oldStatusId: cleanOldStatusId && uuidPattern.test(cleanOldStatusId) ? cleanOldStatusId : undefined
       };
       
-      // CRÍTICO: Verificação final explícita
-      if (!safeParams.newStatusId) {
-        console.error('Final check - newStatusId is empty after formatting');
-        throw new Error('Status inválido após formatação');
-      }
+      console.log(`Calling updateStartupStatus with safe parameters:`, safeParams);
       
-      console.log(`Calling updateStartupStatus with:`, safeParams);
+      return updateStartupStatus(safeParams.id, safeParams.newStatusId, safeParams.oldStatusId);
+    },
+    onMutate: async (variables) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['startups'] });
       
-      // NOVA ABORDAGEM: Usar try-catch para garantir que qualquer erro é capturado
-      try {
-        return updateStartupStatus(safeParams.id, safeParams.newStatusId, safeParams.oldStatusId);
-      } catch (error) {
-        console.error('Error in updateStartupStatus:', error);
-        throw error;
-      }
+      console.log("Optimistic update for status change:", variables);
+      
+      // Return a context object with the original status
+      return { oldStatusId: variables.oldStatusId };
     },
     onSuccess: (data, variables) => {
       console.log("Status update succeeded:", data);
       
-      // Invalidate generic startups query
+      // Invalidate all potentially affected queries
       queryClient.invalidateQueries({ queryKey: ['startups'] });
-      
-      // Invalidate specific startup query
       queryClient.invalidateQueries({ queryKey: ['startup', variables.id] });
       
-      // Invalidate new status query
-      queryClient.invalidateQueries({ 
-        queryKey: ['startups', 'status', variables.newStatusId]
-      });
+      if (variables.newStatusId) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['startups', 'status', variables.newStatusId]
+        });
+      }
       
-      // If we know the old status, invalidate that query too
       if (variables.oldStatusId) {
         queryClient.invalidateQueries({ 
           queryKey: ['startups', 'status', variables.oldStatusId]
@@ -120,7 +108,7 @@ export const useUpdateStartupStatusMutation = () => {
       
       toast.success('Card movido com sucesso');
     },
-    onError: (error, variables) => {
+    onError: (error, variables, context) => {
       console.error("Status update failed:", error);
       console.error("Failed variables:", variables);
       
