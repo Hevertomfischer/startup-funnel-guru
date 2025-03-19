@@ -28,6 +28,9 @@ export function prepareStartupData(data: any): any {
     '__is_status_update', // Remove legacy flag
   ];
   
+  // Check if this is a status update operation (special handling) BEFORE removing the flag
+  const isStatusUpdate = data.isStatusUpdate === true;
+  
   // Remove all non-database fields
   fieldsToRemove.forEach(field => {
     if (field in cleanData) {
@@ -47,9 +50,6 @@ export function prepareStartupData(data: any): any {
   // Validate UUID format for status_id
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  // Check if this is a status update operation (special handling)
-  const isStatusUpdate = data.isStatusUpdate === true;
-  
   // Special handling for status_id in status update operations
   if (isStatusUpdate) {
     // For status updates, we need to be extra careful
@@ -68,6 +68,12 @@ export function prepareStartupData(data: any): any {
     if (typeof cleanData.status_id === 'string' && !uuidPattern.test(cleanData.status_id)) {
       console.error(`Invalid UUID format for status_id in status update: ${cleanData.status_id}`);
       throw new Error(`Formato de ID do status inválido: ${cleanData.status_id}`);
+    }
+    
+    // CRITICAL: Final verification to ensure we never send null status_id during a status update
+    if (!cleanData.status_id || cleanData.status_id === null || cleanData.status_id === '') {
+      console.error('CRITICAL ERROR: Attempted to update with null status_id in a status update operation');
+      throw new Error('ID do status não pode estar vazio ao atualizar status');
     }
   } else {
     // Regular handling for non-status-update operations
@@ -107,5 +113,12 @@ export function prepareStartupData(data: any): any {
   // Process numeric fields (ensuring correct types)
   const processed = processStartupNumericFields(cleanData);
   console.log('prepareStartupData result:', processed);
+  
+  // FINAL SAFETY CHECK: If this is a status update, ensure status_id is not null
+  if (isStatusUpdate && (!processed.status_id || processed.status_id === null)) {
+    console.error('FINAL CHECK FAILED: Status update with null status_id after processing');
+    throw new Error('ID do status inválido após processamento');
+  }
+  
   return processed;
 }

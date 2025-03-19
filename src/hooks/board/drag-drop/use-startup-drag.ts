@@ -40,6 +40,13 @@ export function useStartupDrag({
     const type = e.dataTransfer.getData('type');
     if (type !== 'startup') return;
     
+    // Log all data transfer items for debugging
+    console.log('All dataTransfer items:', {
+      'text/plain': e.dataTransfer.getData('text/plain'),
+      'type': e.dataTransfer.getData('type'),
+      'sourceColumnId': e.dataTransfer.getData('sourceColumnId')
+    });
+    
     // CORRIGIDO: Adicionando verificações robustas para os IDs
     const startupId = e.dataTransfer.getData('text/plain');
     const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
@@ -115,6 +122,13 @@ export function useStartupDrag({
       return;
     }
     
+    // VERIFICAÇÃO EXTRA: Verificar se columnId está em branco após trim
+    if (columnId.trim() === '') {
+      console.error('Column ID is empty after trimming');
+      toast.error('ID da coluna não pode estar vazio');
+      return;
+    }
+    
     // Optimistically update the UI
     const newColumns = columns.map(col => ({
       ...col,
@@ -134,6 +148,13 @@ export function useStartupDrag({
       setColumns(columns);
       return;
     }
+    
+    // Log do que estamos realmente enviando para a mutação
+    console.log('Mutation payload:', {
+      id: startupId,
+      newStatusId: columnId,
+      oldStatusId: oldStatusId
+    });
     
     // Make the API call - only passing the minimal data needed
     updateStartupStatusMutation.mutate({

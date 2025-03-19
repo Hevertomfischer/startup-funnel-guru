@@ -36,6 +36,12 @@ export const useUpdateStartupStatusMutation = () => {
         throw new Error(`ID do status inválido`);
       }
       
+      // CRÍTICO: Verificar explicitamente se newStatusId é uma string vazia após trim
+      if (typeof newStatusId === 'string' && newStatusId.trim() === '') {
+        console.error('Status ID is empty after trimming');
+        throw new Error('ID do status não pode estar vazio');
+      }
+      
       // Verificar se os valores são UUIDs válidos
       if (!uuidPattern.test(id)) {
         console.error(`Invalid startup ID format: ${id}`);

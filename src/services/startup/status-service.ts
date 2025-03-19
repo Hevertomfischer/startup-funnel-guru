@@ -92,11 +92,17 @@ export const updateStartupStatus = async (
       isStatusUpdate: true  
     };
     
+    // Fazer uma verificação de sanidade aqui para garantir que temos um status_id válido
+    if (!rawUpdateData.status_id || typeof rawUpdateData.status_id !== 'string' || !uuidPattern.test(rawUpdateData.status_id)) {
+      console.error('Dados de atualização inválidos: status_id inválido', rawUpdateData.status_id);
+      throw new Error('ID do status inválido para atualização');
+    }
+    
     // Preparar dados para garantir que enviamos apenas campos válidos
     const updateData = prepareStartupData(rawUpdateData);
     
     // CRÍTICO: Garantir que nunca enviamos null para status_id
-    if (!updateData.status_id) {
+    if (!updateData.status_id || updateData.status_id === null || updateData.status_id === '') {
       console.error('Tentativa de atualizar com status_id nulo, abortando operação');
       throw new Error('Não é possível atualizar startup com status_id nulo');
     }
@@ -121,6 +127,13 @@ export const updateStartupStatus = async (
     } catch (historyError) {
       console.error('Erro ao criar registro de histórico:', historyError);
       // Continuar mesmo assim
+    }
+    
+    // Verificação final para garantir que temos um status_id válido
+    console.log('UPDATE DATA ANTES DO UPDATE:', updateData);
+    if (!updateData.status_id || updateData.status_id === null || updateData.status_id === '') {
+      console.error('ERRO CRÍTICO: status_id ainda está nulo após preparação!');
+      throw new Error('status_id inválido antes de enviar ao banco de dados');
     }
     
     // Atualizar apenas o campo status_id
