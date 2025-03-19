@@ -16,33 +16,38 @@ export const updateStartupStatus = async (
   try {
     console.log(`updateStartupStatus called with id: ${id}, newStatusId: ${newStatusId}, oldStatusId: ${oldStatusId || 'unknown'}`);
     
-    // Validate inputs to avoid DB errors
+    // Validar inputs para evitar erros de BD
     if (!id || typeof id !== 'string') {
-      throw new Error('Invalid startup ID');
+      throw new Error('ID da startup inválido');
     }
     
     if (!newStatusId || typeof newStatusId !== 'string') {
-      throw new Error('Invalid status ID');
+      throw new Error('ID do status inválido');
     }
     
-    // UUID validation check - could be more thorough but this catches the basic issues
+    // Validação do formato UUID
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidPattern.test(id)) {
-      throw new Error(`Invalid UUID format for startup ID: ${id}`);
+      throw new Error(`Formato UUID inválido para ID da startup: ${id}`);
     }
     
     if (!uuidPattern.test(newStatusId)) {
-      throw new Error(`Invalid UUID format for status ID: ${newStatusId}`);
+      throw new Error(`Formato UUID inválido para ID do status: ${newStatusId}`);
+    }
+    
+    // CRÍTICO: Verificação explícita que newStatusId não é null ou string vazia
+    if (!newStatusId.trim()) {
+      throw new Error(`ID do status não pode estar vazio`);
     }
     
     if (oldStatusId && !uuidPattern.test(oldStatusId)) {
-      console.warn(`Invalid UUID format for old status ID: ${oldStatusId}. Will proceed without tracking previous status.`);
+      console.warn(`Formato UUID inválido para ID do status anterior: ${oldStatusId}. Prosseguindo sem rastrear o status anterior.`);
       oldStatusId = undefined;
     }
     
-    console.log(`Updating startup ${id} status from ${oldStatusId || 'unknown'} to ${newStatusId}`);
+    console.log(`Atualizando startup ${id} de ${oldStatusId || 'desconhecido'} para ${newStatusId}`);
     
-    // CRITICAL: Check if newStatusId is valid before proceeding
+    // CRÍTICO: Verificar se newStatusId existe antes de prosseguir
     const { data: statusCheck, error: statusError } = await supabase
       .from('statuses')
       .select('id')
@@ -50,12 +55,12 @@ export const updateStartupStatus = async (
       .single();
       
     if (statusError || !statusCheck) {
-      console.error('Invalid status ID, does not exist in database:', newStatusId);
-      toast.error(`Failed to update status: Status does not exist`);
+      console.error('ID do status inválido, não existe no banco de dados:', newStatusId);
+      toast.error(`Falha ao atualizar status: Status não existe`);
       return null;
     }
     
-    // Before we continue, check if the startup exists and get its current status
+    // Verificar se a startup existe e obter seu status atual
     const { data: startupCheck, error: startupError } = await supabase
       .from('startups')
       .select('id, status_id')
@@ -63,42 +68,40 @@ export const updateStartupStatus = async (
       .single();
       
     if (startupError || !startupCheck) {
-      console.error('Startup does not exist:', id);
-      toast.error(`Failed to update status: Startup does not exist`);
+      console.error('Startup não existe:', id);
+      toast.error(`Falha ao atualizar status: Startup não existe`);
       return null;
     }
     
-    // If oldStatusId wasn't provided, get it from the startup
+    // Se oldStatusId não foi fornecido, obter da startup
     if (!oldStatusId && startupCheck.status_id) {
       oldStatusId = startupCheck.status_id;
-      console.log(`Retrieved oldStatusId from database: ${oldStatusId}`);
+      console.log(`Obtido oldStatusId do banco de dados: ${oldStatusId}`);
     }
     
-    // If the status hasn't changed, don't do an update
+    // Se o status não mudou, não fazer atualização
     if (startupCheck.status_id === newStatusId) {
-      console.log('Status is already set to this value, skipping update');
+      console.log('Status já está definido para este valor, pulando atualização');
       return startupCheck as Startup;
     }
     
-    // Create a minimal update with only the status_id field
-    // We add isStatusUpdate flag for prepareStartupData but don't send it to DB
+    // Criar uma atualização mínima com apenas o campo status_id
     const rawUpdateData = { 
       status_id: newStatusId,
-      // Flag for our utilities but not for the database
+      // Sinalizador para nossas utilidades mas não para o banco de dados
       isStatusUpdate: true  
     };
     
-    // Prepare data to ensure we only send valid fields to the database
-    // Use prepareStartupData which will clean fields not in the DB schema
+    // Preparar dados para garantir que enviamos apenas campos válidos
     const updateData = prepareStartupData(rawUpdateData);
     
-    // CRITICAL: Ensure we never send null for status_id
+    // CRÍTICO: Garantir que nunca enviamos null para status_id
     if (!updateData.status_id) {
-      console.error('Attempted to update with null status_id, aborting operation');
-      throw new Error('Cannot update startup with null status_id');
+      console.error('Tentativa de atualizar com status_id nulo, abortando operação');
+      throw new Error('Não é possível atualizar startup com status_id nulo');
     }
     
-    // Manually create the startup_status_history record to avoid relying on DB triggers
+    // Criar manualmente o registro de histórico de status
     try {
       const { error: historyError } = await supabase
         .from('startup_status_history')
@@ -110,17 +113,17 @@ export const updateStartupStatus = async (
         });
       
       if (historyError) {
-        console.error('Failed to create status history record:', historyError);
-        // Continue anyway as the update might still work
+        console.error('Falha ao criar registro de histórico de status:', historyError);
+        // Continuar mesmo assim, pois a atualização ainda pode funcionar
       } else {
-        console.log('Created history record successfully');
+        console.log('Registro de histórico criado com sucesso');
       }
     } catch (historyError) {
-      console.error('Error creating history record:', historyError);
-      // Continue anyway
+      console.error('Erro ao criar registro de histórico:', historyError);
+      // Continuar mesmo assim
     }
     
-    // Update just the status_id field
+    // Atualizar apenas o campo status_id
     const { data, error } = await supabase
       .from('startups')
       .update(updateData)
@@ -129,15 +132,15 @@ export const updateStartupStatus = async (
       .single();
     
     if (error) {
-      console.error('Failed to update startup status:', error);
+      console.error('Falha ao atualizar status da startup:', error);
       throw error;
     }
     
-    console.log('Successfully updated startup status:', data);
+    console.log('Status da startup atualizado com sucesso:', data);
     return data as Startup;
   } catch (error: any) {
-    console.error('Error in updateStartupStatus function:', error);
-    handleError(error, 'Failed to update startup status');
-    throw error; // Re-throw to propagate to UI
+    console.error('Erro na função updateStartupStatus:', error);
+    handleError(error, 'Falha ao atualizar status da startup');
+    throw error; // Re-throw para propagar para a UI
   }
 };

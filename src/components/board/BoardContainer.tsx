@@ -55,7 +55,9 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
   console.log('BoardContainer props:', { 
     columnCount: columns.length, 
     statusCount: statuses.length,
-    columnQueriesKeys: Object.keys(columnQueries)
+    columnQueriesKeys: Object.keys(columnQueries),
+    columnIds: columns.map(c => c.id),
+    statusIds: statuses.map(s => s.id)
   });
 
   const scrollContainer = (direction: 'left' | 'right') => {
@@ -86,6 +88,13 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
         <div className="flex h-full gap-4 pt-4">
           {columns && columns.length > 0 ? columns.map((column, index) => {
             const status = statuses.find(s => s.id === column.id);
+            
+            // CORRIGIDO: Verificação adicional para garantir que a coluna tem um status correspondente
+            if (!status) {
+              console.error(`No matching status found for column ID: ${column.id}`);
+              return null;
+            }
+            
             const query = columnQueries[column.id] || { 
               isLoading: false, 
               isError: false,
@@ -100,7 +109,9 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
               hasData: !!query.data,
               startupCount: startups.length,
               isLoading: query.isLoading,
-              isError: query.isError
+              isError: query.isError,
+              statusId: status.id,
+              statusName: status.name
             });
             
             return (
@@ -108,7 +119,10 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                 key={column.id} 
                 className="h-full"
                 onDragOver={onColumnDragOver}
-                onDrop={(e) => onColumnDrop(e, column.id)}
+                onDrop={(e) => {
+                  console.log('Column drop event on column:', column.id, status.id);
+                  onColumnDrop(e, column.id);
+                }}
               >
                 <div 
                   className="flex items-center mb-2 cursor-move"
@@ -128,7 +142,10 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                   startupIds={column.startupIds || []}
                   isLoading={query?.isLoading || false}
                   isError={query?.isError || false}
-                  onDrop={onDrop}
+                  onDrop={(e) => {
+                    console.log('BoardColumn onDrop called with columnId:', column.id);
+                    onDrop(e, column.id);
+                  }}
                   onDragOver={onDragOver}
                   onDragStart={onDragStart}
                   onDragEnd={onDragEnd}

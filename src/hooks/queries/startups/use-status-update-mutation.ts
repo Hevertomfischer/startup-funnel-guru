@@ -22,37 +22,56 @@ export const useUpdateStartupStatusMutation = () => {
     }) => {
       console.log(`Mutation starting: Update startup ${id} from ${oldStatusId || 'unknown'} to ${newStatusId}`);
       
-      // IMPROVED: More thorough UUID validation
+      // MELHORADO: Validação UUID mais completa
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       
-      // Check if the provided values are valid UUIDs
-      if (!id || !uuidPattern.test(id)) {
-        console.error(`Invalid startup ID format: ${id}`);
-        throw new Error(`Invalid startup ID format: ${id}`);
+      // CRÍTICO: Verificar explicitamente se os valores não são null/undefined antes de validar
+      if (!id) {
+        console.error(`Invalid startup ID: ${id} (null or undefined)`);
+        throw new Error(`ID da startup inválido`);
       }
       
-      if (!newStatusId || !uuidPattern.test(newStatusId)) {
-        console.error(`Invalid status ID format: ${newStatusId}`);
-        throw new Error(`Invalid status ID format: ${newStatusId}`);
-      }
-      
-      // CRITICAL: Ensure newStatusId is not null or empty - redundant check but safer
       if (!newStatusId) {
-        console.error('Status ID cannot be null or empty');
-        throw new Error('Status ID cannot be null or empty');
+        console.error(`Invalid status ID: ${newStatusId} (null or undefined)`);
+        throw new Error(`ID do status inválido`);
       }
       
-      // Ensure oldStatusId is either a valid UUID or undefined, but never null
-      if (oldStatusId && !uuidPattern.test(oldStatusId)) {
-        console.warn(`Invalid old status ID format: ${oldStatusId}. Setting to undefined.`);
-        oldStatusId = undefined;
+      // Verificar se os valores são UUIDs válidos
+      if (!uuidPattern.test(id)) {
+        console.error(`Invalid startup ID format: ${id}`);
+        throw new Error(`Formato do ID da startup inválido: ${id}`);
       }
       
-      // Ensure UUIDs are properly formatted as strings
-      const formattedId = typeof id === 'string' ? id : String(id);
-      const formattedNewStatusId = typeof newStatusId === 'string' ? newStatusId : String(newStatusId);
+      if (!uuidPattern.test(newStatusId)) {
+        console.error(`Invalid status ID format: ${newStatusId}`);
+        throw new Error(`Formato do ID do status inválido: ${newStatusId}`);
+      }
+      
+      // CRÍTICO: Verificar novamente se newStatusId não é null ou vazio
+      if (!newStatusId.trim()) {
+        console.error('Status ID cannot be null or empty or whitespace');
+        throw new Error('ID do status não pode estar vazio');
+      }
+      
+      // Garantir que oldStatusId é um UUID válido ou undefined, nunca null
+      if (oldStatusId) {
+        if (!uuidPattern.test(oldStatusId)) {
+          console.warn(`Invalid old status ID format: ${oldStatusId}. Setting to undefined.`);
+          oldStatusId = undefined;
+        }
+      }
+      
+      // Garantir que os UUIDs estão formatados corretamente como strings
+      const formattedId = typeof id === 'string' ? id.trim() : String(id).trim();
+      const formattedNewStatusId = typeof newStatusId === 'string' ? newStatusId.trim() : String(newStatusId).trim();
       const formattedOldStatusId = oldStatusId && uuidPattern.test(oldStatusId) ? 
-        (typeof oldStatusId === 'string' ? oldStatusId : String(oldStatusId)) : undefined;
+        (typeof oldStatusId === 'string' ? oldStatusId.trim() : String(oldStatusId).trim()) : undefined;
+      
+      // CRÍTICO: Verificação final explícita
+      if (!formattedNewStatusId || formattedNewStatusId === '') {
+        console.error('Final check - newStatusId is empty after formatting');
+        throw new Error('Status inválido após formatação');
+      }
       
       console.log(`Calling updateStartupStatus with:`, {
         id: formattedId,
@@ -60,7 +79,7 @@ export const useUpdateStartupStatusMutation = () => {
         oldStatusId: formattedOldStatusId
       });
       
-      // Call the service with properly formatted and validated IDs
+      // Chamar o serviço com IDs formatados e validados
       return updateStartupStatus(formattedId, formattedNewStatusId, formattedOldStatusId);
     },
     onSuccess: (data, variables) => {
@@ -84,13 +103,13 @@ export const useUpdateStartupStatusMutation = () => {
         });
       }
       
-      toast.success('Card moved successfully');
+      toast.success('Card movido com sucesso');
     },
     onError: (error, variables) => {
       console.error("Status update failed:", error);
       console.error("Failed variables:", variables);
       
-      toast.error(error instanceof Error ? error.message : 'Failed to update startup status');
+      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar o status da startup');
       
       // Invalidate queries to ensure UI is up-to-date
       queryClient.invalidateQueries({ queryKey: ['startups'] });

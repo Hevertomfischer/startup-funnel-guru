@@ -55,13 +55,19 @@ export function prepareStartupData(data: any): any {
     // For status updates, we need to be extra careful
     if (!cleanData.status_id) {
       console.error('Attempted status update with null/empty status_id');
-      throw new Error('Status ID cannot be null or empty when updating status');
+      throw new Error('ID do status não pode estar vazio ao atualizar status');
+    }
+    
+    // CRÍTICO: Verifica explicitamente por strings vazias
+    if (typeof cleanData.status_id === 'string' && cleanData.status_id.trim() === '') {
+      console.error('Status ID is an empty string');
+      throw new Error('ID do status não pode estar vazio');
     }
     
     // Ensure status_id is a valid UUID for status updates
     if (typeof cleanData.status_id === 'string' && !uuidPattern.test(cleanData.status_id)) {
       console.error(`Invalid UUID format for status_id in status update: ${cleanData.status_id}`);
-      throw new Error(`Invalid status ID format: ${cleanData.status_id}`);
+      throw new Error(`Formato de ID do status inválido: ${cleanData.status_id}`);
     }
   } else {
     // Regular handling for non-status-update operations
@@ -86,9 +92,9 @@ export function prepareStartupData(data: any): any {
   }
   
   // Double check for status updates to ensure we never send null
-  if (isStatusUpdate && (!cleanData.status_id || cleanData.status_id === null)) {
+  if (isStatusUpdate && (!cleanData.status_id || cleanData.status_id === null || cleanData.status_id === '')) {
     console.error('Attempted to update with null status_id in a status update operation');
-    throw new Error('Status ID cannot be null when updating status');
+    throw new Error('ID do status não pode estar vazio ao atualizar status');
   }
   
   // Ensure assigned_to is a string or null
