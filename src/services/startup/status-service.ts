@@ -77,7 +77,7 @@ export const updateStartupStatus = async (
     // If the status hasn't changed, don't do an update
     if (startupCheck.status_id === newStatusId) {
       console.log('Status is already set to this value, skipping update');
-      return startupCheck;
+      return startupCheck as Startup;
     }
     
     // Create a minimal update with only the status_id field
@@ -134,7 +134,7 @@ export const updateStartupStatus = async (
     }
     
     console.log('Successfully updated startup status:', data);
-    return data;
+    return data as Startup;
   } catch (error: any) {
     console.error('Error in updateStartupStatus function:', error);
     handleError(error, 'Failed to update startup status');
