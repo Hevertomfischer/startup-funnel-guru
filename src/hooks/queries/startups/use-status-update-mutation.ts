@@ -20,17 +20,17 @@ export const useUpdateStartupStatusMutation = () => {
       newStatusId: string; 
       oldStatusId?: string 
     }) => {
-      console.log(`Mutation starting: Update startup ${id} from ${oldStatusId} to ${newStatusId}`);
+      console.log(`Mutation starting: Update startup ${id} from ${oldStatusId || 'unknown'} to ${newStatusId}`);
       
       // Validate UUIDs before sending to the service
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       
       // Check if the provided values are valid UUIDs
-      if (!uuidPattern.test(id)) {
+      if (!id || !uuidPattern.test(id)) {
         throw new Error(`Invalid startup ID format: ${id}`);
       }
       
-      if (!uuidPattern.test(newStatusId)) {
+      if (!newStatusId || !uuidPattern.test(newStatusId)) {
         throw new Error(`Invalid status ID format: ${newStatusId}`);
       }
       
@@ -63,14 +63,12 @@ export const useUpdateStartupStatusMutation = () => {
           queryKey: ['startups', 'status', variables.oldStatusId]
         });
       }
-      
-      toast.success('Startup status updated successfully');
     },
     onError: (error, variables) => {
       console.error("Status update failed:", error);
       console.error("Failed variables:", variables);
       
-      toast.error('Failed to update startup status');
+      toast.error(error instanceof Error ? error.message : 'Failed to update startup status');
       
       // Invalidate queries to ensure UI is up-to-date
       queryClient.invalidateQueries({ queryKey: ['startups'] });

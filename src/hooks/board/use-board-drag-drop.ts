@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useUpdateStartupStatusMutation } from '../queries/use-startup-queries';
+import { useUpdateStartupStatusMutation } from '../queries/startups';
 import { Column, Startup } from '@/types';
 import { useWorkflowRules } from '../workflow';
 import { toast } from 'sonner';
@@ -48,6 +48,14 @@ export function useBoardDragDrop({
       return;
     }
     
+    // Validate the column ID is a valid UUID
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(columnId)) {
+      console.error('Invalid column ID format:', columnId);
+      toast.error('Cannot move card to this column (invalid column)');
+      return;
+    }
+    
     const startup = getStartupById(startupId);
     
     if (!startup) {
@@ -55,59 +63,63 @@ export function useBoardDragDrop({
       return;
     }
     
-    if (startup && startup.status_id !== columnId) {
-      const oldStatusId = startup.status_id;
-      
-      console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
-      
-      // Optimistically update the UI
-      const newColumns = columns.map(col => ({
-        ...col,
-        startupIds: col.id === columnId 
-          ? [...col.startupIds, startupId] 
-          : col.startupIds.filter(id => id !== startupId)
-      }));
-      
-      setColumns(newColumns);
-      
-      // Make the API call - only passing the minimal data needed
-      updateStartupStatusMutation.mutate({
-        id: startupId,
-        newStatusId: columnId,
-        oldStatusId: oldStatusId
-      }, {
-        onSuccess: (data) => {
-          console.log('Status update successful for startup', startupId);
-          
-          const newStatus = statuses.find(s => s.id === columnId);
-          toast.success(`Startup moved to ${newStatus?.name || 'new status'}`);
-          
-          if (data) {
-            const startupForWorkflow: Startup = {
-              id: startup.id,
-              createdAt: startup.created_at || new Date().toISOString(),
-              updatedAt: startup.updated_at || new Date().toISOString(),
-              statusId: columnId,
-              values: { ...startup },
-              labels: [],
-              priority: startup.priority || 'medium',
-              attachments: []
-            };
-            
-            // Run any workflow rules that might apply to this status change
-            processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
-          }
-        },
-        onError: (error) => {
-          console.error('Error updating startup status:', error);
-          
-          toast.error(error instanceof Error ? error.message : "An error occurred. Please try again.");
-          
-          // Revert the optimistic update
-          setColumns(columns);
-        }
-      });
+    // Make sure the startup has a valid status_id (even if it's different from columnId)
+    const oldStatusId = startup.status_id || columns.find(col => col.startupIds.includes(startupId))?.id;
+    
+    if (oldStatusId === columnId) {
+      console.log('Startup is already in this column, no update needed');
+      return;
     }
+    
+    console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
+    
+    // Optimistically update the UI
+    const newColumns = columns.map(col => ({
+      ...col,
+      startupIds: col.id === columnId 
+        ? [...col.startupIds, startupId] 
+        : col.startupIds.filter(id => id !== startupId)
+    }));
+    
+    setColumns(newColumns);
+    
+    // Make the API call - only passing the minimal data needed
+    updateStartupStatusMutation.mutate({
+      id: startupId,
+      newStatusId: columnId,
+      oldStatusId: oldStatusId
+    }, {
+      onSuccess: (data) => {
+        console.log('Status update successful for startup', startupId);
+        
+        const newStatus = statuses.find(s => s.id === columnId);
+        toast.success(`Startup moved to ${newStatus?.name || 'new status'}`);
+        
+        if (data) {
+          const startupForWorkflow: Startup = {
+            id: startup.id,
+            createdAt: startup.created_at || new Date().toISOString(),
+            updatedAt: startup.updated_at || new Date().toISOString(),
+            statusId: columnId,
+            values: { ...startup },
+            labels: [],
+            priority: startup.priority || 'medium',
+            attachments: []
+          };
+          
+          // Run any workflow rules that might apply to this status change
+          processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
+        }
+      },
+      onError: (error) => {
+        console.error('Error updating startup status:', error);
+        
+        toast.error(error instanceof Error ? error.message : "An error occurred. Please try again.");
+        
+        // Revert the optimistic update
+        setColumns(columns);
+      }
+    });
     
     setDraggingStartupId(null);
   };

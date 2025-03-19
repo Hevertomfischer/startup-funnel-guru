@@ -37,7 +37,20 @@ export const updateStartupStatus = async (
       oldStatusId = undefined;
     }
     
-    console.log(`Updating startup ${id} status from ${oldStatusId} to ${newStatusId}`);
+    console.log(`Updating startup ${id} status from ${oldStatusId || 'unknown'} to ${newStatusId}`);
+    
+    // CRITICAL: Check if newStatusId is valid before proceeding
+    const { data: statusCheck, error: statusError } = await supabase
+      .from('statuses')
+      .select('id')
+      .eq('id', newStatusId)
+      .single();
+      
+    if (statusError || !statusCheck) {
+      console.error('Invalid status ID, does not exist in database:', newStatusId);
+      toast.error(`Failed to update status: Status does not exist`);
+      return null;
+    }
     
     // Create a minimal update with only the status_id field
     const updateData = { 
