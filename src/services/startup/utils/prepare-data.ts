@@ -47,6 +47,11 @@ export function prepareStartupData(data: any): any {
     cleanData.assigned_to = data.assignedTo;
   }
   
+  // CRITICAL: Log data state after field mapping
+  console.log('Data after mapping and cleanup:', cleanData);
+  console.log('Is status update?', isStatusUpdate);
+  console.log('Current status_id value:', cleanData.status_id);
+  
   // CRITICAL: UUID validation pattern
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   

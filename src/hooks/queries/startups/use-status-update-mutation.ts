@@ -67,6 +67,13 @@ export const useUpdateStartupStatusMutation = () => {
         // Keep undefined to allow service to fetch from DB
       }
       
+      // CRITICAL DEBUG: Log complete details of parameters after all validation
+      console.log('MUTATION VALIDATION COMPLETE');
+      console.log('Final parameters after validation:');
+      console.log('- Startup ID:', cleanId);
+      console.log('- New status ID:', cleanNewStatusId);
+      console.log('- Old status ID:', cleanOldStatusId);
+      
       // Finally create a clean object with validated data
       const safeParams = {
         id: cleanId,

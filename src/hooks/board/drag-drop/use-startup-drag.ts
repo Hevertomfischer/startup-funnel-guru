@@ -118,7 +118,19 @@ export function useStartupDrag({
       return;
     }
     
-    console.log('Moving startup', cleanStartupId, 'from status', oldStatusId, 'to status', cleanColumnId);
+    // CRITICAL DEBUG: Log the exact values that will be sent for the update
+    console.log('CRITICAL DEBUG - Values that will be used for status update:');
+    console.log('- Startup ID:', cleanStartupId);
+    console.log('- New status ID:', cleanColumnId);
+    console.log('- Old status ID:', oldStatusId);
+    console.log('- Target status details:', targetStatus);
+    
+    // Ensure the new status ID is definitely valid
+    if (!cleanColumnId || cleanColumnId === 'null' || cleanColumnId === 'undefined') {
+      console.error('FATAL ERROR: New status ID is invalid:', cleanColumnId);
+      toast.error('Erro interno: status inválido');
+      return;
+    }
     
     // Optimistically update the UI (more reliable than waiting for API)
     const newColumns = columns.map(col => ({
@@ -130,18 +142,23 @@ export function useStartupDrag({
     
     setColumns(newColumns);
     
-    // Make the API call with minimal, sanitized data
-    console.log('Mutation payload:', {
+    // Create a minimal, safe mutation payload object
+    const mutationPayload = {
       id: cleanStartupId,
       newStatusId: cleanColumnId,
       oldStatusId: oldStatusId
-    });
+    };
     
-    updateStartupStatusMutation.mutate({
-      id: cleanStartupId,
-      newStatusId: cleanColumnId,
-      oldStatusId: oldStatusId
-    }, {
+    // Final validation before sending
+    if (!mutationPayload.newStatusId || !uuidPattern.test(mutationPayload.newStatusId)) {
+      console.error('VALIDATION FAILED: newStatusId is invalid:', mutationPayload.newStatusId);
+      toast.error('Status inválido');
+      return;
+    }
+    
+    console.log('Mutation payload:', mutationPayload);
+    
+    updateStartupStatusMutation.mutate(mutationPayload, {
       onSuccess: (data) => {
         console.log('Status update successful for startup', cleanStartupId);
         
