@@ -2,6 +2,7 @@
 import { supabase, handleError } from '../base-service';
 import type { Startup } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { prepareStartupData } from './utils/prepare-data';
 
 /**
  * Updates just the status of a startup - this is a specialized function for drag & drop
@@ -74,18 +75,16 @@ export const updateStartupStatus = async (
     }
     
     // Create a minimal update with only the status_id field
-    const updateData = { 
+    // We add isStatusUpdate flag for prepareStartupData but don't send it to DB
+    const rawUpdateData = { 
       status_id: newStatusId,
-      // Add a flag that this is explicitly a status update
-      // This is used in prepareStartupData to ensure we don't send null
-      __is_status_update: true
+      // Flag for our utilities but not for the database
+      isStatusUpdate: true  
     };
     
-    // CRITICAL: Explicitly remove changed_by if it somehow exists
-    // This ensures it will be set by the database trigger
-    if ('changed_by' in updateData) {
-      delete updateData.changed_by;
-    }
+    // Prepare data to ensure we only send valid fields to the database
+    // Use prepareStartupData which will clean fields not in the DB schema
+    const updateData = prepareStartupData(rawUpdateData);
     
     // CRITICAL: Ensure we never send null for status_id
     if (!updateData.status_id) {

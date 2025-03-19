@@ -24,6 +24,8 @@ export function prepareStartupData(data: any): any {
     'statusId', // Remove incorrect field name if present
     'assignedTo', // Remove incorrect field name if present
     'status_current', // Remove if present (not a database column)
+    'isStatusUpdate', // Remove this flag - it's only for our client code
+    '__is_status_update', // Remove legacy flag
   ];
   
   // Remove all non-database fields
@@ -68,7 +70,7 @@ export function prepareStartupData(data: any): any {
   
   // CRITICAL: For updates to startup status, we must ensure we don't send null
   // This is especially important for the update status function that triggers the history
-  if ('status_id' in cleanData && cleanData.status_id === null && data.__is_status_update === true) {
+  if ('status_id' in cleanData && cleanData.status_id === null && data.isStatusUpdate === true) {
     console.error('Attempted to update with null status_id in a status update operation');
     throw new Error('Status ID cannot be null when updating status');
   }
