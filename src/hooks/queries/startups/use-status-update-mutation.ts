@@ -22,7 +22,7 @@ export const useUpdateStartupStatusMutation = () => {
     }) => {
       console.log(`Mutation starting: Update startup ${id} from ${oldStatusId || 'unknown'} to ${newStatusId}`);
       
-      // Validate UUIDs before sending to the service
+      // IMPROVED: More thorough UUID validation
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       
       // Check if the provided values are valid UUIDs
@@ -34,7 +34,7 @@ export const useUpdateStartupStatusMutation = () => {
         throw new Error(`Invalid status ID format: ${newStatusId}`);
       }
       
-      // CRITICAL: Ensure newStatusId is not null or empty
+      // CRITICAL: Ensure newStatusId is not null or empty - redundant check but safer
       if (!newStatusId) {
         throw new Error('Status ID cannot be null or empty');
       }

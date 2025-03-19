@@ -70,8 +70,23 @@ export function useBoardDragDrop({
       return;
     }
     
-    // Make sure the startup has a valid status_id (even if it's different from columnId)
-    const oldStatusId = startup.status_id || columns.find(col => col.startupIds.includes(startupId))?.id;
+    // Determine the current status ID of the startup
+    let oldStatusId;
+    
+    // First try to get status_id directly from the startup object
+    if (startup.status_id && uuidPattern.test(startup.status_id)) {
+      oldStatusId = startup.status_id;
+    } 
+    // If not available or invalid, try to find which column contains this startup
+    else {
+      const currentColumn = columns.find(col => col.startupIds.includes(startupId));
+      if (currentColumn && uuidPattern.test(currentColumn.id)) {
+        oldStatusId = currentColumn.id;
+      } else {
+        console.warn('Could not determine current status of startup:', startupId);
+        // Don't return, we'll still try to update with just the new status
+      }
+    }
     
     if (oldStatusId === columnId) {
       console.log('Startup is already in this column, no update needed');
@@ -80,9 +95,9 @@ export function useBoardDragDrop({
     
     console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
     
-    // CRITICAL: Ensure we're not passing null values to the mutation
-    if (!columnId) {
-      console.error('Attempted to move startup to a null column ID');
+    // CRITICAL: Final validation to ensure we have a valid new column ID
+    if (!columnId || !uuidPattern.test(columnId)) {
+      console.error('Attempted to move startup to an invalid column ID');
       toast.error('Cannot move to an invalid column');
       return;
     }
