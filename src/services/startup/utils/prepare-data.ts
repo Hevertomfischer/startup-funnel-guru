@@ -1,3 +1,4 @@
+
 import { processStartupNumericFields } from './numeric-field-utils';
 
 /**
@@ -46,41 +47,46 @@ export function prepareStartupData(data: any): any {
   // Validate UUID format for status_id
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  // Ensure status_id is a valid UUID or null (critical fix)
-  if (cleanData.status_id === undefined || cleanData.status_id === '') {
-    // CRITICAL: For status updates, we can't allow null or undefined
-    if (data.isStatusUpdate === true) {
-      console.error('Attempted to update with null/undefined status_id in a status update operation');
-      throw new Error('Status ID cannot be null or undefined when updating status');
+  // Check if this is a status update operation (special handling)
+  const isStatusUpdate = data.isStatusUpdate === true;
+  
+  // Special handling for status_id in status update operations
+  if (isStatusUpdate) {
+    // For status updates, we need to be extra careful
+    if (!cleanData.status_id) {
+      console.error('Attempted status update with null/empty status_id');
+      throw new Error('Status ID cannot be null or empty when updating status');
     }
-    cleanData.status_id = null;
-  } else if (cleanData.status_id && typeof cleanData.status_id === 'string') {
-    // Check if it's a valid UUID format
-    if (!uuidPattern.test(cleanData.status_id)) {
-      console.error(`Invalid UUID format for status_id: ${cleanData.status_id}`);
-      // If we have an invalid format and this is a status update, throw error
-      if (data.isStatusUpdate === true) {
-        throw new Error(`Invalid status ID format: ${cleanData.status_id}`);
-      }
-      // Otherwise convert to null
-      cleanData.status_id = null;
+    
+    // Ensure status_id is a valid UUID for status updates
+    if (typeof cleanData.status_id === 'string' && !uuidPattern.test(cleanData.status_id)) {
+      console.error(`Invalid UUID format for status_id in status update: ${cleanData.status_id}`);
+      throw new Error(`Invalid status ID format: ${cleanData.status_id}`);
     }
-  } else if (cleanData.status_id && typeof cleanData.status_id !== 'string') {
-    // If it's not a string, convert to string and then check format
-    const statusIdStr = String(cleanData.status_id);
-    if (!uuidPattern.test(statusIdStr)) {
-      console.error(`Invalid UUID format for status_id: ${statusIdStr}`);
-      if (data.isStatusUpdate === true) {
-        throw new Error(`Invalid status ID format: ${statusIdStr}`);
-      }
+  } else {
+    // Regular handling for non-status-update operations
+    if (cleanData.status_id === undefined || cleanData.status_id === '') {
       cleanData.status_id = null;
-    } else {
-      cleanData.status_id = statusIdStr;
+    } else if (cleanData.status_id && typeof cleanData.status_id === 'string') {
+      // Check if it's a valid UUID format
+      if (!uuidPattern.test(cleanData.status_id)) {
+        console.error(`Invalid UUID format for status_id: ${cleanData.status_id}`);
+        cleanData.status_id = null;
+      }
+    } else if (cleanData.status_id && typeof cleanData.status_id !== 'string') {
+      // If it's not a string, convert to string and then check format
+      const statusIdStr = String(cleanData.status_id);
+      if (!uuidPattern.test(statusIdStr)) {
+        console.error(`Invalid UUID format for status_id: ${statusIdStr}`);
+        cleanData.status_id = null;
+      } else {
+        cleanData.status_id = statusIdStr;
+      }
     }
   }
   
   // Double check for status updates to ensure we never send null
-  if (data.isStatusUpdate === true && (!cleanData.status_id || cleanData.status_id === null)) {
+  if (isStatusUpdate && (!cleanData.status_id || cleanData.status_id === null)) {
     console.error('Attempted to update with null status_id in a status update operation');
     throw new Error('Status ID cannot be null when updating status');
   }

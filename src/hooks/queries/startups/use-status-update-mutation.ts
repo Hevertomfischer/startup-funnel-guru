@@ -27,16 +27,25 @@ export const useUpdateStartupStatusMutation = () => {
       
       // Check if the provided values are valid UUIDs
       if (!id || !uuidPattern.test(id)) {
+        console.error(`Invalid startup ID format: ${id}`);
         throw new Error(`Invalid startup ID format: ${id}`);
       }
       
       if (!newStatusId || !uuidPattern.test(newStatusId)) {
+        console.error(`Invalid status ID format: ${newStatusId}`);
         throw new Error(`Invalid status ID format: ${newStatusId}`);
       }
       
       // CRITICAL: Ensure newStatusId is not null or empty - redundant check but safer
       if (!newStatusId) {
+        console.error('Status ID cannot be null or empty');
         throw new Error('Status ID cannot be null or empty');
+      }
+      
+      // Ensure oldStatusId is either a valid UUID or undefined, but never null
+      if (oldStatusId && !uuidPattern.test(oldStatusId)) {
+        console.warn(`Invalid old status ID format: ${oldStatusId}. Setting to undefined.`);
+        oldStatusId = undefined;
       }
       
       // Ensure UUIDs are properly formatted as strings
@@ -44,6 +53,12 @@ export const useUpdateStartupStatusMutation = () => {
       const formattedNewStatusId = typeof newStatusId === 'string' ? newStatusId : String(newStatusId);
       const formattedOldStatusId = oldStatusId && uuidPattern.test(oldStatusId) ? 
         (typeof oldStatusId === 'string' ? oldStatusId : String(oldStatusId)) : undefined;
+      
+      console.log(`Calling updateStartupStatus with:`, {
+        id: formattedId,
+        newStatusId: formattedNewStatusId,
+        oldStatusId: formattedOldStatusId
+      });
       
       // Call the service with properly formatted and validated IDs
       return updateStartupStatus(formattedId, formattedNewStatusId, formattedOldStatusId);
@@ -68,6 +83,8 @@ export const useUpdateStartupStatusMutation = () => {
           queryKey: ['startups', 'status', variables.oldStatusId]
         });
       }
+      
+      toast.success('Card moved successfully');
     },
     onError: (error, variables) => {
       console.error("Status update failed:", error);

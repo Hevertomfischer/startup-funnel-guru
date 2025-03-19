@@ -55,7 +55,7 @@ export const updateStartupStatus = async (
       return null;
     }
     
-    // If we're here, we also need to check if the startup exists
+    // Before we continue, check if the startup exists and get its current status
     const { data: startupCheck, error: startupError } = await supabase
       .from('startups')
       .select('id, status_id')
@@ -74,6 +74,12 @@ export const updateStartupStatus = async (
       console.log(`Retrieved oldStatusId from database: ${oldStatusId}`);
     }
     
+    // If the status hasn't changed, don't do an update
+    if (startupCheck.status_id === newStatusId) {
+      console.log('Status is already set to this value, skipping update');
+      return startupCheck;
+    }
+    
     // Create a minimal update with only the status_id field
     // We add isStatusUpdate flag for prepareStartupData but don't send it to DB
     const rawUpdateData = { 
@@ -89,35 +95,29 @@ export const updateStartupStatus = async (
     // CRITICAL: Ensure we never send null for status_id
     if (!updateData.status_id) {
       console.error('Attempted to update with null status_id, aborting operation');
-      toast.error('Failed to update status: Invalid status');
-      return null;
+      throw new Error('Cannot update startup with null status_id');
     }
     
-    // If the startup doesn't have a status_id and we're about to set one,
-    // we need to manually ensure a startup_status_history record exists
-    // This handles the case where a startup was created without a status_id
-    if (!startupCheck.status_id && newStatusId) {
-      console.log('Startup has no previous status_id, will create initial history record');
+    // Manually create the startup_status_history record to avoid relying on DB triggers
+    try {
+      const { error: historyError } = await supabase
+        .from('startup_status_history')
+        .insert({
+          startup_id: id,
+          status_id: newStatusId,
+          previous_status_id: oldStatusId || null,
+          entered_at: new Date().toISOString()
+        });
       
-      // Create a history record manually if needed
-      try {
-        const { error: historyError } = await supabase
-          .from('startup_status_history')
-          .insert({
-            startup_id: id,
-            status_id: newStatusId,
-            previous_status_id: null,
-            entered_at: new Date().toISOString()
-          });
-        
-        if (historyError) {
-          console.error('Failed to create initial status history record:', historyError);
-          // Continue anyway as the update might still work
-        }
-      } catch (historyError) {
-        console.error('Error creating history record:', historyError);
-        // Continue anyway
+      if (historyError) {
+        console.error('Failed to create status history record:', historyError);
+        // Continue anyway as the update might still work
+      } else {
+        console.log('Created history record successfully');
       }
+    } catch (historyError) {
+      console.error('Error creating history record:', historyError);
+      // Continue anyway
     }
     
     // Update just the status_id field
@@ -125,21 +125,19 @@ export const updateStartupStatus = async (
       .from('startups')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
     
     if (error) {
       console.error('Failed to update startup status:', error);
-      toast.error(`Failed to update status: ${error.message}`);
       throw error;
     }
     
     console.log('Successfully updated startup status:', data);
-    toast.success('Status updated successfully');
     return data;
   } catch (error: any) {
     console.error('Error in updateStartupStatus function:', error);
     handleError(error, 'Failed to update startup status');
-    return null;
+    throw error; // Re-throw to propagate to UI
   }
 };

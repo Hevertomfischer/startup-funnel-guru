@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useUpdateStartupStatusMutation } from '../queries/startups';
 import { Column, Startup } from '@/types';
@@ -29,6 +30,13 @@ export function useBoardDragDrop({
     e.dataTransfer.setData('text/plain', startupId);
     e.dataTransfer.setData('type', 'startup');
     setDraggingStartupId(startupId);
+    
+    // Store source column for tracking
+    const sourceColumn = columns.find(col => col.startupIds.includes(startupId));
+    if (sourceColumn) {
+      e.dataTransfer.setData('sourceColumnId', sourceColumn.id);
+      console.log(`Dragging startup ${startupId} from column ${sourceColumn.id}`);
+    }
   };
   
   const handleDragOver = (e: React.DragEvent) => {
@@ -42,6 +50,8 @@ export function useBoardDragDrop({
     if (type !== 'startup') return;
     
     const startupId = e.dataTransfer.getData('text/plain');
+    const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
+    
     if (!startupId || !columnId) {
       console.error('Missing required data:', { startupId, columnId });
       return;
@@ -73,18 +83,25 @@ export function useBoardDragDrop({
     // Determine the current status ID of the startup
     let oldStatusId;
     
-    // First try to get status_id directly from the startup object
-    if (startup.status_id && uuidPattern.test(startup.status_id)) {
+    // First try to use sourceColumnId from drag event (most reliable)
+    if (sourceColumnId && uuidPattern.test(sourceColumnId)) {
+      oldStatusId = sourceColumnId;
+      console.log(`Using sourceColumnId from drag event: ${oldStatusId}`);
+    }
+    // Then try to get status_id directly from the startup object
+    else if (startup.status_id && uuidPattern.test(startup.status_id)) {
       oldStatusId = startup.status_id;
+      console.log(`Using status_id from startup object: ${oldStatusId}`);
     } 
     // If not available or invalid, try to find which column contains this startup
     else {
       const currentColumn = columns.find(col => col.startupIds.includes(startupId));
       if (currentColumn && uuidPattern.test(currentColumn.id)) {
         oldStatusId = currentColumn.id;
+        console.log(`Found startup in column: ${oldStatusId}`);
       } else {
         console.warn('Could not determine current status of startup:', startupId);
-        // Don't return, we'll still try to update with just the new status
+        // We'll still try to update with just the new status
       }
     }
     
