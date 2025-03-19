@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useUpdateStartupStatusMutation } from '../queries/startups';
 import { Column, Startup } from '@/types';
@@ -80,6 +79,13 @@ export function useBoardDragDrop({
     }
     
     console.log('Moving startup', startupId, 'from status', oldStatusId, 'to status', columnId);
+    
+    // CRITICAL: Ensure we're not passing null values to the mutation
+    if (!columnId) {
+      console.error('Attempted to move startup to a null column ID');
+      toast.error('Cannot move to an invalid column');
+      return;
+    }
     
     // Optimistically update the UI
     const newColumns = columns.map(col => ({

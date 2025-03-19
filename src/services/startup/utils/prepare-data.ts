@@ -66,6 +66,13 @@ export function prepareStartupData(data: any): any {
     }
   }
   
+  // CRITICAL: For updates to startup status, we must ensure we don't send null
+  // This is especially important for the update status function that triggers the history
+  if ('status_id' in cleanData && cleanData.status_id === null && data.__is_status_update === true) {
+    console.error('Attempted to update with null status_id in a status update operation');
+    throw new Error('Status ID cannot be null when updating status');
+  }
+  
   // Ensure assigned_to is a string or null
   if (cleanData.assigned_to === undefined || cleanData.assigned_to === '') {
     cleanData.assigned_to = null;

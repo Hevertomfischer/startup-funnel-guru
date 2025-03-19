@@ -34,6 +34,11 @@ export const useUpdateStartupStatusMutation = () => {
         throw new Error(`Invalid status ID format: ${newStatusId}`);
       }
       
+      // CRITICAL: Ensure newStatusId is not null or empty
+      if (!newStatusId) {
+        throw new Error('Status ID cannot be null or empty');
+      }
+      
       // Ensure UUIDs are properly formatted as strings
       const formattedId = typeof id === 'string' ? id : String(id);
       const formattedNewStatusId = typeof newStatusId === 'string' ? newStatusId : String(newStatusId);
