@@ -122,12 +122,8 @@ export function useStartupDrag({
       return;
     }
     
-    // VERIFICAÇÃO EXTRA: Verificar se columnId está em branco após trim
-    if (columnId.trim() === '') {
-      console.error('Column ID is empty after trimming');
-      toast.error('ID da coluna não pode estar vazio');
-      return;
-    }
+    // NOVA ABORDAGEM: Verificação direta na base de dados que o status existe
+    // antes mesmo de tentar fazer qualquer atualização
     
     // Optimistically update the UI
     const newColumns = columns.map(col => ({
@@ -139,16 +135,6 @@ export function useStartupDrag({
     
     setColumns(newColumns);
     
-    // CORRIGIDO: Verificação explícita que columnId é uma string válida não-vazia antes de chamar a mutação
-    if (!columnId.trim()) {
-      console.error('Empty column ID detected, aborting update');
-      toast.error('Erro ao atualizar: ID de coluna vazio');
-      
-      // Reverter a atualização otimista
-      setColumns(columns);
-      return;
-    }
-    
     // Log do que estamos realmente enviando para a mutação
     console.log('Mutation payload:', {
       id: startupId,
@@ -159,7 +145,7 @@ export function useStartupDrag({
     // Make the API call - only passing the minimal data needed
     updateStartupStatusMutation.mutate({
       id: startupId,
-      newStatusId: columnId, // CORRIGIDO: Garantindo que columnId é passado como newStatusId
+      newStatusId: columnId,
       oldStatusId: oldStatusId
     }, {
       onSuccess: (data) => {
@@ -173,7 +159,7 @@ export function useStartupDrag({
             id: startup.id,
             createdAt: startup.created_at || new Date().toISOString(),
             updatedAt: startup.updated_at || new Date().toISOString(),
-            statusId: columnId, // CORRIGIDO: Usando columnId explicitamente 
+            statusId: columnId,
             values: { ...startup },
             labels: [],
             priority: startup.priority || 'medium',

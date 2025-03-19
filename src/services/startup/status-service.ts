@@ -85,75 +85,82 @@ export const updateStartupStatus = async (
       return startupCheck as Startup;
     }
     
-    // Criar uma atualização mínima com apenas o campo status_id
-    const rawUpdateData = { 
-      status_id: newStatusId,
-      // Sinalizador para nossas utilidades mas não para o banco de dados
-      isStatusUpdate: true  
-    };
-    
-    // Fazer uma verificação de sanidade aqui para garantir que temos um status_id válido
-    if (!rawUpdateData.status_id || typeof rawUpdateData.status_id !== 'string' || !uuidPattern.test(rawUpdateData.status_id)) {
-      console.error('Dados de atualização inválidos: status_id inválido', rawUpdateData.status_id);
-      throw new Error('ID do status inválido para atualização');
-    }
-    
-    // Preparar dados para garantir que enviamos apenas campos válidos
-    const updateData = prepareStartupData(rawUpdateData);
-    
-    // CRÍTICO: Garantir que nunca enviamos null para status_id
-    if (!updateData.status_id || updateData.status_id === null || updateData.status_id === '') {
-      console.error('Tentativa de atualizar com status_id nulo, abortando operação');
-      throw new Error('Não é possível atualizar startup com status_id nulo');
-    }
-    
-    // Criar manualmente o registro de histórico de status
-    try {
-      const { error: historyError } = await supabase
-        .from('startup_status_history')
-        .insert({
-          startup_id: id,
-          status_id: newStatusId,
-          previous_status_id: oldStatusId || null,
-          entered_at: new Date().toISOString()
-        });
-      
-      if (historyError) {
-        console.error('Falha ao criar registro de histórico de status:', historyError);
-        // Continuar mesmo assim, pois a atualização ainda pode funcionar
-      } else {
-        console.log('Registro de histórico criado com sucesso');
+    // NOVA ABORDAGEM: Atualizar diretamente com SQL bruto para evitar problemas com triggers
+    // Isso permite maior controle sobre como a atualização é processada
+    const { data: updateResult, error: updateError } = await supabase.rpc(
+      'update_startup_status_safely',
+      { 
+        p_startup_id: id,
+        p_new_status_id: newStatusId,
+        p_old_status_id: oldStatusId || null
       }
-    } catch (historyError) {
-      console.error('Erro ao criar registro de histórico:', historyError);
-      // Continuar mesmo assim
+    );
+    
+    if (updateError) {
+      console.error('Falha ao atualizar status via função RPC:', updateError);
+      
+      // Fallback: Usar o método anterior se a função RPC falhar
+      console.log('Tentando método alternativo de atualização...');
+      
+      // Criar uma atualização mínima com apenas o campo status_id
+      const rawUpdateData = { 
+        status_id: newStatusId,
+        isStatusUpdate: true  
+      };
+      
+      // Fazer uma verificação de sanidade aqui para garantir que temos um status_id válido
+      if (!rawUpdateData.status_id || typeof rawUpdateData.status_id !== 'string' || !uuidPattern.test(rawUpdateData.status_id)) {
+        console.error('Dados de atualização inválidos: status_id inválido', rawUpdateData.status_id);
+        throw new Error('ID do status inválido para atualização');
+      }
+      
+      // Preparar dados para garantir que enviamos apenas campos válidos
+      const updateData = prepareStartupData(rawUpdateData);
+      
+      // CRÍTICO: Garantir que nunca enviamos null para status_id
+      if (!updateData.status_id || updateData.status_id === null || updateData.status_id === '') {
+        console.error('Tentativa de atualizar com status_id nulo, abortando operação');
+        throw new Error('Não é possível atualizar startup com status_id nulo');
+      }
+      
+      // Verificação final para garantir que temos um status_id válido
+      console.log('UPDATE DATA ANTES DO UPDATE:', updateData);
+      
+      // Atualizar apenas o campo status_id
+      const { data, error } = await supabase
+        .from('startups')
+        .update(updateData)
+        .eq('id', id)
+        .select('*')
+        .single();
+      
+      if (error) {
+        console.error('Falha ao atualizar status da startup (método alternativo):', error);
+        throw error;
+      }
+      
+      console.log('Status da startup atualizado com sucesso (método alternativo):', data);
+      return data as Startup;
     }
     
-    // Verificação final para garantir que temos um status_id válido
-    console.log('UPDATE DATA ANTES DO UPDATE:', updateData);
-    if (!updateData.status_id || updateData.status_id === null || updateData.status_id === '') {
-      console.error('ERRO CRÍTICO: status_id ainda está nulo após preparação!');
-      throw new Error('status_id inválido antes de enviar ao banco de dados');
-    }
+    console.log('Status da startup atualizado com sucesso via RPC:', updateResult);
     
-    // Atualizar apenas o campo status_id
-    const { data, error } = await supabase
+    // Recuperar a startup atualizada
+    const { data: updatedStartup, error: fetchError } = await supabase
       .from('startups')
-      .update(updateData)
-      .eq('id', id)
       .select('*')
+      .eq('id', id)
       .single();
-    
-    if (error) {
-      console.error('Falha ao atualizar status da startup:', error);
-      throw error;
+      
+    if (fetchError) {
+      console.error('Falha ao recuperar startup após atualização:', fetchError);
+      throw fetchError;
     }
     
-    console.log('Status da startup atualizado com sucesso:', data);
-    return data as Startup;
+    return updatedStartup as Startup;
   } catch (error: any) {
     console.error('Erro na função updateStartupStatus:', error);
     handleError(error, 'Falha ao atualizar status da startup');
-    throw error; // Re-throw para propagar para a UI
+    throw error;
   }
 };

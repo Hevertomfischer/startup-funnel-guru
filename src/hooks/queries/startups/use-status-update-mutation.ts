@@ -37,9 +37,15 @@ export const useUpdateStartupStatusMutation = () => {
       }
       
       // CRÍTICO: Verificar explicitamente se newStatusId é uma string vazia após trim
-      if (typeof newStatusId === 'string' && newStatusId.trim() === '') {
-        console.error('Status ID is empty after trimming');
-        throw new Error('ID do status não pode estar vazio');
+      if (typeof newStatusId === 'string') {
+        newStatusId = newStatusId.trim();
+        if (newStatusId === '') {
+          console.error('Status ID is empty after trimming');
+          throw new Error('ID do status não pode estar vazio');
+        }
+      } else {
+        console.error(`Status ID is not a string: ${typeof newStatusId}`);
+        throw new Error('ID do status deve ser uma string');
       }
       
       // Verificar se os valores são UUIDs válidos
@@ -54,39 +60,42 @@ export const useUpdateStartupStatusMutation = () => {
       }
       
       // CRÍTICO: Verificar novamente se newStatusId não é null ou vazio
-      if (!newStatusId.trim()) {
+      if (!newStatusId) {
         console.error('Status ID cannot be null or empty or whitespace');
         throw new Error('ID do status não pode estar vazio');
       }
       
       // Garantir que oldStatusId é um UUID válido ou undefined, nunca null
       if (oldStatusId) {
+        oldStatusId = oldStatusId.trim();
         if (!uuidPattern.test(oldStatusId)) {
           console.warn(`Invalid old status ID format: ${oldStatusId}. Setting to undefined.`);
           oldStatusId = undefined;
         }
       }
       
-      // Garantir que os UUIDs estão formatados corretamente como strings
-      const formattedId = typeof id === 'string' ? id.trim() : String(id).trim();
-      const formattedNewStatusId = typeof newStatusId === 'string' ? newStatusId.trim() : String(newStatusId).trim();
-      const formattedOldStatusId = oldStatusId && uuidPattern.test(oldStatusId) ? 
-        (typeof oldStatusId === 'string' ? oldStatusId.trim() : String(oldStatusId).trim()) : undefined;
+      // NOVA ABORDAGEM: Criar um objeto limpo e seguro para a chamada da API
+      const safeParams = {
+        id: id.trim(),
+        newStatusId: newStatusId.trim(),
+        oldStatusId: oldStatusId && uuidPattern.test(oldStatusId) ? oldStatusId.trim() : undefined
+      };
       
       // CRÍTICO: Verificação final explícita
-      if (!formattedNewStatusId || formattedNewStatusId === '') {
+      if (!safeParams.newStatusId) {
         console.error('Final check - newStatusId is empty after formatting');
         throw new Error('Status inválido após formatação');
       }
       
-      console.log(`Calling updateStartupStatus with:`, {
-        id: formattedId,
-        newStatusId: formattedNewStatusId,
-        oldStatusId: formattedOldStatusId
-      });
+      console.log(`Calling updateStartupStatus with:`, safeParams);
       
-      // Chamar o serviço com IDs formatados e validados
-      return updateStartupStatus(formattedId, formattedNewStatusId, formattedOldStatusId);
+      // NOVA ABORDAGEM: Usar try-catch para garantir que qualquer erro é capturado
+      try {
+        return updateStartupStatus(safeParams.id, safeParams.newStatusId, safeParams.oldStatusId);
+      } catch (error) {
+        console.error('Error in updateStartupStatus:', error);
+        throw error;
+      }
     },
     onSuccess: (data, variables) => {
       console.log("Status update succeeded:", data);

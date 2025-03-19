@@ -50,33 +50,55 @@ export function prepareStartupData(data: any): any {
   // Validate UUID format for status_id
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  // Special handling for status_id in status update operations
+  // NOVA ABORDAGEM: Para atualizações de status, garantir que o status_id seja válido
   if (isStatusUpdate) {
-    // For status updates, we need to be extra careful
+    // Para status updates, queremos ser extremamente rigorosos
+    
+    // Primeiro vamos verificar se temos um status_id válido
     if (!cleanData.status_id) {
       console.error('Attempted status update with null/empty status_id');
       throw new Error('ID do status não pode estar vazio ao atualizar status');
     }
     
-    // CRÍTICO: Verifica explicitamente por strings vazias
-    if (typeof cleanData.status_id === 'string' && cleanData.status_id.trim() === '') {
-      console.error('Status ID is an empty string');
-      throw new Error('ID do status não pode estar vazio');
+    // Garantir que status_id está definido e não é uma string vazia
+    if (typeof cleanData.status_id === 'string') {
+      cleanData.status_id = cleanData.status_id.trim();
+      
+      if (cleanData.status_id === '') {
+        console.error('Status ID is an empty string');
+        throw new Error('ID do status não pode estar vazio');
+      }
+      
+      // Verificar se é um UUID válido
+      if (!uuidPattern.test(cleanData.status_id)) {
+        console.error(`Invalid UUID format for status_id in status update: ${cleanData.status_id}`);
+        throw new Error(`Formato de ID do status inválido: ${cleanData.status_id}`);
+      }
+    } else {
+      // Se não for uma string, é inválido para um status update
+      console.error(`Invalid data type for status_id: ${typeof cleanData.status_id}`);
+      throw new Error('Tipo de dado inválido para ID do status');
     }
     
-    // Ensure status_id is a valid UUID for status updates
-    if (typeof cleanData.status_id === 'string' && !uuidPattern.test(cleanData.status_id)) {
-      console.error(`Invalid UUID format for status_id in status update: ${cleanData.status_id}`);
-      throw new Error(`Formato de ID do status inválido: ${cleanData.status_id}`);
+    // CRÍTICO: Criar uma cópia segura para garantir que o objeto sendo passado é o que esperamos
+    const safeUpdateData = {
+      status_id: cleanData.status_id
+    };
+    
+    // Processar campos numéricos apenas para o objeto seguro
+    const processed = processStartupNumericFields(safeUpdateData);
+    
+    // Verificação final
+    if (!processed.status_id || processed.status_id === null || processed.status_id === '') {
+      console.error('FINAL CHECK FAILED: Status update with null status_id after processing');
+      throw new Error('ID do status inválido após processamento');
     }
     
-    // CRITICAL: Final verification to ensure we never send null status_id during a status update
-    if (!cleanData.status_id || cleanData.status_id === null || cleanData.status_id === '') {
-      console.error('CRITICAL ERROR: Attempted to update with null status_id in a status update operation');
-      throw new Error('ID do status não pode estar vazio ao atualizar status');
-    }
-  } else {
-    // Regular handling for non-status-update operations
+    console.log('prepareStartupData result for status update:', processed);
+    return processed;
+  } 
+  else {
+    // For non-status updates, handle normally
     if (cleanData.status_id === undefined || cleanData.status_id === '') {
       cleanData.status_id = null;
     } else if (cleanData.status_id && typeof cleanData.status_id === 'string') {
@@ -97,12 +119,6 @@ export function prepareStartupData(data: any): any {
     }
   }
   
-  // Double check for status updates to ensure we never send null
-  if (isStatusUpdate && (!cleanData.status_id || cleanData.status_id === null || cleanData.status_id === '')) {
-    console.error('Attempted to update with null status_id in a status update operation');
-    throw new Error('ID do status não pode estar vazio ao atualizar status');
-  }
-  
   // Ensure assigned_to is a string or null
   if (cleanData.assigned_to === undefined || cleanData.assigned_to === '') {
     cleanData.assigned_to = null;
@@ -113,12 +129,6 @@ export function prepareStartupData(data: any): any {
   // Process numeric fields (ensuring correct types)
   const processed = processStartupNumericFields(cleanData);
   console.log('prepareStartupData result:', processed);
-  
-  // FINAL SAFETY CHECK: If this is a status update, ensure status_id is not null
-  if (isStatusUpdate && (!processed.status_id || processed.status_id === null)) {
-    console.error('FINAL CHECK FAILED: Status update with null status_id after processing');
-    throw new Error('ID do status inválido após processamento');
-  }
   
   return processed;
 }
