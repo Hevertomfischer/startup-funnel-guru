@@ -42,11 +42,28 @@ export function prepareStartupData(data: any): any {
     cleanData.assigned_to = data.assignedTo;
   }
   
-  // Ensure status_id is a string or null (critical fix)
+  // Validate UUID format for status_id
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
+  // Ensure status_id is a valid UUID or null (critical fix)
   if (cleanData.status_id === undefined || cleanData.status_id === '') {
     cleanData.status_id = null;
+  } else if (cleanData.status_id && typeof cleanData.status_id === 'string') {
+    // Check if it's a valid UUID format
+    if (!uuidPattern.test(cleanData.status_id)) {
+      console.error(`Invalid UUID format for status_id: ${cleanData.status_id}`);
+      // If we have an invalid format, convert to null instead of sending invalid data
+      cleanData.status_id = null;
+    }
   } else if (cleanData.status_id && typeof cleanData.status_id !== 'string') {
-    cleanData.status_id = String(cleanData.status_id);
+    // If it's not a string, convert to string and then check format
+    const statusIdStr = String(cleanData.status_id);
+    if (!uuidPattern.test(statusIdStr)) {
+      console.error(`Invalid UUID format for status_id: ${statusIdStr}`);
+      cleanData.status_id = null;
+    } else {
+      cleanData.status_id = statusIdStr;
+    }
   }
   
   // Ensure assigned_to is a string or null

@@ -22,12 +22,25 @@ export const useUpdateStartupStatusMutation = () => {
     }) => {
       console.log(`Mutation starting: Update startup ${id} from ${oldStatusId} to ${newStatusId}`);
       
+      // Validate UUIDs before sending to the service
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      // Check if the provided values are valid UUIDs
+      if (!uuidPattern.test(id)) {
+        throw new Error(`Invalid startup ID format: ${id}`);
+      }
+      
+      if (!uuidPattern.test(newStatusId)) {
+        throw new Error(`Invalid status ID format: ${newStatusId}`);
+      }
+      
       // Ensure UUIDs are properly formatted as strings
       const formattedId = typeof id === 'string' ? id : String(id);
       const formattedNewStatusId = typeof newStatusId === 'string' ? newStatusId : String(newStatusId);
-      const formattedOldStatusId = oldStatusId ? (typeof oldStatusId === 'string' ? oldStatusId : String(oldStatusId)) : undefined;
+      const formattedOldStatusId = oldStatusId && uuidPattern.test(oldStatusId) ? 
+        (typeof oldStatusId === 'string' ? oldStatusId : String(oldStatusId)) : undefined;
       
-      // Call the service with properly formatted IDs
+      // Call the service with properly formatted and validated IDs
       return updateStartupStatus(formattedId, formattedNewStatusId, formattedOldStatusId);
     },
     onSuccess: (data, variables) => {

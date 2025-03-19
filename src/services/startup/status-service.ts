@@ -24,8 +24,17 @@ export const updateStartupStatus = async (
     
     // UUID validation check - could be more thorough but this catches the basic issues
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidPattern.test(id) || !uuidPattern.test(newStatusId)) {
-      throw new Error(`Invalid UUID format: ${!uuidPattern.test(id) ? 'startup ID' : 'status ID'}`);
+    if (!uuidPattern.test(id)) {
+      throw new Error(`Invalid UUID format for startup ID: ${id}`);
+    }
+    
+    if (!uuidPattern.test(newStatusId)) {
+      throw new Error(`Invalid UUID format for status ID: ${newStatusId}`);
+    }
+    
+    if (oldStatusId && !uuidPattern.test(oldStatusId)) {
+      console.warn(`Invalid UUID format for old status ID: ${oldStatusId}. Will proceed without tracking previous status.`);
+      oldStatusId = undefined;
     }
     
     console.log(`Updating startup ${id} status from ${oldStatusId} to ${newStatusId}`);

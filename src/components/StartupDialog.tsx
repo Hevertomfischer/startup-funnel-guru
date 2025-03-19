@@ -41,13 +41,24 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
     console.log('StartupDialog useEffect - open state changed to:', open);
   }, [open]);
   
+  // UUID validation helper
+  const isValidUUID = (id: string): boolean => {
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidPattern.test(id);
+  };
+  
   const handleFormSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
     
-    // Validate that statusId exists and is valid
-    if (!data.statusId && statuses && statuses.length > 0) {
-      console.warn('No status ID provided, using first available status');
-      data.statusId = statuses[0].id;
+    // Validate that statusId exists and is valid UUID
+    if (!data.statusId || !isValidUUID(data.statusId)) {
+      console.warn('Invalid status ID provided, using first available status');
+      if (statuses && statuses.length > 0) {
+        data.statusId = statuses[0].id;
+      } else {
+        console.error('No valid status available');
+        return; // Don't submit if we can't find a valid status
+      }
     }
     
     // IMPORTANT: Do not include the changed_by field as it must be handled by DB triggers
