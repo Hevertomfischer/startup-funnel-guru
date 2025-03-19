@@ -545,6 +545,14 @@ export type Database = {
         }
         Returns: string
       }
+      update_startup_status_safely: {
+        Args: {
+          p_startup_id: string
+          p_new_status_id: string
+          p_old_status_id?: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "admin" | "investor"

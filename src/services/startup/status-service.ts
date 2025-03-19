@@ -85,16 +85,14 @@ export const updateStartupStatus = async (
       return startupCheck as Startup;
     }
     
-    // NOVA ABORDAGEM: Atualizar diretamente com SQL bruto para evitar problemas com triggers
+    // NOVA ABORDAGEM: Atualizar diretamente com função RPC que evita problemas com triggers
     // Isso permite maior controle sobre como a atualização é processada
-    const { data: updateResult, error: updateError } = await supabase.rpc(
-      'update_startup_status_safely',
-      { 
+    const { data: updateResult, error: updateError } = await supabase
+      .rpc('update_startup_status_safely', { 
         p_startup_id: id,
         p_new_status_id: newStatusId,
         p_old_status_id: oldStatusId || null
-      }
-    );
+      });
     
     if (updateError) {
       console.error('Falha ao atualizar status via função RPC:', updateError);
