@@ -13,6 +13,8 @@ export const updateStartupStatus = async (
   oldStatusId?: string
 ): Promise<Startup | null> => {
   try {
+    console.log(`updateStartupStatus called with id: ${id}, newStatusId: ${newStatusId}, oldStatusId: ${oldStatusId || 'unknown'}`);
+    
     // Validate inputs to avoid DB errors
     if (!id || typeof id !== 'string') {
       throw new Error('Invalid startup ID');
@@ -50,6 +52,25 @@ export const updateStartupStatus = async (
       console.error('Invalid status ID, does not exist in database:', newStatusId);
       toast.error(`Failed to update status: Status does not exist`);
       return null;
+    }
+    
+    // If we're here, we also need to check if the startup exists
+    const { data: startupCheck, error: startupError } = await supabase
+      .from('startups')
+      .select('id, status_id')
+      .eq('id', id)
+      .single();
+      
+    if (startupError || !startupCheck) {
+      console.error('Startup does not exist:', id);
+      toast.error(`Failed to update status: Startup does not exist`);
+      return null;
+    }
+    
+    // If oldStatusId wasn't provided, get it from the startup
+    if (!oldStatusId && startupCheck.status_id) {
+      oldStatusId = startupCheck.status_id;
+      console.log(`Retrieved oldStatusId from database: ${oldStatusId}`);
     }
     
     // Create a minimal update with only the status_id field

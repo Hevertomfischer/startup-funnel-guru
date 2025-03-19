@@ -61,6 +61,18 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
       }
     }
     
+    // Verify that the status exists in our list of valid statuses
+    const statusExists = statuses.some(status => status.id === data.statusId);
+    if (!statusExists) {
+      console.warn('Status ID not found in statuses list, using first available status');
+      if (statuses && statuses.length > 0) {
+        data.statusId = statuses[0].id;
+      } else {
+        console.error('No valid status available');
+        return; // Don't submit if we can't find a valid status
+      }
+    }
+    
     // IMPORTANT: Do not include the changed_by field as it must be handled by DB triggers
     const startupData = {
       // Map form values to database schema

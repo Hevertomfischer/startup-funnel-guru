@@ -56,6 +56,14 @@ export function useBoardDragDrop({
       return;
     }
     
+    // Validate that this columnId exists in the status list
+    const statusExists = statuses.some(status => status.id === columnId);
+    if (!statusExists) {
+      console.error('Column ID does not match any existing status:', columnId);
+      toast.error('Cannot move card to this column (status does not exist)');
+      return;
+    }
+    
     const startup = getStartupById(startupId);
     
     if (!startup) {
