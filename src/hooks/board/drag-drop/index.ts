@@ -1,5 +1,5 @@
 
-import { useStartupDrag } from './use-startup-drag';
+import { useStartupDrag } from './startup-drag';
 import { useColumnDrag } from './use-column-drag';
 import { UseBoardDragDropParams } from './types';
 
@@ -14,5 +14,5 @@ export function useBoardDragDrop(params: UseBoardDragDropParams) {
 }
 
 export * from './types';
-export * from './use-startup-drag';
+export * from './startup-drag';
 export * from './use-column-drag';
