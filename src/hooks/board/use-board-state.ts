@@ -62,7 +62,7 @@ export function useBoardState() {
   // Get the startup deletion handler
   const { handleDeleteStartup } = useStartupDeletion();
   
-  // Get all the startup dialog handlers
+  // Get all the startup actions
   const {
     createStartupMutation,
     updateStartupMutation,
@@ -73,9 +73,11 @@ export function useBoardState() {
     setShowEditDialog,
     handleAddStartup,
     handleCreateStartup,
-    handleEditStartup,
     handleUpdateStartup,
-    handleCardClick
+    handleCardClick,
+    handleEditStartup,
+    handleCopyStartup,
+    handleStartupDetail
   } = useStartupActions();
   
   // Get all the status dialog handlers

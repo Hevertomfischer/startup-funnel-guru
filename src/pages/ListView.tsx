@@ -36,14 +36,17 @@ const ListView = () => {
   } = useStartupList(formattedStartups);
   
   // Get startup actions (update functionality)
-  const { updateStartupMutation } = useStartupActions();
+  const { 
+    handleUpdateStartup,
+    updateStartupMutation 
+  } = useStartupActions();
   
   const handleRowClick = (startup) => {
     setEditStartup(startup);
     setShowEditDialog(true);
   };
 
-  const handleUpdateStartup = (data) => {
+  const handleUpdateStartupLocal = (data) => {
     updateStartupMutation.mutate(
       { id: editStartup.id, startup: data },
       {
@@ -135,7 +138,7 @@ const ListView = () => {
           title="Editar Startup"
           startup={editStartup}
           statuses={statusesData}
-          onSubmit={handleUpdateStartup}
+          onSubmit={handleUpdateStartupLocal}
           isSubmitting={updateStartupMutation.isPending}
         />
       )}

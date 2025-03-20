@@ -32,7 +32,7 @@ import { Startup } from '@/types';
 import { useStartupActions } from '@/hooks/use-startup-actions';
 
 export const usePortfolioManagement = () => {
-  const { startups, statuses } = useStartupData();
+  const { formattedStartups, statusesData } = useStartupData();
   const [investedStatusIds, setInvestedStatusIds] = useState<string[]>(getInvestedStatusIds());
   const [investedStartups, setInvestedStartups] = useState<InvestedStartup[]>([]);
   const [kpis, setKpis] = useState<PortfolioKPI[]>(getKPIs());
@@ -250,10 +250,10 @@ export const usePortfolioManagement = () => {
     }
   }, [investedStartups.length, boardMeetings.length, startupHighlights.length, quarterlyReports.length, kpis.length]);
 
-  // Update invested startups when startups or investedStatusIds change
+  // Update invested startups when formattedStartups or investedStatusIds change
   useEffect(() => {
-    if (startups.length > 0 && statuses.length > 0) {
-      const filtered = getInvestedStartups(startups, investedStatusIds);
+    if (formattedStartups.length > 0 && statusesData.length > 0) {
+      const filtered = getInvestedStartups(formattedStartups, investedStatusIds);
       
       // Enrich the startups with portfolio data
       const enriched: InvestedStartup[] = filtered.map(startup => {
@@ -276,7 +276,7 @@ export const usePortfolioManagement = () => {
       // Update portfolio summary
       updatePortfolioSummary(enriched);
     }
-  }, [startups, statuses, investedStatusIds, kpiValues, boardMeetings, startupHighlights, quarterlyReports]);
+  }, [formattedStartups, statusesData, investedStatusIds, kpiValues, boardMeetings, startupHighlights, quarterlyReports]);
 
   // Update the portfolio summary based on the invested startups
   const updatePortfolioSummary = (startups: InvestedStartup[]) => {
@@ -294,7 +294,7 @@ export const usePortfolioManagement = () => {
       summary.sectorsDistribution[sector] = (summary.sectorsDistribution[sector] || 0) + 1;
       
       // Find the status name
-      const status = statuses.find(s => s.id === startup.statusId);
+      const status = statusesData.find(s => s.id === startup.statusId);
       const stage = status?.name || 'Unknown';
       summary.stageDistribution[stage] = (summary.stageDistribution[stage] || 0) + 1;
       
@@ -417,7 +417,7 @@ export const usePortfolioManagement = () => {
     quarterlyReports,
     portfolioSummary,
     investedStatusIds,
-    allStatuses: statuses,
+    allStatuses: statusesData,
     isInvestedStartup: (startup: Startup) => isInvestedStartup(startup, investedStatusIds),
     addKpiValue,
     addBoardMeeting,

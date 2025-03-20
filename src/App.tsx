@@ -21,9 +21,10 @@ import Profile from '@/pages/Profile';
 import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
 import Portfolio from '@/pages/Portfolio';
+import { GoalModal } from '@/components/GoalModal';
 
 // Global constants
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // Initialize query client
 const queryClient = new QueryClient({
@@ -87,6 +88,7 @@ const App = () => {
         <Toaster />
         <AuthProvider>
           <Router>
+            <GoalModal isOpen={isGoalModalOpen} onClose={closeGoalModal} />
             <div className="flex flex-1">
               <Sidebar />
               <main className="flex-1 max-h-screen overflow-y-auto pb-10">
