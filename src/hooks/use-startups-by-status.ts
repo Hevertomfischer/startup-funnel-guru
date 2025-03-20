@@ -16,7 +16,10 @@ export const useStartupsByStatus = (statusId: string) => {
     isError: query.isError,
     error: query.error ? `${query.error}` : null,
     isFetching: query.isFetching,
+    isFetched: query.isFetched,
     isPlaceholder: statusId.startsWith('placeholder-'),
+    status: query.status,
+    statusIds: query.data ? query.data.map(s => s.id) : [],
   });
   
   // If there's an error and it's not a placeholder ID, show toast

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/board/BoardContainer';
@@ -13,13 +13,17 @@ const BoardView = () => {
   // Component state
   const [showCompactCards, setShowCompactCards] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   // Check Supabase connection on component mount
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        // Simple query to test connection
-        const { data, error } = await supabase.from('statuses').select('count').limit(1);
+        setIsRetrying(true);
+        
+        // Simple query to test connection and fetch statuses
+        console.log("Checking Supabase connection in BoardView");
+        const { data, error } = await supabase.from('statuses').select('*');
         
         if (error) {
           console.error('Supabase connection error:', error);
@@ -30,12 +34,27 @@ const BoardView = () => {
             variant: "destructive",
           });
         } else {
-          console.log('Supabase connection successful');
+          console.log('Supabase connection successful, found statuses:', data?.length || 0);
           setConnectionError(false);
+          
+          // If no statuses exist, let's try to check if startups exist directly
+          if (!data || data.length === 0) {
+            const { data: startups, error: startupError } = await supabase
+              .from('startups')
+              .select('count');
+              
+            if (startupError) {
+              console.error('Error checking startups:', startupError);
+            } else {
+              console.log('Found startups in database:', startups);
+            }
+          }
         }
       } catch (error) {
         console.error('Unexpected error checking Supabase connection:', error);
         setConnectionError(true);
+      } finally {
+        setIsRetrying(false);
       }
     };
     
@@ -99,7 +118,8 @@ const BoardView = () => {
     statusesCount: statuses?.length || 0,
     isLoadingStatuses,
     isErrorStatuses,
-    hasQueries: Object.keys(mappedQueries || {}).length
+    hasQueries: Object.keys(mappedQueries || {}).length,
+    connectionError
   });
   
   // Function to open the add startup dialog with the first status
@@ -120,16 +140,27 @@ const BoardView = () => {
     setSearchTerm(e.target.value);
   };
   
+  const handleRetryConnection = () => {
+    window.location.reload();
+  };
+  
   if (connectionError) {
     return (
       <div className="h-[calc(100vh-4rem)] flex items-center justify-center flex-col gap-4">
         <div className="text-center space-y-3">
+          <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-2" />
           <h2 className="text-xl font-semibold text-destructive">Erro de conexão</h2>
           <p className="text-muted-foreground">Não foi possível conectar ao banco de dados.</p>
           <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            onClick={handleRetryConnection}
+            disabled={isRetrying}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 mt-2 mx-auto"
           >
+            {isRetrying ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
             Tentar novamente
           </button>
         </div>
@@ -139,23 +170,31 @@ const BoardView = () => {
   
   if (isLoadingStatuses) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-        <span className="ml-2 text-lg">Carregando quadro...</span>
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center flex-col gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+        <span className="text-lg">Carregando quadro...</span>
+        <p className="text-muted-foreground text-sm">Conectando ao banco de dados Supabase</p>
       </div>
     );
   }
   
   if (isErrorStatuses) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="text-center">
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center flex-col gap-4">
+        <div className="text-center space-y-3">
+          <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-2" />
           <h2 className="text-xl font-semibold text-destructive">Falha ao carregar o quadro</h2>
-          <p className="text-muted-foreground mt-2">Tente novamente mais tarde</p>
+          <p className="text-muted-foreground mt-2">O banco de dados respondeu, mas houve um erro ao buscar os dados</p>
           <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            onClick={handleRetryConnection}
+            disabled={isRetrying}
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 mx-auto"
           >
+            {isRetrying ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
             Recarregar página
           </button>
         </div>

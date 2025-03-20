@@ -2,9 +2,45 @@
 import { useMemo, useEffect } from 'react';
 import { useStartupsByStatus } from '../use-startups-by-status';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useStatusQueries = ({ statuses, columns }: { statuses: any[], columns: any[] }) => {
   const { toast } = useToast();
+  
+  // Verificar diretamente a conexão com o Supabase
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        console.log("Checking Supabase connection in useStatusQueries");
+        const { data, error } = await supabase.from('statuses').select('count');
+        
+        if (error) {
+          console.error("Failed to connect to Supabase:", error);
+          toast({
+            title: "Erro de conexão",
+            description: "Não foi possível conectar ao banco de dados. Tente novamente mais tarde.",
+            variant: "destructive",
+          });
+        } else {
+          console.log("Supabase connection verified successfully");
+        }
+      } catch (e) {
+        console.error("Unexpected error checking Supabase connection:", e);
+      }
+    };
+    
+    checkConnection();
+  }, [toast]);
+  
+  // Log detailed information about statuses and columns for debugging
+  useEffect(() => {
+    console.log("useStatusQueries received:", { 
+      statusesCount: statuses?.length || 0, 
+      columnsCount: columns?.length || 0,
+      statusesData: statuses?.map(s => ({id: s.id, name: s.name})) || [],
+      columnsData: columns?.map(c => ({id: c.id, title: c.title})) || []
+    });
+  }, [statuses, columns]);
   
   // Get all status IDs from the columns array
   const statusIds = useMemo(() => 
@@ -57,6 +93,17 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
     
     queryResults.forEach(({ statusId, ...query }) => {
       result[statusId] = query;
+    });
+    
+    console.log("Final mapped queries:", {
+      queriesCount: Object.keys(result).length,
+      queriesKeys: Object.keys(result),
+      queriesSummary: Object.entries(result).map(([key, val]) => ({
+        statusId: key,
+        dataCount: (val as any).data?.length || 0,
+        isLoading: (val as any).isLoading,
+        isError: (val as any).isError
+      }))
     });
     
     return result;
@@ -133,7 +180,7 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
 
   // If there are no boards yet and we're not loading, notify the user via toast
   useEffect(() => {
-    if (!isLoading && columns.length === 0) {
+    if (!isLoading && columns.length === 0 && statuses.length === 0) {
       console.log("No statuses available. Suggesting to add a column.");
       toast({
         title: "Board vazio",
@@ -141,7 +188,7 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
         duration: 5000,
       });
     }
-  }, [isLoading, columns.length, toast]);
+  }, [isLoading, columns.length, statuses.length, toast]);
   
   return { 
     queries, 
