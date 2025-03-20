@@ -88,7 +88,7 @@ export const useStartupActions = () => {
   };
 
   // Handle opening the startup form
-  const handleCreateStartup2 = () => {
+  const handleOpenCreateForm = () => {
     handleModalOpen('new');
   };
 
@@ -120,7 +120,7 @@ export const useStartupActions = () => {
   };
 
   return {
-    handleCreateStartup: handleCreateStartup2,
+    handleCreateStartup: handleOpenCreateForm,
     handleEditStartup,
     handleCopyStartup,
     handleStartupDetail,
@@ -133,7 +133,7 @@ export const useStartupActions = () => {
     setShowEditDialog,
     handleAddStartup,
     handleCardClick,
-    handleCreateStartup: handleCreateStartup,
+    handleSubmitCreateStartup: handleCreateStartup,
     handleUpdateStartup
   };
 };
