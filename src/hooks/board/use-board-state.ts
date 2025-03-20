@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,7 +9,7 @@ import { useBoardDragDrop } from './use-board-drag-drop';
 import { useBoardDialogs } from './use-board-dialogs';
 import { useBoardSearch } from './use-board-search';
 import { useStartupDeletion } from './use-startup-deletion';
-import { useStatusQueries } from './use-status-queries';
+import { useStatusQueries } from './status-queries';
 
 export function useBoardState() {
   const navigate = useNavigate();
