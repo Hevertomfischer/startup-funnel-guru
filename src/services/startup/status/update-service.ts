@@ -6,7 +6,8 @@ import {
   isValidUUID, 
   sanitizeId, 
   verifyStatusExists, 
-  verifyStartupExists 
+  verifyStartupExists,
+  mapStatusSlugToUUID
 } from './validators';
 import { logStatusUpdateStart } from './logs';
 import { 
@@ -41,7 +42,19 @@ export const updateStartupStatus = async (
     newStatusId = sanitizeId(newStatusId) || '';
     if (oldStatusId) oldStatusId = sanitizeId(oldStatusId);
     
-    // UUID validation (3rd Layer of validation)
+    // Check if newStatusId might be a slug and try to convert it (3rd layer)
+    if (!isValidUUID(newStatusId)) {
+      console.log(`Status ID "${newStatusId}" appears to be a slug, attempting to map to UUID`);
+      const mappedStatusId = await mapStatusSlugToUUID(newStatusId);
+      if (mappedStatusId) {
+        console.log(`Successfully mapped "${newStatusId}" to UUID: ${mappedStatusId}`);
+        newStatusId = mappedStatusId;
+      } else {
+        throw new Error(`Formato de status inválido e não pôde ser convertido: ${newStatusId}`);
+      }
+    }
+    
+    // UUID validation (4th Layer of validation)
     if (!isValidUUID(id)) {
       throw new Error(`Formato UUID inválido para ID da startup: ${id}`);
     }
@@ -57,7 +70,7 @@ export const updateStartupStatus = async (
     
     console.log(`VALIDATED VALUES: Atualizando startup ${id} de ${oldStatusId || 'desconhecido'} para ${newStatusId}`);
     
-    // CRITICAL: Double-check that statuses table contains this ID before proceeding (4th Layer)
+    // CRITICAL: Double-check that statuses table contains this ID before proceeding (5th Layer)
     const statusExists = await verifyStatusExists(newStatusId);
     if (!statusExists) {
       const errorMsg = `Status não encontrado: ${newStatusId}`;
@@ -65,7 +78,7 @@ export const updateStartupStatus = async (
       throw new Error(errorMsg);
     }
     
-    // Verify startup exists and get current status (5th Layer)
+    // Verify startup exists and get current status (6th Layer)
     const { exists, currentStatusId } = await verifyStartupExists(id);
     if (!exists) {
       const errorMsg = `Startup não encontrada: ${id}`;
@@ -85,7 +98,7 @@ export const updateStartupStatus = async (
       return { id, status_id: newStatusId } as Startup;
     }
     
-    // Double-check newStatusId is never null at this point (6th Layer)
+    // Double-check newStatusId is never null at this point (7th Layer)
     if (!newStatusId) {
       const criticalError = 'ERRO CRÍTICO: newStatusId é null após validação';
       console.error(criticalError);

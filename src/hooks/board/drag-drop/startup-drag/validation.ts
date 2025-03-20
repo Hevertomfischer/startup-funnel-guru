@@ -6,7 +6,7 @@
 /**
  * Validates that a string is a valid UUID
  */
-export const isValidUUID = (id: string): boolean => {
+export const isValidUUID = (id?: string | null): boolean => {
   if (!id) return false;
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidPattern.test(id);
@@ -45,7 +45,8 @@ export const validateDragDropParams = (
 /**
  * Sanitizes string IDs by trimming whitespace
  */
-export const sanitizeId = (id: string | null | undefined): string | undefined => {
+export const sanitizeId = (id?: string | null): string | undefined => {
   if (!id) return undefined;
-  return id.trim();
+  const trimmed = typeof id === 'string' ? id.trim() : String(id).trim();
+  return trimmed === '' ? undefined : trimmed;
 };

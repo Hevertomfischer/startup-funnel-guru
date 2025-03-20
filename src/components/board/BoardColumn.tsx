@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Loader2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -88,6 +89,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
       className="flex flex-col h-full bg-accent/50 backdrop-blur-sm rounded-xl min-w-[280px] w-[280px] shadow-sm border"
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, id)}
+      data-column-id={id} // Add data attribute for column ID
     >
       <div 
         className="p-3 flex items-center justify-between"

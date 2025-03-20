@@ -75,6 +75,11 @@ export function prepareStartupData(data: any): any {
         throw new Error('ID do status vazio após limpeza');
       }
       
+      // ENHANCED ERROR DETECTION: Print slug-like status IDs before they cause errors
+      if (cleanData.status_id.includes('-') && !uuidPattern.test(cleanData.status_id)) {
+        console.error(`Received slug-like status_id: ${cleanData.status_id}. This is not a valid UUID.`);
+      }
+      
       // CRITICAL FIX: Reject non-UUID values like "due-diligence"
       if (!uuidPattern.test(cleanData.status_id)) {
         console.error(`Invalid UUID format for status_id: ${cleanData.status_id}`);
@@ -104,6 +109,11 @@ export function prepareStartupData(data: any): any {
       cleanData.status_id = null;
     } else if (cleanData.status_id && typeof cleanData.status_id === 'string') {
       cleanData.status_id = cleanData.status_id.trim();
+      
+      // ENHANCED ERROR DETECTION: Print slug-like status IDs before they cause errors
+      if (cleanData.status_id.includes('-') && !uuidPattern.test(cleanData.status_id)) {
+        console.error(`Received slug-like status_id: ${cleanData.status_id} in normal update. Converting to null.`);
+      }
       
       // CRITICAL FIX: Detect non-UUID values and handle appropriately
       if (!uuidPattern.test(cleanData.status_id)) {

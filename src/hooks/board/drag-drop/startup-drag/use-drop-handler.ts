@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useUpdateStartupStatusMutation } from '../../../queries/startups';
 import { useWorkflowRules } from '../../../workflow';
 import { Startup } from '@/types';
-import { validateDragDropParams } from './validation';
+import { validateDragDropParams, isValidUUID } from './validation';
 import { getSourceColumnId, validateTargetColumn, prepareMutationPayload } from './data-extraction';
 import { updateColumnsOptimistically } from './ui-update';
 import { StartupDragHandlerParams } from './types';
@@ -24,8 +24,13 @@ export const useDropHandler = ({
   const handleDrop = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
     
+    console.log('Drop event triggered in column:', columnId);
     const type = e.dataTransfer.getData('type');
-    if (type !== 'startup') return;
+    
+    if (type !== 'startup') {
+      console.log('Not a startup drop event, type:', type);
+      return;
+    }
     
     // Log all data transfer items for debugging
     console.log('All dataTransfer items:', {
@@ -39,6 +44,13 @@ export const useDropHandler = ({
     const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
     
     console.log('Drop event data:', { startupId, columnId, sourceColumnId });
+    
+    // CRITICAL: Ensure columnId is a valid UUID
+    if (!isValidUUID(columnId)) {
+      console.error('Received invalid column ID format:', columnId);
+      toast.error(`Formato de ID da coluna inválido: ${columnId}`);
+      return;
+    }
     
     // Validate parameters
     const validationError = validateDragDropParams(startupId, columnId, sourceColumnId);

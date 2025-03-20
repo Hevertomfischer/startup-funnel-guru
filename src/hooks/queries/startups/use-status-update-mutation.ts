@@ -49,6 +49,11 @@ export const useUpdateStartupStatusMutation = () => {
         throw new Error(`ID do status não pode estar vazio`);
       }
       
+      // ENHANCED ERROR DETECTION: Log potential slug-like status IDs before validation fails
+      if (cleanNewStatusId.includes('-') && cleanNewStatusId.length < 36) {
+        console.warn(`Potential slug detected in status ID: ${cleanNewStatusId}`);
+      }
+      
       // CRITICAL: UUID validation - only accept valid UUIDs
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       

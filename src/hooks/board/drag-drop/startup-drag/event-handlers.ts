@@ -1,30 +1,41 @@
 
-import { StartupDragEvents } from './types';
+import { isValidUUID } from './validation';
 
 /**
- * Creates event handlers for drag and drop events
+ * Creates event handlers for startup drag events
  */
 export const createDragEventHandlers = (
-  setDraggingStartupId: (id: string | null) => void
-): StartupDragEvents => {
+  setDraggingStartupId: React.Dispatch<React.SetStateAction<string | null>>
+) => {
   const handleDragStart = (e: React.DragEvent, startupId: string) => {
+    console.log('Starting drag for startup:', startupId);
+    
+    // CRITICAL: Ensure we have a valid UUID for the startup
+    if (!startupId || !isValidUUID(startupId)) {
+      console.error('Invalid startup ID for drag:', startupId);
+      e.preventDefault();
+      return;
+    }
+    
+    // Find the column element that contains this startup
+    const columnElement = e.currentTarget.closest('[data-column-id]');
+    const sourceColumnId = columnElement?.getAttribute('data-column-id') || '';
+    
+    console.log('Drag started from column:', sourceColumnId);
+    
+    // Set drag data
+    e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', startupId);
     e.dataTransfer.setData('type', 'startup');
-    setDraggingStartupId(startupId);
+    e.dataTransfer.setData('sourceColumnId', sourceColumnId);
     
-    // Store source column for tracking
-    const sourceColumn = e.currentTarget.closest('[data-column-id]');
-    if (sourceColumn) {
-      const sourceColumnId = sourceColumn.getAttribute('data-column-id');
-      if (sourceColumnId) {
-        e.dataTransfer.setData('sourceColumnId', sourceColumnId);
-        console.log(`Dragging startup ${startupId} from column ${sourceColumnId}`);
-      }
-    }
+    // Update UI state
+    setDraggingStartupId(startupId);
   };
   
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
   };
   
   const handleDragEnd = () => {
