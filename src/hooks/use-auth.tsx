@@ -6,6 +6,7 @@ import { Profile } from '@/types/auth';
 // Create a strongly typed context
 type AuthContextType = {
   user: any | null;
+  profile: Profile | null; // Add the profile property to the context type
   isLoading: boolean;
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; data?: any }>;
@@ -17,8 +18,30 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null); // Add state for profile
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // Function to fetch user profile
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+      
+      return data as Profile;
+    } catch (error) {
+      console.error('Unexpected error fetching profile:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     console.log("Auth provider mounted");
@@ -33,14 +56,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (mounted) setUser(session.user);
           
           try {
-            // Check admin status
-            const { data } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
-              
-            if (mounted) setIsAdmin(data?.role === 'admin');
+            // Fetch the complete profile data
+            const profileData = await fetchUserProfile(session.user.id);
+            if (mounted) {
+              setProfile(profileData);
+              setIsAdmin(profileData?.role === 'admin');
+            }
           } catch (error) {
             console.error('Error checking admin status:', error);
           } finally {
@@ -49,6 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           if (mounted) {
             setUser(null);
+            setProfile(null);
             setIsAdmin(false);
             setIsLoading(false);
           }
@@ -65,24 +87,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error('Error getting session:', error);
           if (mounted) {
             setUser(null);
+            setProfile(null);
             setIsLoading(false);
           }
         } else if (data?.session) {
           if (mounted) setUser(data.session.user);
           
-          // Check if user has admin role
+          // Fetch complete profile data
           try {
-            const { data: userData, error: profileError } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', data.session.user.id)
-              .single();
-              
-            if (profileError) {
-              console.error('Error fetching profile:', profileError);
-            }
+            const profileData = await fetchUserProfile(data.session.user.id);
             
-            if (mounted) setIsAdmin(userData?.role === 'admin');
+            if (mounted) {
+              setProfile(profileData);
+              setIsAdmin(profileData?.role === 'admin');
+            }
           } catch (error) {
             console.error('Error checking admin status:', error);
           } finally {
@@ -92,6 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // No active session
           if (mounted) {
             setUser(null);
+            setProfile(null);
             setIsLoading(false);
           }
         }
@@ -99,6 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('Session check error:', error);
         if (mounted) {
           setUser(null);
+          setProfile(null);
           setIsLoading(false);
         }
       }
@@ -126,6 +146,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         if (error) throw error;
+        
+        // Fetch profile after successful login
+        if (data.user) {
+          const profileData = await fetchUserProfile(data.user.id);
+          setProfile(profileData);
+          setIsAdmin(profileData?.role === 'admin');
+        }
+        
         console.log('Sign in successful:', data);
         return { success: true, data };
       } catch (error: any) {
@@ -141,6 +169,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsLoading(true);
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
+        setProfile(null);
         console.log('Sign out successful');
       } catch (error: any) {
         console.error('Sign out error:', error.message);
@@ -151,20 +180,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // For development only - signs in as admin without checking credentials
     const devSignIn = () => {
+      const mockProfile: Profile = {
+        id: 'dev-user',
+        email: 'dev@example.com',
+        full_name: 'Dev User',
+        avatar_url: null,
+        role: 'admin',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
       setUser({ id: 'dev-user', email: 'dev@example.com' });
+      setProfile(mockProfile);
       setIsAdmin(true);
       setIsLoading(false);
     };
 
     return {
       user,
+      profile, // Include profile in the context value
       isLoading,
       isAdmin,
       signIn,
       signOut,
       devSignIn,
     };
-  }, [user, isLoading, isAdmin]);
+  }, [user, profile, isLoading, isAdmin]); // Add profile to the dependency array
 
   return (
     <AuthContext.Provider value={authValue}>
