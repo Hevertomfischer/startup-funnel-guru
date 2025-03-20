@@ -9,19 +9,19 @@ const Index = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Se o usuário estiver autenticado, redireciona para o dashboard
+    // If user is authenticated, redirect to dashboard
     if (!isLoading && user) {
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } else if (!isLoading && !user) {
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
   }, [user, isLoading, navigate]);
 
-  // Mostra um estado de carregamento enquanto verifica a autenticação
+  // Show a loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center flex-col gap-4">
-        <div className="text-center">
+      <div className="flex h-screen items-center justify-center flex-col gap-4 p-4">
+        <div className="text-center max-w-sm w-full">
           <Skeleton className="h-12 w-12 rounded-full mx-auto mb-4" />
           <Skeleton className="h-4 w-48 mx-auto mb-2" />
           <Skeleton className="h-3 w-32 mx-auto" />
@@ -32,7 +32,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className="flex h-screen items-center justify-center p-4">
       <div className="text-center">
         <h1 className="text-3xl font-bold">Bem-vindo ao Sistema</h1>
         <p className="mt-4 text-muted-foreground">Redirecionando...</p>

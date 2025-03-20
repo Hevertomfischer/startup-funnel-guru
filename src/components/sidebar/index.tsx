@@ -6,7 +6,7 @@ import SidebarFooter from './SidebarFooter';
 
 const Sidebar = () => {
   return (
-    <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-sidebar fixed">
+    <aside className="hidden md:block h-screen w-64 flex-col border-r bg-sidebar">
       <SidebarLogo />
       <SidebarNav />
       <SidebarFooter />

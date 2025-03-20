@@ -26,11 +26,14 @@ import { GoalModal } from '@/components/GoalModal';
 // Global constants
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-// Initialize query client
+// Initialize query client with improved caching strategies
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60000, // 1 minute
+      cacheTime: 300000, // 5 minutes for better performance
+      refetchOnWindowFocus: false, // Reduces unnecessary requests
+      retry: 1, // Limit retries to improve performance
     },
   },
 });
@@ -76,39 +79,37 @@ const App = () => {
   console.log("App rendering");
 
   return (
-    <div className="app flex min-h-screen dark:bg-background">
-      <QueryClientProvider client={queryClient}>
-        <Toaster />
-        <Router>
-          <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <div className="app flex min-h-screen dark:bg-background">
+            <Toaster />
+            <Sidebar />
             <GoalModal isOpen={isGoalModalOpen} onClose={closeGoalModal} />
-            <div className="flex flex-1">
-              <Sidebar />
-              <main className="flex-1 max-h-screen overflow-y-auto pb-10">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/board" element={<Board />} />
-                  <Route path="/list" element={<ListView />} />
-                  <Route path="/portfolio" element={<Portfolio />} />
-                  <Route path="/investors" element={<Investors />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/tasks" element={<Tasks />} />
-                  <Route path="/emails" element={<Emails />} />
-                  <Route path="/workflow" element={<WorkflowEditor />} />
-                  <Route path="/team" element={<Team />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-            </div>
-          </AuthProvider>
-        </Router>
-      </QueryClientProvider>
-    </div>
+            <main className="flex-1 max-h-screen overflow-y-auto pb-10 md:ml-64">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/board" element={<Board />} />
+                <Route path="/list" element={<ListView />} />
+                <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/investors" element={<Investors />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/tasks" element={<Tasks />} />
+                <Route path="/emails" element={<Emails />} />
+                <Route path="/workflow" element={<WorkflowEditor />} />
+                <Route path="/team" element={<Team />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
+        </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   );
 };
 
