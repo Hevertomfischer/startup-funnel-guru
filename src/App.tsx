@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { GoalModal } from '@/components/GoalModal';
+import { AuthProvider } from '@/hooks/use-auth';
 import Sidebar from '@/components/Sidebar';
 import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
@@ -87,7 +87,6 @@ const App = () => {
         <Toaster />
         <AuthProvider>
           <Router>
-            <GoalModal />
             <div className="flex flex-1">
               <Sidebar />
               <main className="flex-1 max-h-screen overflow-y-auto pb-10">

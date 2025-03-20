@@ -1,27 +1,20 @@
 
-import { useState, useEffect, useMemo } from 'react';
-import { Startup, Status } from '@/types';
-import { 
-  PortfolioKPI, 
-  KPIValue, 
-  BoardMeeting, 
-  StartupHighlight, 
+import { useState, useEffect } from 'react';
+import { useStartupData } from '@/hooks/use-startup-data';
+import {
+  PortfolioKPI,
+  KPIValue,
+  BoardMeeting,
+  StartupHighlight,
   QuarterlyReport,
   PortfolioSummary,
   InvestedStartup
 } from '@/types/portfolio';
-import { useStartupData } from '@/hooks/use-startup-data';
-import { useStatusesQuery } from '@/hooks/use-supabase-query';
-import { useTeamMembersQuery } from '@/hooks/use-team-members';
+import { getInvestedStatusIds, saveInvestedStatusIds, isInvestedStartup, getInvestedStartups } from '@/utils/portfolio-utils';
 import { 
-  getInvestedStartups, 
-  getInvestedStatusIds, 
-  saveInvestedStatusIds 
-} from '@/utils/portfolio-utils';
-import {
-  getKPIs,
-  saveKPIs,
-  getKPIValues,
+  getKPIs, 
+  saveKPIs, 
+  getKPIValues, 
   saveKPIValues,
   getBoardMeetings,
   saveBoardMeetings,
@@ -34,593 +27,405 @@ import {
   getStartupHighlightsById,
   getStartupQuarterlyReports
 } from '@/utils/portfolio-storage';
-import { useToast } from '@/hooks/use-toast';
-import { format, addMonths, addHours, parseISO } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+import { Startup } from '@/types';
+import { useStartupActions } from '@/hooks/use-startup-actions';
 
 export const usePortfolioManagement = () => {
-  const { formattedStartups, statusesData } = useStartupData();
-  const { data: allStatuses = [] } = useStatusesQuery();
-  const { data: teamMembers = [] } = useTeamMembersQuery();
-  const { toast } = useToast();
-  
-  // Persistent state
-  const [investedStatusIds, setInvestedStatusIds] = useState<string[]>([]);
-  const [kpis, setKPIs] = useState<PortfolioKPI[]>([]);
-  const [kpiValues, setKPIValues] = useState<KPIValue[]>([]);
-  const [boardMeetings, setBoardMeetings] = useState<BoardMeeting[]>([]);
-  const [startupHighlights, setStartupHighlights] = useState<StartupHighlight[]>([]);
-  const [quarterlyReports, setQuarterlyReports] = useState<QuarterlyReport[]>([]);
+  const { startups, statuses } = useStartupData();
+  const [investedStatusIds, setInvestedStatusIds] = useState<string[]>(getInvestedStatusIds());
+  const [investedStartups, setInvestedStartups] = useState<InvestedStartup[]>([]);
+  const [kpis, setKpis] = useState<PortfolioKPI[]>(getKPIs());
+  const [kpiValues, setKpiValues] = useState<KPIValue[]>(getKPIValues());
+  const [boardMeetings, setBoardMeetings] = useState<BoardMeeting[]>(getBoardMeetings());
+  const [startupHighlights, setStartupHighlights] = useState<StartupHighlight[]>(getStartupHighlights());
+  const [quarterlyReports, setQuarterlyReports] = useState<QuarterlyReport[]>(getQuarterlyReports());
+  const [portfolioSummary, setPortfolioSummary] = useState<PortfolioSummary>({
+    totalInvested: 0,
+    startupCount: 0,
+    sectorsDistribution: {},
+    stageDistribution: {},
+    performanceByQuarter: {}
+  });
 
-  // Current focus
-  const [selectedStartupId, setSelectedStartupId] = useState<string | null>(null);
-  const [selectedQuarter, setSelectedQuarter] = useState<string>(
-    `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`
-  );
-  
-  // Load all data on initialization
+  // Preload data if empty
   useEffect(() => {
-    setInvestedStatusIds(getInvestedStatusIds());
-    setKPIs(getKPIs());
-    setKPIValues(getKPIValues());
-    setBoardMeetings(getBoardMeetings());
-    setStartupHighlights(getStartupHighlights());
-    setQuarterlyReports(getQuarterlyReports());
-  }, []);
+    if (kpis.length === 0) {
+      const defaultKpis: PortfolioKPI[] = [
+        {
+          id: uuidv4(),
+          name: 'MRR',
+          description: 'Monthly Recurring Revenue',
+          category: 'financial',
+          unit: 'BRL',
+          targetValue: 100000,
+          isHigherBetter: true
+        },
+        {
+          id: uuidv4(),
+          name: 'Burn Rate',
+          description: 'Monthly cash burn rate',
+          category: 'financial',
+          unit: 'BRL',
+          targetValue: 50000,
+          isHigherBetter: false
+        },
+        {
+          id: uuidv4(),
+          name: 'CAC',
+          description: 'Customer Acquisition Cost',
+          category: 'financial',
+          unit: 'BRL',
+          isHigherBetter: false
+        },
+        {
+          id: uuidv4(),
+          name: 'LTV',
+          description: 'Lifetime Value',
+          category: 'financial',
+          unit: 'BRL',
+          isHigherBetter: true
+        },
+        {
+          id: uuidv4(),
+          name: 'Active Users',
+          description: 'Monthly Active Users',
+          category: 'operational',
+          unit: 'users',
+          isHigherBetter: true
+        },
+        {
+          id: uuidv4(),
+          name: 'Churn Rate',
+          description: 'Monthly customer churn rate',
+          category: 'customer',
+          unit: '%',
+          targetValue: 5,
+          isHigherBetter: false
+        }
+      ];
+      setKpis(defaultKpis);
+      saveKPIs(defaultKpis);
+    }
 
-  // Get invested startups based on status
-  const investedStartups = useMemo(() => {
-    return getInvestedStartups(formattedStartups, investedStatusIds);
-  }, [formattedStartups, investedStatusIds]);
+    // Initialize if no board meetings
+    if (boardMeetings.length === 0 && investedStartups.length > 0) {
+      const sampleMeetings: BoardMeeting[] = investedStartups.slice(0, 2).flatMap(startup => {
+        const now = new Date();
+        const nextMonth = new Date(now);
+        nextMonth.setMonth(now.getMonth() + 1);
+        
+        return [
+          {
+            id: uuidv4(),
+            startupId: startup.id,
+            scheduledDate: nextMonth,
+            status: 'scheduled' as const,
+            title: `Reunião de Conselho - ${startup.values.Startup || 'Startup'}`,
+            agenda: 'Revisão de KPIs trimestrais e planejamento estratégico',
+            attendees: ['User 1', 'User 2', 'CEO'],
+            actionItems: []
+          },
+          {
+            id: uuidv4(),
+            startupId: startup.id,
+            scheduledDate: new Date(now.setMonth(now.getMonth() - 1)),
+            actualDate: new Date(now.setMonth(now.getMonth() - 1)),
+            status: 'completed' as const,
+            title: `Reunião de Acompanhamento - ${startup.values.Startup || 'Startup'}`,
+            minutes: 'Discutimos os resultados do primeiro trimestre e definimos novas metas.',
+            decisions: ['Aprovação de novo orçamento de marketing', 'Contratação de CTO'],
+            attendees: ['User 1', 'User 2', 'CEO'],
+            actionItems: [
+              {
+                id: uuidv4(),
+                meetingId: '',
+                description: 'Finalizar plano de marketing Q3',
+                assignedTo: 'User 1',
+                dueDate: new Date(now.setDate(now.getDate() + 14)),
+                status: 'pending',
+                completion: 0
+              }
+            ]
+          }
+        ];
+      });
+      
+      // Add meetingId to action items
+      sampleMeetings.forEach(meeting => {
+        meeting.actionItems.forEach(item => {
+          item.meetingId = meeting.id;
+        });
+      });
+      
+      if (sampleMeetings.length > 0) {
+        setBoardMeetings(sampleMeetings);
+        saveBoardMeetings(sampleMeetings);
+      }
+    }
 
-  // Calculate portfolio summary
-  const portfolioSummary = useMemo(() => {
+    // Initialize if no highlights
+    if (startupHighlights.length === 0 && investedStartups.length > 0) {
+      const sampleHighlights: StartupHighlight[] = investedStartups.slice(0, 3).flatMap(startup => {
+        const now = new Date();
+        const lastMonth = new Date(now);
+        lastMonth.setMonth(now.getMonth() - 1);
+        
+        return [
+          {
+            id: uuidv4(),
+            startupId: startup.id,
+            type: 'achievement',
+            title: 'Milestone de usuários atingido',
+            description: 'Atingimos 10.000 usuários ativos mensais, superando a meta trimestral em 25%.',
+            date: lastMonth,
+            status: 'active' as const,
+            priority: 'medium'
+          },
+          {
+            id: uuidv4(),
+            startupId: startup.id,
+            type: 'concern',
+            title: 'Burn rate acima do esperado',
+            description: 'O burn rate aumentou 15% no último mês, principalmente devido a gastos não planejados em infraestrutura.',
+            date: now,
+            status: 'active' as const,
+            priority: 'high'
+          },
+          {
+            id: uuidv4(),
+            startupId: startup.id,
+            type: 'need',
+            title: 'Necessidade de mentor de produto',
+            description: 'A equipe precisa de mentoria especializada em produto para refinar o roadmap do próximo semestre.',
+            date: now,
+            status: 'active' as const,
+            priority: 'medium'
+          }
+        ];
+      });
+      
+      if (sampleHighlights.length > 0) {
+        setStartupHighlights(sampleHighlights);
+        saveStartupHighlights(sampleHighlights);
+      }
+    }
+
+    // Initialize if no quarterly reports
+    if (quarterlyReports.length === 0 && investedStartups.length > 0) {
+      const currentYear = new Date().getFullYear();
+      const sampleReports: QuarterlyReport[] = investedStartups.slice(0, 2).flatMap(startup => {
+        return [
+          {
+            id: uuidv4(),
+            startupId: startup.id,
+            quarter: `Q1 ${currentYear}`,
+            startDate: new Date(currentYear, 0, 1),
+            endDate: new Date(currentYear, 2, 31),
+            kpiValues: [],
+            highlights: [],
+            summary: 'Primeiro trimestre com crescimento estável de receita e aquisição de clientes.',
+            goals: ['Aumentar MRR em 15%', 'Reduzir CAC em 10%', 'Lançar 2 features principais'],
+            status: 'published' as const
+          },
+          {
+            id: uuidv4(),
+            startupId: startup.id,
+            quarter: `Q2 ${currentYear}`,
+            startDate: new Date(currentYear, 3, 1),
+            endDate: new Date(currentYear, 5, 30),
+            kpiValues: [],
+            highlights: [],
+            summary: 'Segundo trimestre com foco em expansão de mercado e otimização de custos.',
+            goals: ['Expandir para 2 novos mercados', 'Manter churn abaixo de 3%', 'Iniciar processo de captação série A'],
+            status: 'draft' as const
+          }
+        ];
+      });
+      
+      if (sampleReports.length > 0) {
+        setQuarterlyReports(sampleReports);
+        saveQuarterlyReports(sampleReports);
+      }
+    }
+  }, [investedStartups.length, boardMeetings.length, startupHighlights.length, quarterlyReports.length, kpis.length]);
+
+  // Update invested startups when startups or investedStatusIds change
+  useEffect(() => {
+    if (startups.length > 0 && statuses.length > 0) {
+      const filtered = getInvestedStartups(startups, investedStatusIds);
+      
+      // Enrich the startups with portfolio data
+      const enriched: InvestedStartup[] = filtered.map(startup => {
+        const startupKpiValues = getStartupKPIValues(startup.id);
+        const startupBoardMeetings = getStartupBoardMeetings(startup.id);
+        const startupHighlights = getStartupHighlightsById(startup.id);
+        const startupReports = getStartupQuarterlyReports(startup.id);
+        
+        return {
+          ...startup,
+          kpiValues: startupKpiValues,
+          boardMeetings: startupBoardMeetings,
+          highlights: startupHighlights,
+          quarterlyReports: startupReports
+        };
+      });
+      
+      setInvestedStartups(enriched);
+      
+      // Update portfolio summary
+      updatePortfolioSummary(enriched);
+    }
+  }, [startups, statuses, investedStatusIds, kpiValues, boardMeetings, startupHighlights, quarterlyReports]);
+
+  // Update the portfolio summary based on the invested startups
+  const updatePortfolioSummary = (startups: InvestedStartup[]) => {
     const summary: PortfolioSummary = {
       totalInvested: 0,
-      startupCount: investedStartups.length,
+      startupCount: startups.length,
       sectorsDistribution: {},
       stageDistribution: {},
       performanceByQuarter: {}
     };
-
-    // Calculate distributions
-    investedStartups.forEach(startup => {
-      const sector = startup.values.Setor || 'Undefined';
-      const stage = allStatuses.find(s => s.id === startup.statusId)?.name || 'Undefined';
-      
-      summary.sectorsDistribution[sector] = (summary.sectorsDistribution[sector] || 0) + 1;
-      summary.stageDistribution[stage] = (summary.stageDistribution[stage] || 0) + 1;
-    });
-
-    // Calculate performance for each quarter
-    const quarters = quarterlyReports.map(report => report.quarter);
-    const uniqueQuarters = [...new Set(quarters)];
     
-    uniqueQuarters.forEach(quarter => {
-      // Calculate average performance for this quarter
-      const reportsForQuarter = quarterlyReports.filter(report => report.quarter === quarter);
-      let totalGrowth = 0;
+    // Calculate sector distribution
+    startups.forEach(startup => {
+      const sector = startup.values.Setor || 'Unknown';
+      summary.sectorsDistribution[sector] = (summary.sectorsDistribution[sector] || 0) + 1;
       
-      reportsForQuarter.forEach(report => {
-        const revenueKPIs = report.kpiValues.filter(value => {
-          const kpi = kpis.find(k => k.id === value.kpiId);
-          return kpi?.category === 'financial' && kpi?.name.toLowerCase().includes('revenue');
-        });
-        
-        if (revenueKPIs.length > 0) {
-          // Simple average of all revenue KPIs for this quarter
-          const avgRevenue = revenueKPIs.reduce((sum, kpi) => sum + kpi.value, 0) / revenueKPIs.length;
-          totalGrowth += avgRevenue;
-        }
-      });
+      // Find the status name
+      const status = statuses.find(s => s.id === startup.statusId);
+      const stage = status?.name || 'Unknown';
+      summary.stageDistribution[stage] = (summary.stageDistribution[stage] || 0) + 1;
       
-      summary.performanceByQuarter[quarter] = totalGrowth;
+      // Calculate financial data (this would use real KPIs in a production app)
+      summary.totalInvested += Number(startup.values['Valor Investido'] || 0);
     });
-
-    return summary;
-  }, [investedStartups, allStatuses, quarterlyReports, kpis]);
-
-  // Enhanced startups with portfolio data
-  const enhancedInvestedStartups = useMemo(() => {
-    return investedStartups.map(startup => {
-      const startupKPIValues = getStartupKPIValues(startup.id);
-      const startupBoardMeetings = getStartupBoardMeetings(startup.id);
-      const startupHighlights = getStartupHighlightsById(startup.id);
-      const startupReports = getStartupQuarterlyReports(startup.id);
-      
-      return {
-        ...startup,
-        kpis: kpis.filter(kpi => startupKPIValues.some(val => val.kpiId === kpi.id)),
-        kpiValues: startupKPIValues,
-        highlights: startupHighlights,
-        boardMeetings: startupBoardMeetings,
-        quarterlyReports: startupReports
-      } as InvestedStartup;
-    });
-  }, [investedStartups, kpis]);
-
-  // Update invested status IDs
-  const updateInvestedStatusIds = (statusIds: string[]) => {
-    setInvestedStatusIds(statusIds);
-    saveInvestedStatusIds(statusIds);
-    toast({
-      title: "Configuração Atualizada",
-      description: "Os status de startups investidas foram atualizados.",
-    });
-  };
-
-  // KPI Management
-  const addKPI = (kpi: Omit<PortfolioKPI, 'id'>) => {
-    const newKPI: PortfolioKPI = {
-      ...kpi,
-      id: `kpi-${Date.now()}`
+    
+    // Simulate some quarterly performance data
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+    
+    summary.performanceByQuarter = {
+      [`Q1 ${lastYear}`]: 5000000,
+      [`Q2 ${lastYear}`]: 5500000,
+      [`Q3 ${lastYear}`]: 6200000,
+      [`Q4 ${lastYear}`]: 7100000,
+      [`Q1 ${currentYear}`]: 7800000,
+      [`Q2 ${currentYear}`]: 8500000,
     };
     
-    const updatedKPIs = [...kpis, newKPI];
-    setKPIs(updatedKPIs);
-    saveKPIs(updatedKPIs);
-    
-    toast({
-      title: "KPI Adicionado",
-      description: `O KPI ${kpi.name} foi adicionado com sucesso.`,
-    });
-    
-    return newKPI;
+    setPortfolioSummary(summary);
   };
 
-  const updateKPI = (updatedKPI: PortfolioKPI) => {
-    const updatedKPIs = kpis.map(kpi => 
-      kpi.id === updatedKPI.id ? updatedKPI : kpi
-    );
+  // Add KPI to a startup
+  const addKpiValue = (startupId: string, kpiId: string, value: number, date: Date) => {
+    const quarter = `Q${Math.floor(date.getMonth() / 3) + 1} ${date.getFullYear()}`;
     
-    setKPIs(updatedKPIs);
-    saveKPIs(updatedKPIs);
-    
-    toast({
-      title: "KPI Atualizado",
-      description: `O KPI ${updatedKPI.name} foi atualizado com sucesso.`,
-    });
-  };
-
-  const deleteKPI = (kpiId: string) => {
-    const updatedKPIs = kpis.filter(kpi => kpi.id !== kpiId);
-    setKPIs(updatedKPIs);
-    saveKPIs(updatedKPIs);
-    
-    // Also delete all values for this KPI
-    const updatedValues = kpiValues.filter(value => value.kpiId !== kpiId);
-    setKPIValues(updatedValues);
-    saveKPIValues(updatedValues);
-    
-    toast({
-      title: "KPI Removido",
-      description: "O KPI foi removido com sucesso.",
-    });
-  };
-
-  // KPI Value Management
-  const addKPIValue = (startupId: string, kpiId: string, value: number, quarter: string, notes?: string) => {
-    const date = new Date();
-    
-    const newValue: KPIValue = {
-      id: `kpi-value-${Date.now()}`,
+    const newKpiValue: KPIValue = {
+      id: uuidv4(),
       kpiId,
       startupId,
       value,
       date,
       quarter,
-      notes
     };
     
-    const updatedValues = [...kpiValues, newValue];
-    setKPIValues(updatedValues);
-    saveKPIValues(updatedValues);
-    
-    toast({
-      title: "Valor Registrado",
-      description: "O valor do KPI foi registrado com sucesso.",
-    });
-    
-    return newValue;
+    const updatedKpiValues = [...kpiValues, newKpiValue];
+    setKpiValues(updatedKpiValues);
+    saveKPIValues(updatedKpiValues);
   };
 
-  const updateKPIValue = (updatedValue: KPIValue) => {
-    const updatedValues = kpiValues.map(value => 
-      value.id === updatedValue.id ? updatedValue : value
-    );
-    
-    setKPIValues(updatedValues);
-    saveKPIValues(updatedValues);
-    
-    toast({
-      title: "Valor Atualizado",
-      description: "O valor do KPI foi atualizado com sucesso.",
-    });
-  };
-
-  const deleteKPIValue = (valueId: string) => {
-    const updatedValues = kpiValues.filter(value => value.id !== valueId);
-    setKPIValues(updatedValues);
-    saveKPIValues(updatedValues);
-    
-    toast({
-      title: "Valor Removido",
-      description: "O valor do KPI foi removido com sucesso.",
-    });
-  };
-
-  // Board Meeting Management
-  const scheduleBoardMeeting = (
-    startupId: string, 
-    scheduledDate: Date, 
-    title: string, 
-    agenda?: string, 
-    attendees: string[] = []
-  ) => {
+  // Add a board meeting
+  const addBoardMeeting = (meeting: Omit<BoardMeeting, 'id'>) => {
     const newMeeting: BoardMeeting = {
-      id: `meeting-${Date.now()}`,
-      startupId,
-      scheduledDate,
-      status: 'scheduled',
-      title,
-      agenda,
-      attendees,
-      actionItems: []
+      ...meeting,
+      id: uuidv4(),
     };
     
     const updatedMeetings = [...boardMeetings, newMeeting];
     setBoardMeetings(updatedMeetings);
     saveBoardMeetings(updatedMeetings);
-    
-    toast({
-      title: "Reunião Agendada",
-      description: `Reunião "${title}" agendada para ${format(scheduledDate, 'dd/MM/yyyy HH:mm')}.`,
-    });
-    
-    return newMeeting;
   };
 
-  const updateBoardMeeting = (updatedMeeting: BoardMeeting) => {
+  // Update a board meeting
+  const updateBoardMeeting = (meetingId: string, updates: Partial<BoardMeeting>) => {
     const updatedMeetings = boardMeetings.map(meeting => 
-      meeting.id === updatedMeeting.id ? updatedMeeting : meeting
+      meeting.id === meetingId ? { ...meeting, ...updates } : meeting
     );
     
     setBoardMeetings(updatedMeetings);
     saveBoardMeetings(updatedMeetings);
-    
-    toast({
-      title: "Reunião Atualizada",
-      description: "Os detalhes da reunião foram atualizados com sucesso.",
-    });
   };
 
-  const completeBoardMeeting = (
-    meetingId: string, 
-    minutes: string, 
-    decisions: string[] = [], 
-    actualDate?: Date
-  ) => {
-    const updatedMeetings = boardMeetings.map(meeting => {
-      if (meeting.id === meetingId) {
-        return {
-          ...meeting,
-          status: 'completed',
-          minutes,
-          decisions,
-          actualDate: actualDate || new Date()
-        };
-      }
-      return meeting;
-    });
-    
-    setBoardMeetings(updatedMeetings);
-    saveBoardMeetings(updatedMeetings);
-    
-    toast({
-      title: "Reunião Concluída",
-      description: "A reunião foi marcada como concluída e as notas foram salvas.",
-    });
-  };
-
-  const cancelBoardMeeting = (meetingId: string) => {
-    const updatedMeetings = boardMeetings.map(meeting => {
-      if (meeting.id === meetingId) {
-        return {
-          ...meeting,
-          status: 'cancelled'
-        };
-      }
-      return meeting;
-    });
-    
-    setBoardMeetings(updatedMeetings);
-    saveBoardMeetings(updatedMeetings);
-    
-    toast({
-      title: "Reunião Cancelada",
-      description: "A reunião foi cancelada com sucesso.",
-    });
-  };
-
-  const deleteBoardMeeting = (meetingId: string) => {
-    const updatedMeetings = boardMeetings.filter(meeting => meeting.id !== meetingId);
-    setBoardMeetings(updatedMeetings);
-    saveBoardMeetings(updatedMeetings);
-    
-    toast({
-      title: "Reunião Removida",
-      description: "A reunião foi removida com sucesso.",
-    });
-  };
-
-  // Highlights Management
-  const addStartupHighlight = (
-    startupId: string, 
-    type: 'achievement' | 'concern' | 'need',
-    title: string,
-    description: string,
-    priority?: 'low' | 'medium' | 'high',
-    relatedKPIs?: string[]
-  ) => {
+  // Add a highlight
+  const addStartupHighlight = (highlight: Omit<StartupHighlight, 'id'>) => {
     const newHighlight: StartupHighlight = {
-      id: `highlight-${Date.now()}`,
-      startupId,
-      type,
-      title,
-      description,
-      date: new Date(),
-      status: 'active',
-      priority,
-      relatedKPIs
+      ...highlight,
+      id: uuidv4(),
     };
     
     const updatedHighlights = [...startupHighlights, newHighlight];
     setStartupHighlights(updatedHighlights);
     saveStartupHighlights(updatedHighlights);
-    
-    const typeText = type === 'achievement' ? 'Conquista' : type === 'concern' ? 'Ponto de Atenção' : 'Necessidade';
-    
-    toast({
-      title: `${typeText} Registrado`,
-      description: `${typeText} "${title}" foi registrado com sucesso.`,
-    });
-    
-    return newHighlight;
   };
 
-  const updateStartupHighlight = (updatedHighlight: StartupHighlight) => {
+  // Update a highlight
+  const updateStartupHighlight = (highlightId: string, updates: Partial<StartupHighlight>) => {
     const updatedHighlights = startupHighlights.map(highlight => 
-      highlight.id === updatedHighlight.id ? updatedHighlight : highlight
+      highlight.id === highlightId ? { ...highlight, ...updates } : highlight
     );
     
     setStartupHighlights(updatedHighlights);
     saveStartupHighlights(updatedHighlights);
-    
-    toast({
-      title: "Registro Atualizado",
-      description: "O registro foi atualizado com sucesso.",
-    });
   };
 
-  const resolveStartupHighlight = (highlightId: string) => {
-    const updatedHighlights = startupHighlights.map(highlight => {
-      if (highlight.id === highlightId) {
-        return {
-          ...highlight,
-          status: 'resolved'
-        };
-      }
-      return highlight;
-    });
-    
-    setStartupHighlights(updatedHighlights);
-    saveStartupHighlights(updatedHighlights);
-    
-    toast({
-      title: "Registro Resolvido",
-      description: "O registro foi marcado como resolvido.",
-    });
-  };
-
-  const archiveStartupHighlight = (highlightId: string) => {
-    const updatedHighlights = startupHighlights.map(highlight => {
-      if (highlight.id === highlightId) {
-        return {
-          ...highlight,
-          status: 'archived'
-        };
-      }
-      return highlight;
-    });
-    
-    setStartupHighlights(updatedHighlights);
-    saveStartupHighlights(updatedHighlights);
-    
-    toast({
-      title: "Registro Arquivado",
-      description: "O registro foi arquivado.",
-    });
-  };
-
-  const deleteStartupHighlight = (highlightId: string) => {
-    const updatedHighlights = startupHighlights.filter(highlight => highlight.id !== highlightId);
-    setStartupHighlights(updatedHighlights);
-    saveStartupHighlights(updatedHighlights);
-    
-    toast({
-      title: "Registro Removido",
-      description: "O registro foi removido com sucesso.",
-    });
-  };
-
-  // Quarterly Report Management
-  const createQuarterlyReport = (
-    startupId: string,
-    quarter: string,
-    summary?: string,
-    goals?: string[]
-  ) => {
-    // Calculate quarter dates
-    const year = parseInt(quarter.split(' ')[1]);
-    const quarterNumber = parseInt(quarter.split('Q')[1].split(' ')[0]);
-    const startMonth = (quarterNumber - 1) * 3;
-    
-    const startDate = new Date(year, startMonth, 1);
-    const endDate = addMonths(startDate, 3);
-    endDate.setDate(endDate.getDate() - 1);
-    
-    // Get KPI values for this startup and quarter
-    const relevantKPIValues = kpiValues.filter(value => 
-      value.startupId === startupId && value.quarter === quarter
-    );
-    
-    // Get highlights for this startup in this quarter's date range
-    const relevantHighlights = startupHighlights.filter(highlight => {
-      const highlightDate = highlight.date instanceof Date ? highlight.date : new Date(highlight.date);
-      return highlight.startupId === startupId && 
-             highlightDate >= startDate && 
-             highlightDate <= endDate;
-    });
-    
+  // Add a quarterly report
+  const addQuarterlyReport = (report: Omit<QuarterlyReport, 'id'>) => {
     const newReport: QuarterlyReport = {
-      id: `report-${Date.now()}`,
-      startupId,
-      quarter,
-      startDate,
-      endDate,
-      kpiValues: relevantKPIValues,
-      highlights: relevantHighlights,
-      summary,
-      goals,
-      status: 'draft'
+      ...report,
+      id: uuidv4(),
     };
     
     const updatedReports = [...quarterlyReports, newReport];
     setQuarterlyReports(updatedReports);
     saveQuarterlyReports(updatedReports);
-    
-    toast({
-      title: "Relatório Criado",
-      description: `Relatório para ${quarter} foi criado com sucesso.`,
-    });
-    
-    return newReport;
   };
 
-  const updateQuarterlyReport = (updatedReport: QuarterlyReport) => {
+  // Update a quarterly report
+  const updateQuarterlyReport = (reportId: string, updates: Partial<QuarterlyReport>) => {
     const updatedReports = quarterlyReports.map(report => 
-      report.id === updatedReport.id ? updatedReport : report
+      report.id === reportId ? { ...report, ...updates } : report
     );
     
     setQuarterlyReports(updatedReports);
     saveQuarterlyReports(updatedReports);
-    
-    toast({
-      title: "Relatório Atualizado",
-      description: "O relatório foi atualizado com sucesso.",
-    });
   };
 
-  const publishQuarterlyReport = (reportId: string) => {
-    const updatedReports = quarterlyReports.map(report => {
-      if (report.id === reportId) {
-        return {
-          ...report,
-          status: 'published'
-        };
-      }
-      return report;
-    });
-    
-    setQuarterlyReports(updatedReports);
-    saveQuarterlyReports(updatedReports);
-    
-    toast({
-      title: "Relatório Publicado",
-      description: "O relatório foi publicado com sucesso.",
-    });
+  // Update invested status IDs
+  const updateInvestedStatusIds = (statusIds: string[]) => {
+    setInvestedStatusIds(statusIds);
+    saveInvestedStatusIds(statusIds);
   };
 
-  const deleteQuarterlyReport = (reportId: string) => {
-    const updatedReports = quarterlyReports.filter(report => report.id !== reportId);
-    setQuarterlyReports(updatedReports);
-    saveQuarterlyReports(updatedReports);
-    
-    toast({
-      title: "Relatório Removido",
-      description: "O relatório foi removido com sucesso.",
-    });
-  };
-
-  // Helper functions
-  const getQuarterOptions = (): string[] => {
-    const currentYear = new Date().getFullYear();
-    const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3);
-    
-    const options: string[] = [];
-    
-    // Include quarters from last year until current quarter
-    for (let year = currentYear - 1; year <= currentYear; year++) {
-      for (let quarter = 1; quarter <= 4; quarter++) {
-        // Only include up to current quarter for current year
-        if (year < currentYear || quarter <= currentQuarter) {
-          options.push(`Q${quarter} ${year}`);
-        }
-      }
-    }
-    
-    return options;
-  };
-
-  // Return all the functions and data
   return {
-    // State
-    investedStartups: enhancedInvestedStartups,
-    investedStatusIds,
+    investedStartups,
     kpis,
     kpiValues,
     boardMeetings,
     startupHighlights,
     quarterlyReports,
-    selectedStartupId,
-    selectedQuarter,
     portfolioSummary,
-    allStatuses,
-    teamMembers,
-    quartersOptions: getQuarterOptions(),
-    
-    // Setters
-    setSelectedStartupId,
-    setSelectedQuarter,
-    
-    // Status configuration
-    updateInvestedStatusIds,
-    
-    // KPI functions
-    addKPI,
-    updateKPI,
-    deleteKPI,
-    addKPIValue,
-    updateKPIValue,
-    deleteKPIValue,
-    
-    // Board meeting functions
-    scheduleBoardMeeting,
+    investedStatusIds,
+    allStatuses: statuses,
+    isInvestedStartup: (startup: Startup) => isInvestedStartup(startup, investedStatusIds),
+    addKpiValue,
+    addBoardMeeting,
     updateBoardMeeting,
-    completeBoardMeeting,
-    cancelBoardMeeting,
-    deleteBoardMeeting,
-    
-    // Highlights functions
     addStartupHighlight,
     updateStartupHighlight,
-    resolveStartupHighlight,
-    archiveStartupHighlight,
-    deleteStartupHighlight,
-    
-    // Quarterly report functions
-    createQuarterlyReport,
+    addQuarterlyReport,
     updateQuarterlyReport,
-    publishQuarterlyReport,
-    deleteQuarterlyReport
+    updateInvestedStatusIds
   };
 };
