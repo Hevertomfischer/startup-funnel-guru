@@ -1,35 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
-import { Toaster } from 'sonner';
-import ViewToggle from '@/components/ViewToggle';
-import { ViewMode } from '@/types';
-import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
 
 const Index = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('board');
-  const [searchTerm, setSearchTerm] = useState('');
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    console.log('Searching for:', term);
-    // Further search implementation would go here
-  };
-
   useEffect(() => {
-    // Redirect to login if not authenticated and not currently loading
-    if (!isLoading && !user) {
-      console.log('No user detected, redirecting to login page');
+    // Se o usuário estiver autenticado, redireciona para o dashboard
+    if (!isLoading && user) {
+      navigate('/dashboard');
+    } else if (!isLoading && !user) {
       navigate('/login');
     }
   }, [user, isLoading, navigate]);
 
-  // Show loading state while checking authentication
+  // Mostra um estado de carregamento enquanto verifica a autenticação
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4">
@@ -43,32 +31,11 @@ const Index = () => {
     );
   }
 
-  // If not loading and no user, return null (will redirect in useEffect)
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar />
-      
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden ml-64">
-        <Header 
-          view={viewMode} 
-          setView={setViewMode} 
-          onSearch={handleSearch}
-        >
-          <div className="flex items-center gap-4">
-            <ViewToggle view={viewMode} setView={setViewMode} />
-          </div>
-        </Header>
-        
-        <main className="flex-1 overflow-auto p-4">
-          <Outlet />
-          <Toaster position="top-right" />
-        </main>
+    <div className="flex h-screen items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">Bem-vindo ao Sistema</h1>
+        <p className="mt-4 text-muted-foreground">Redirecionando...</p>
       </div>
     </div>
   );

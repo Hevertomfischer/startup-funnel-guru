@@ -73,21 +73,14 @@ const App = () => {
     setGoals(goals.filter(goal => goal.id !== goalId));
   };
 
-  // useEffect hook to perform side effects, such as fetching data
-  useEffect(() => {
-    // Example: Fetch goals from an API endpoint
-    // fetch(`${API_URL}/goals`)
-    //   .then(response => response.json())
-    //   .then(data => setGoals(data))
-    //   .catch(error => console.error("Failed to fetch goals:", error));
-  }, []);
+  console.log("App rendering");
 
   return (
     <div className="app flex min-h-screen dark:bg-background">
       <QueryClientProvider client={queryClient}>
         <Toaster />
-        <AuthProvider>
-          <Router>
+        <Router>
+          <AuthProvider>
             <GoalModal isOpen={isGoalModalOpen} onClose={closeGoalModal} />
             <div className="flex flex-1">
               <Sidebar />
@@ -112,8 +105,8 @@ const App = () => {
                 </Routes>
               </main>
             </div>
-          </Router>
-        </AuthProvider>
+          </AuthProvider>
+        </Router>
       </QueryClientProvider>
     </div>
   );
