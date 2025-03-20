@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WorkflowRule, WorkflowCondition, WorkflowAction, Status, Startup, Task } from '@/types';
 import { useUpdateStartupMutation } from './use-supabase-query';
-import { mockWorkflowRules, initializeWorkflowRules } from '@/utils/workflow-utils';
+import { initializeWorkflowRules } from '@/utils/workflow-utils';
 import { useTeamMembersQuery } from './use-team-members';
 
 // Initialize rules with mock data if none exist
