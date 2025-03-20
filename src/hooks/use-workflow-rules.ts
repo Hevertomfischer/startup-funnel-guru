@@ -1,30 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WorkflowRule, WorkflowCondition, WorkflowAction, Status, Startup, Task } from '@/types';
 import { useUpdateStartupMutation } from './use-supabase-query';
-import { initializeWorkflowRules } from '@/utils/workflow-utils';
+import { 
+  getWorkflowRules, 
+  saveWorkflowRules, 
+  getTasks, 
+  saveTasks, 
+  initializeWorkflowRules 
+} from '@/utils/workflow-utils';
 import { useTeamMembersQuery } from './use-team-members';
-
-// Initialize rules with mock data if none exist
-const getWorkflowRules = (): WorkflowRule[] => {
-  initializeWorkflowRules();
-  return JSON.parse(localStorage.getItem('workflowRules') || '[]');
-};
-
-// Function to get tasks from local storage
-const getTasks = (): Task[] => {
-  return JSON.parse(localStorage.getItem('workflowTasks') || '[]');
-};
-
-// Function to save tasks to local storage
-const saveTasks = (tasks: Task[]): void => {
-  localStorage.setItem('workflowTasks', JSON.stringify(tasks));
-};
-
-export const saveWorkflowRules = (rules: WorkflowRule[]): void => {
-  localStorage.setItem('workflowRules', JSON.stringify(rules));
-};
 
 export const useWorkflowRules = () => {
   const [rules, setRules] = useState<WorkflowRule[]>([]);
