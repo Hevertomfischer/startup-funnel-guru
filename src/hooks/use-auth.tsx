@@ -13,38 +13,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Auth provider mounted");
     let mounted = true;
     
-    // Check active session
-    const checkSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) setUser(null);
-        } else if (data?.session) {
-          if (mounted) setUser(data.session.user);
-          
-          // Check if user has admin role
-          const { data: userData } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.session.user.id)
-            .single();
-            
-          if (mounted) setIsAdmin(userData?.role === 'admin');
-        } else {
-          // No active session
-          if (mounted) setUser(null);
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
-        if (mounted) setUser(null);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    // Set up auth state listener
+    // Set up auth state listener FIRST to catch all auth events
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
@@ -53,13 +22,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (mounted) setUser(session.user);
           
           // Check admin status
-          const { data } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (mounted) setIsAdmin(data?.role === 'admin');
+          try {
+            const { data } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+              
+            if (mounted) setIsAdmin(data?.role === 'admin');
+          } catch (error) {
+            console.error('Error checking admin status:', error);
+          }
         } else {
           if (mounted) {
             setUser(null);
@@ -71,18 +44,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
+    // THEN check for existing session
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (mounted) {
+            setUser(null);
+            setIsLoading(false);
+          }
+        } else if (data?.session) {
+          if (mounted) setUser(data.session.user);
+          
+          // Check if user has admin role
+          try {
+            const { data: userData } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', data.session.user.id)
+              .single();
+              
+            if (mounted) setIsAdmin(userData?.role === 'admin');
+          } catch (error) {
+            console.error('Error checking admin status:', error);
+          } finally {
+            if (mounted) setIsLoading(false);
+          }
+        } else {
+          // No active session
+          if (mounted) {
+            setUser(null);
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        if (mounted) {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    };
+
     checkSession();
 
     // Cleanup
     return () => {
       mounted = false;
-      authListener?.subscription.unsubscribe();
+      if (authListener) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, []);
 
   // Memoize the auth value to prevent unnecessary re-renders
   const authValue = useMemo(() => {
-    // Mock sign in for development (remove in production)
     const signIn = async (email: string, password: string) => {
       try {
         setIsLoading(true);
@@ -92,6 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         if (error) throw error;
+        console.log('Sign in successful:', data);
         return { success: true, data };
       } catch (error: any) {
         console.error('Sign in error:', error.message);
@@ -106,6 +125,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsLoading(true);
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
+        console.log('Sign out successful');
       } catch (error: any) {
         console.error('Sign out error:', error.message);
       } finally {
