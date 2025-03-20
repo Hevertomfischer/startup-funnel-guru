@@ -1,8 +1,19 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Profile } from '@/types/auth';
 
-const AuthContext = createContext<any>(null);
+// Create a strongly typed context
+type AuthContextType = {
+  user: any | null;
+  isLoading: boolean;
+  isAdmin: boolean;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; data?: any }>;
+  signOut: () => Promise<void>;
+  devSignIn: () => void;
+};
+
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
@@ -21,8 +32,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (session?.user) {
           if (mounted) setUser(session.user);
           
-          // Check admin status
           try {
+            // Check admin status
             const { data } = await supabase
               .from('profiles')
               .select('role')
@@ -32,15 +43,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (mounted) setIsAdmin(data?.role === 'admin');
           } catch (error) {
             console.error('Error checking admin status:', error);
+          } finally {
+            if (mounted) setIsLoading(false);
           }
         } else {
           if (mounted) {
             setUser(null);
             setIsAdmin(false);
+            setIsLoading(false);
           }
         }
-        
-        if (mounted) setIsLoading(false);
       }
     );
 
@@ -60,12 +72,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           // Check if user has admin role
           try {
-            const { data: userData } = await supabase
+            const { data: userData, error: profileError } = await supabase
               .from('profiles')
               .select('role')
               .eq('id', data.session.user.id)
               .single();
               
+            if (profileError) {
+              console.error('Error fetching profile:', profileError);
+            }
+            
             if (mounted) setIsAdmin(userData?.role === 'admin');
           } catch (error) {
             console.error('Error checking admin status:', error);

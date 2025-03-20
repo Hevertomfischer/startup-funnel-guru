@@ -1,8 +1,11 @@
 
 import { useMemo, useEffect } from 'react';
 import { useStartupsByStatus } from '../use-startups-by-status';
+import { useToast } from '@/hooks/use-toast';
 
 export const useStatusQueries = ({ statuses, columns }: { statuses: any[], columns: any[] }) => {
+  const { toast } = useToast();
+  
   // Get all status IDs from the columns array
   const statusIds = useMemo(() => 
     columns.map(column => column.id),
@@ -11,7 +14,6 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
 
   // Each hook must be called unconditionally at the top level
   // We'll use fixed number of hooks based on maximum possible number of statuses
-  // We're using 12 as the maximum number of possible statuses
   const query1 = useStartupsByStatus(statusIds[0] || 'placeholder-1');
   const query2 = useStartupsByStatus(statusIds[1] || 'placeholder-2');
   const query3 = useStartupsByStatus(statusIds[2] || 'placeholder-3');
@@ -78,8 +80,20 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
       });
 
       // Update columns with startupIds
-      if (updatedColumns.some((col, i) => col.startupIds.length !== columns[i].startupIds.length)) {
-        console.log('Updating columns with startupIds', updatedColumns);
+      if (updatedColumns.some((col, i) => 
+          col.startupIds?.length !== columns[i].startupIds?.length)) {
+        console.log('Updating columns with startupIds', 
+          { 
+            updatedColumns: updatedColumns.map(c => ({ 
+              id: c.id, 
+              startupIds: c.startupIds?.length 
+            })),
+            originals: columns.map(c => ({ 
+              id: c.id, 
+              startupIds: c.startupIds?.length 
+            }))
+          }
+        );
       }
     }
   }, [columns, queries]);
@@ -87,36 +101,26 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
   // Check if any real query (not placeholder) is loading
   const isLoading = useMemo(() => {
     return statusIds.some((id, index) => {
-      if (!id) return false;
-      const queryIndex = index + 1;
-      const query = eval(`query${queryIndex}`);
-      return query.isLoading;
+      if (!id || id.startsWith('placeholder-')) return false;
+      const query = queries[id];
+      return query?.isLoading;
     });
-  }, [
-    statusIds,
-    query1, query2, query3, query4, query5, query6,
-    query7, query8, query9, query10, query11, query12
-  ]);
+  }, [statusIds, queries]);
   
   // Check if any real query (not placeholder) has an error
   const isError = useMemo(() => {
     return statusIds.some((id, index) => {
-      if (!id) return false;
-      const queryIndex = index + 1;
-      const query = eval(`query${queryIndex}`);
-      return query.isError;
+      if (!id || id.startsWith('placeholder-')) return false;
+      const query = queries[id];
+      return query?.isError;
     });
-  }, [
-    statusIds,
-    query1, query2, query3, query4, query5, query6,
-    query7, query8, query9, query10, query11, query12
-  ]);
+  }, [statusIds, queries]);
 
   // Create a function to get a startup by its ID from any of the queries
   const getStartupById = (id: string) => {
     // Check all status queries
     for (const statusId of statusIds) {
-      if (!statusId) continue;
+      if (!statusId || statusId.startsWith('placeholder-')) continue;
       const query = queries[statusId];
       if (!query || !query.data) continue;
       
@@ -126,6 +130,18 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
     }
     return undefined;
   };
+
+  // If there are no boards yet and we're not loading, notify the user via toast
+  useEffect(() => {
+    if (!isLoading && columns.length === 0) {
+      console.log("No statuses available. Suggesting to add a column.");
+      toast({
+        title: "Board vazio",
+        description: "Adicione uma coluna para começar a organizar suas startups.",
+        duration: 5000,
+      });
+    }
+  }, [isLoading, columns.length, toast]);
   
   return { 
     queries, 

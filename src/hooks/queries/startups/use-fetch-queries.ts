@@ -5,6 +5,28 @@ import {
   getStartupsByStatus,
   getStartup,
 } from '@/services';
+import { supabase } from '@/integrations/supabase/client';
+
+// Direct Supabase query function for debugging
+const debugFetchStartupsByStatus = async (statusId: string) => {
+  console.log(`Directly fetching startups for status ID: ${statusId}`);
+  const { data, error } = await supabase
+    .from('startups')
+    .select('*')
+    .eq('status_id', statusId);
+    
+  if (error) {
+    console.error('Supabase direct query error:', error);
+    throw error;
+  }
+  
+  console.log(`Direct query result for status ${statusId}:`, {
+    count: data?.length || 0,
+    firstItem: data && data.length > 0 ? data[0] : null
+  });
+  
+  return data || [];
+};
 
 // Basic startup fetch queries
 export const useStartupsQuery = () => {
@@ -20,11 +42,16 @@ export const useStartupsByStatusQuery = (statusId: string) => {
   
   return useQuery({
     queryKey: ['startups', 'status', statusId],
-    queryFn: () => getStartupsByStatus(statusId),
+    queryFn: () => {
+      console.log(`Query function execution for status ${statusId}`);
+      // Use the debugging function for direct Supabase access
+      return isPlaceholder ? [] : debugFetchStartupsByStatus(statusId);
+    },
     enabled: !!statusId && !isPlaceholder, // Don't run query for placeholder IDs
-    staleTime: isPlaceholder ? Infinity : 5000, // 5 seconds for real queries, Infinity for placeholders
-    gcTime: isPlaceholder ? 0 : 60000, // 1 minute for real queries, 0 for placeholders
-    refetchInterval: isPlaceholder ? false : 10000 // Auto refresh every 10 seconds for real status
+    staleTime: isPlaceholder ? Infinity : 5000, // 5 seconds for real queries
+    gcTime: isPlaceholder ? 0 : 60000, // 1 minute for real queries
+    refetchInterval: isPlaceholder ? false : 15000, // Refresh every 15 seconds
+    retry: 2, // Retry failed requests twice before giving up
   });
 };
 
