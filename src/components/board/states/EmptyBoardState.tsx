@@ -7,7 +7,7 @@ interface EmptyBoardStateProps {
 
 const EmptyBoardState = ({ onAddColumn }: EmptyBoardStateProps) => {
   return (
-    <div className="flex-1 flex items-center justify-center flex-col gap-4">
+    <div className="w-full h-full flex-1 flex items-center justify-center flex-col gap-4">
       <div className="text-center space-y-3">
         <h2 className="text-xl font-semibold">Sem colunas</h2>
         <p className="text-muted-foreground">

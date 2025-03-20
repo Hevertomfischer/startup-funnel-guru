@@ -86,7 +86,7 @@ const App = () => {
             <Toaster />
             <Sidebar />
             <GoalModal isOpen={isGoalModalOpen} onClose={closeGoalModal} />
-            <main className="flex-1 max-h-screen overflow-y-auto pb-10 md:ml-64">
+            <main className="flex-1 max-h-screen overflow-y-auto pb-10 pl-64">
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
