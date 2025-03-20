@@ -1,6 +1,5 @@
 
 import { WorkflowRule, Task } from '@/types';
-import { mockWorkflowRules } from '@/utils/workflow-utils';
 
 // Function to get workflow rules from local storage
 export const getWorkflowRules = (): WorkflowRule[] => {
@@ -27,6 +26,6 @@ export const saveTasks = (tasks: Task[]): void => {
 export const initializeWorkflowRules = (): void => {
   const existingRules = localStorage.getItem('workflowRules');
   if (!existingRules) {
-    localStorage.setItem('workflowRules', JSON.stringify(mockWorkflowRules));
+    localStorage.setItem('workflowRules', JSON.stringify([]));
   }
 };

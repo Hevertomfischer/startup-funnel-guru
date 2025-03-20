@@ -1,5 +1,4 @@
-
-import { Status, Label, Startup, Column, Field, WorkflowRule } from '@/types';
+import { Status, Label, Startup, Column, Field } from '@/types';
 
 export const FIELDS: Field[] = [
   { id: 'startup', name: 'Startup', type: 'shortText', required: true },
@@ -234,58 +233,4 @@ export const INITIAL_COLUMNS: Column[] = [
   { id: 'negotiation', title: 'Negotiation', startupIds: ['5'] },
   { id: 'invested', title: 'Invested', startupIds: ['6'] },
   { id: 'rejected', title: 'Rejected', startupIds: ['7'] },
-];
-
-export const SAMPLE_WORKFLOW_RULES: WorkflowRule[] = [
-  {
-    id: 'rule1',
-    name: 'High MRR Alert',
-    conditions: [
-      {
-        fieldId: 'mrr',
-        operator: 'greaterThan',
-        value: 100000,
-      },
-    ],
-    actions: [
-      {
-        type: 'sendEmail',
-        config: {
-          emailTemplate: 'high-mrr-alert',
-          emailTo: 'team@scventures.com',
-          message: 'A startup with high MRR has been added to the pipeline',
-        },
-      },
-      {
-        type: 'updateField',
-        config: {
-          fieldId: 'priority',
-          value: 'high',
-        },
-      },
-    ],
-    active: true,
-  },
-  {
-    id: 'rule2',
-    name: 'Meeting Follow-up',
-    conditions: [
-      {
-        fieldId: 'statusId',
-        operator: 'equals',
-        value: 'meeting',
-      },
-    ],
-    actions: [
-      {
-        type: 'sendEmail',
-        config: {
-          emailTemplate: 'meeting-followup',
-          emailTo: '{email}',
-          message: 'Thank you for meeting with us. We would like to schedule a follow-up.',
-        },
-      },
-    ],
-    active: true,
-  },
 ];
