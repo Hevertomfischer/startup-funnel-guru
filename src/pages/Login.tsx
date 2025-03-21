@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,15 @@ export default function Login() {
       setLoginError(null);
       setEmailNotConfirmed(false);
       console.log('Attempting login with:', email);
-      await signIn(email, password);
+      const { success, error } = await signIn(email, password);
+      
+      if (!success && error) {
+        if (error.includes('Email not confirmed')) {
+          setEmailNotConfirmed(true);
+        } else {
+          setLoginError(error);
+        }
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       

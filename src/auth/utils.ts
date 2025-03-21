@@ -3,13 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 
 // Function to fetch user profile
-export const fetchUserProfile = async (userId: string) => {
+export const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
   try {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error('Error fetching profile:', error);

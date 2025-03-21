@@ -14,37 +14,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("Auth provider mounted");
     let mounted = true;
+    let authListener: { subscription: { unsubscribe: () => void } } | null = null;
     
     // Set up auth state listener FIRST to catch all auth events
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event);
-        
-        if (session?.user) {
-          if (mounted) setUser(session.user);
+    const setupAuthListener = async () => {
+      const { data } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log('Auth state changed:', event);
           
-          try {
-            // Fetch the complete profile data
-            const profileData = await fetchUserProfile(session.user.id);
+          if (session?.user) {
+            if (mounted) setUser(session.user);
+            
+            try {
+              // Fetch the complete profile data
+              const profileData = await fetchUserProfile(session.user.id);
+              if (mounted) {
+                setProfile(profileData);
+                setIsAdmin(profileData?.role === 'admin');
+                setIsLoading(false);
+              }
+            } catch (error) {
+              console.error('Error checking admin status:', error);
+              if (mounted) setIsLoading(false);
+            }
+          } else {
             if (mounted) {
-              setProfile(profileData);
-              setIsAdmin(profileData?.role === 'admin');
+              setUser(null);
+              setProfile(null);
+              setIsAdmin(false);
               setIsLoading(false);
             }
-          } catch (error) {
-            console.error('Error checking admin status:', error);
-            if (mounted) setIsLoading(false);
-          }
-        } else {
-          if (mounted) {
-            setUser(null);
-            setProfile(null);
-            setIsAdmin(false);
-            setIsLoading(false);
           }
         }
+      );
+      
+      if (mounted) {
+        authListener = data;
       }
-    );
+    };
 
     // THEN check for existing session
     const checkSession = async () => {
@@ -73,7 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           } catch (error) {
             console.error('Error checking admin status:', error);
             if (mounted) setIsLoading(false);
-          } 
+          }
         } else {
           // No active session
           if (mounted) {
@@ -92,7 +99,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    checkSession();
+    // Start auth setup
+    Promise.all([setupAuthListener(), checkSession()])
+      .catch(error => {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      });
 
     // Cleanup
     return () => {
