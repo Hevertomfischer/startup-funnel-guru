@@ -47,6 +47,88 @@ export type Database = {
           },
         ]
       }
+      board_meeting_attendees: {
+        Row: {
+          board_meeting_id: string
+          created_at: string
+          id: string
+          member_email: string | null
+          member_name: string
+          member_role: string | null
+        }
+        Insert: {
+          board_meeting_id: string
+          created_at?: string
+          id?: string
+          member_email?: string | null
+          member_name: string
+          member_role?: string | null
+        }
+        Update: {
+          board_meeting_id?: string
+          created_at?: string
+          id?: string
+          member_email?: string | null
+          member_name?: string
+          member_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_meeting_attendees_board_meeting_id_fkey"
+            columns: ["board_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_meetings: {
+        Row: {
+          created_at: string
+          decisions: string | null
+          description: string | null
+          id: string
+          location: string | null
+          meeting_date: string
+          minutes: string | null
+          startup_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decisions?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          meeting_date: string
+          minutes?: string | null
+          startup_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decisions?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          meeting_date?: string
+          minutes?: string | null
+          startup_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_meetings_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           content: string
@@ -97,6 +179,50 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      portfolio_highlights: {
+        Row: {
+          created_at: string
+          date: string
+          description: string
+          id: string
+          impact: string | null
+          link: string | null
+          startup_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          description: string
+          id?: string
+          impact?: string | null
+          link?: string | null
+          startup_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          impact?: string | null
+          link?: string | null
+          startup_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_highlights_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -197,6 +323,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "startup_history_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      startup_kpis: {
+        Row: {
+          burn_rate: number | null
+          cash_balance: number | null
+          client_count: number | null
+          created_at: string
+          custom_metric_name: string | null
+          custom_metric_value: string | null
+          ebitda: number | null
+          id: string
+          notes: string | null
+          period: string
+          revenue: number | null
+          startup_id: string
+          team_size: number | null
+          updated_at: string
+        }
+        Insert: {
+          burn_rate?: number | null
+          cash_balance?: number | null
+          client_count?: number | null
+          created_at?: string
+          custom_metric_name?: string | null
+          custom_metric_value?: string | null
+          ebitda?: number | null
+          id?: string
+          notes?: string | null
+          period: string
+          revenue?: number | null
+          startup_id: string
+          team_size?: number | null
+          updated_at?: string
+        }
+        Update: {
+          burn_rate?: number | null
+          cash_balance?: number | null
+          client_count?: number | null
+          created_at?: string
+          custom_metric_name?: string | null
+          custom_metric_value?: string | null
+          ebitda?: number | null
+          id?: string
+          notes?: string | null
+          period?: string
+          revenue?: number | null
+          startup_id?: string
+          team_size?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_kpis_startup_id_fkey"
             columns: ["startup_id"]
             isOneToOne: false
             referencedRelation: "startups"
@@ -462,6 +647,56 @@ export type Database = {
           position?: number | null
         }
         Relationships: []
+      }
+      strategic_needs: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          priority: string
+          startup_id: string
+          status: string
+          title: string
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          priority?: string
+          startup_id: string
+          status?: string
+          title: string
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          priority?: string
+          startup_id?: string
+          status?: string
+          title?: string
+          type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_needs_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_members: {
         Row: {

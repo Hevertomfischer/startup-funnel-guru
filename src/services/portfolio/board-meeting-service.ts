@@ -29,43 +29,18 @@ export const getStartupBoardMeetings = async (startupId: string) => {
  */
 export const createBoardMeeting = async (meetingData: any) => {
   try {
-    // Extract attendees from meeting data to insert separately
-    const { attendees, ...meetingRecord } = meetingData;
-    
-    // Insert the meeting record
     const { data, error } = await supabase
       .from('board_meetings')
-      .insert(meetingRecord)
+      .insert(meetingData)
       .select()
       .single();
     
     if (error) throw error;
     
-    // If meeting created successfully and we have attendees
-    if (data && attendees && attendees.length > 0) {
-      // Prepare attendees records
-      const attendeesRecords = attendees.map((attendee: any) => ({
-        board_meeting_id: data.id,
-        member_name: attendee.name,
-        member_email: attendee.email,
-        member_role: attendee.role,
-      }));
-      
-      // Insert attendees
-      const { error: attendeesError } = await supabase
-        .from('board_meeting_attendees')
-        .insert(attendeesRecords);
-      
-      if (attendeesError) {
-        console.error('Error adding attendees:', attendeesError);
-        toast.error('Reunião criada, mas houve um erro ao adicionar participantes');
-      }
-    }
-    
-    toast.success('Reunião do conselho adicionada com sucesso');
+    toast.success('Reunião agendada com sucesso');
     return data;
   } catch (error: any) {
-    handleError(error, 'Erro ao criar reunião do conselho');
+    handleError(error, 'Erro ao criar reunião');
     return null;
   }
 };
@@ -75,55 +50,19 @@ export const createBoardMeeting = async (meetingData: any) => {
  */
 export const updateBoardMeeting = async (id: string, meetingData: any) => {
   try {
-    // Extract attendees from meeting data to update separately
-    const { attendees, ...meetingRecord } = meetingData;
-    
-    // Update the meeting record
     const { data, error } = await supabase
       .from('board_meetings')
-      .update(meetingRecord)
+      .update(meetingData)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
     
-    // If we have attendees, update them
-    if (attendees) {
-      // First delete all existing attendees
-      const { error: deleteError } = await supabase
-        .from('board_meeting_attendees')
-        .delete()
-        .eq('board_meeting_id', id);
-      
-      if (deleteError) {
-        console.error('Error removing existing attendees:', deleteError);
-      }
-      
-      // Then insert new attendees if we have any
-      if (attendees.length > 0) {
-        const attendeesRecords = attendees.map((attendee: any) => ({
-          board_meeting_id: id,
-          member_name: attendee.name,
-          member_email: attendee.email,
-          member_role: attendee.role,
-        }));
-        
-        const { error: insertError } = await supabase
-          .from('board_meeting_attendees')
-          .insert(attendeesRecords);
-        
-        if (insertError) {
-          console.error('Error adding new attendees:', insertError);
-          toast.error('Reunião atualizada, mas houve um erro ao atualizar participantes');
-        }
-      }
-    }
-    
-    toast.success('Reunião do conselho atualizada com sucesso');
+    toast.success('Reunião atualizada com sucesso');
     return data;
   } catch (error: any) {
-    handleError(error, 'Erro ao atualizar reunião do conselho');
+    handleError(error, 'Erro ao atualizar reunião');
     return null;
   }
 };
@@ -133,17 +72,6 @@ export const updateBoardMeeting = async (id: string, meetingData: any) => {
  */
 export const deleteBoardMeeting = async (id: string) => {
   try {
-    // First delete all attendees
-    const { error: attendeesError } = await supabase
-      .from('board_meeting_attendees')
-      .delete()
-      .eq('board_meeting_id', id);
-    
-    if (attendeesError) {
-      console.error('Error deleting attendees:', attendeesError);
-    }
-    
-    // Then delete the meeting
     const { error } = await supabase
       .from('board_meetings')
       .delete()
@@ -151,10 +79,49 @@ export const deleteBoardMeeting = async (id: string) => {
     
     if (error) throw error;
     
-    toast.success('Reunião do conselho removida com sucesso');
+    toast.success('Reunião removida com sucesso');
     return true;
   } catch (error: any) {
-    handleError(error, 'Erro ao excluir reunião do conselho');
+    handleError(error, 'Erro ao excluir reunião');
+    return false;
+  }
+};
+
+/**
+ * Add attendee to a board meeting
+ */
+export const addBoardMeetingAttendee = async (attendeeData: any) => {
+  try {
+    const { data, error } = await supabase
+      .from('board_meeting_attendees')
+      .insert(attendeeData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error: any) {
+    handleError(error, 'Erro ao adicionar participante');
+    return null;
+  }
+};
+
+/**
+ * Remove attendee from a board meeting
+ */
+export const removeBoardMeetingAttendee = async (attendeeId: string) => {
+  try {
+    const { error } = await supabase
+      .from('board_meeting_attendees')
+      .delete()
+      .eq('id', attendeeId);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error: any) {
+    handleError(error, 'Erro ao remover participante');
     return false;
   }
 };
