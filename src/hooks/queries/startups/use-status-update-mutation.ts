@@ -110,10 +110,26 @@ export const useUpdateStartupStatusMutation = () => {
     onSuccess: (data, variables) => {
       console.log("Status update succeeded:", data);
       
-      // Check if this is a move to Investida status
-      const isInvestedStatus = data && statuses => {
-        const status = statuses.find(s => s.id === variables.newStatusId);
-        return status && status.name.toLowerCase().includes('investida');
+      // Check if the status name contains "investida" or "invested" to identify portfolio changes
+      const checkIfInvestedStatus = async () => {
+        try {
+          // Get the status name from supabase directly
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: statusData } = await supabase
+            .from('statuses')
+            .select('name')
+            .eq('id', variables.newStatusId)
+            .single();
+          
+          if (statusData && statusData.name) {
+            const statusName = statusData.name.toLowerCase();
+            return statusName.includes('investida') || statusName.includes('invested');
+          }
+          return false;
+        } catch (error) {
+          console.error('Error checking if status is invested:', error);
+          return false;
+        }
       };
       
       // Invalidate all potentially affected queries
@@ -132,18 +148,15 @@ export const useUpdateStartupStatusMutation = () => {
         });
       }
       
-      // Additional invalidation for portfolio when moving to Investida
-      if (data && data.status_id) {
-        // This happens after the status has been updated, so we can rely on the status name
-        const status = statuses?.find?.(s => s.id === data.status_id);
-        
-        if (status && status.name.toLowerCase().includes('investida')) {
+      // Check if this is a move to an "Investida" status and invalidate portfolio queries
+      checkIfInvestedStatus().then(isInvestedStatus => {
+        if (isInvestedStatus) {
           console.log('Portfolio change detected, invalidating portfolio queries');
           queryClient.invalidateQueries({ 
             queryKey: ['startups', 'portfolio']
           });
         }
-      }
+      });
       
       toast.success('Card movido com sucesso');
     },
