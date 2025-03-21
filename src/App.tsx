@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider, RequireAuth } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/hooks/use-auth';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -23,6 +23,7 @@ import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import Layout from '@/components/Layout';
 import Diagnostico from './pages/Diagnostico';
+import { RequireAuth } from '@/contexts/AuthContext';
 
 const queryClient = new QueryClient();
 

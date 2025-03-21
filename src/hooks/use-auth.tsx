@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
+import { Navigate, useLocation } from 'react-router-dom';
 
 // Create a strongly typed context
 type AuthContextType = {
@@ -220,4 +220,20 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+// Protect routes component
+export const RequireAuth = ({ children }: { children: JSX.Element }) => {
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
 };
