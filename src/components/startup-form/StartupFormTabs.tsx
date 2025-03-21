@@ -10,6 +10,8 @@ import { AnalysisSection } from './AnalysisSection';
 import { MetricsSection } from './MetricsSection';
 import { FinancialSection } from './FinancialSection';
 import { StatusDescriptionSection } from './StatusDescriptionSection';
+import { PitchDeckSection } from './PitchDeckSection';
+import { AttachmentSection } from './AttachmentSection';
 import { UseFormReturn } from 'react-hook-form';
 import { StartupFormValues } from './schema';
 import { Status } from '@/types';
@@ -63,6 +65,13 @@ export const StartupFormTabs: React.FC<StartupFormTabsProps> = ({
       
       <TabsContent value="analysis" className="m-0">
         <AnalysisSection form={form} />
+      </TabsContent>
+      
+      <TabsContent value="attachments" className="m-0">
+        <div className="space-y-8">
+          <PitchDeckSection />
+          <AttachmentSection />
+        </div>
       </TabsContent>
     </Tabs>
   );

@@ -11,13 +11,16 @@ import { prepareStartupData } from './utils/prepare-data';
  */
 export const updateStartup = async (
   id: string,
-  startup: Partial<Startup> & { attachments?: any[] }
+  startup: Partial<Startup> & { 
+    attachments?: any[],
+    pitchDeck?: any
+  }
 ): Promise<Startup | null> => {
   try {
     console.log('updateStartup called with id:', id, 'and data:', startup);
     
-    // Extract attachments from the input data (they aren't database fields)
-    const { attachments, ...startupData } = startup;
+    // Extract attachments and pitchDeck from the input data (they aren't database fields)
+    const { attachments, pitchDeck, ...startupData } = startup;
     
     // CRITICAL: Always remove changed_by field completely
     if ('changed_by' in startupData) {
@@ -26,6 +29,11 @@ export const updateStartup = async (
     
     // Prepare the data for update
     const preparedData = prepareStartupData(startupData);
+    
+    // If we have a pitch deck, add it to the prepared data
+    if (pitchDeck) {
+      preparedData.pitch_deck = pitchDeck;
+    }
     
     console.log('Prepared data for Supabase update:', preparedData);
     

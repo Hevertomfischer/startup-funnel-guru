@@ -80,6 +80,8 @@ export const startupFormSchema = z.object({
   statusId: z.string().min(1, "Status é obrigatório"),
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
+  pitchDeck: z.any().optional().nullable(),
+  attachments: z.array(z.any()).optional(),
   values: z.object({
     ...basicInfoSchema.shape,
     ...teamInfoSchema.shape,

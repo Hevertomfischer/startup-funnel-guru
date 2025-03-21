@@ -8,13 +8,21 @@ import { prepareStartupData } from './utils/prepare-data';
 /**
  * Creates a new startup in the database
  */
-export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' | 'updated_at'> & { attachments?: any[] }): Promise<Startup | null> => {
+export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' | 'updated_at'> & { 
+  attachments?: any[],
+  pitchDeck?: any
+}): Promise<Startup | null> => {
   try {
     console.log('Creating startup in Supabase with data:', startup);
-    const { attachments, ...startupData } = startup;
+    const { attachments, pitchDeck, ...startupData } = startup;
     
     // Prepare data for Supabase
     const preparedData = prepareStartupData(startupData);
+    
+    // If we have a pitch deck, add it to the prepared data
+    if (pitchDeck) {
+      preparedData.pitch_deck = pitchDeck;
+    }
     
     console.log('Prepared data for Supabase insert:', preparedData);
     

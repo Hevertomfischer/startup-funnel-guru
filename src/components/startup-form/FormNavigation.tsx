@@ -1,18 +1,12 @@
 
 import React from 'react';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { 
-  ClipboardList, 
-  User, 
-  Building2, 
-  TrendingUp, 
-  BarChartBig, 
-  FileText, 
-  FileSpreadsheet, 
-  PercentSquare,
-  Info
-} from 'lucide-react';
+import { Check, CheckCircle2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface FormNavigationProps {
   activeTab: string;
@@ -23,43 +17,90 @@ interface FormNavigationProps {
 export const FormNavigation: React.FC<FormNavigationProps> = ({
   activeTab,
   setActiveTab,
-  progress
+  progress,
 }) => {
-  const tabs = [
-    { id: 'status', label: 'Status', icon: <ClipboardList className="h-4 w-4" /> },
-    { id: 'basic', label: 'Básico', icon: <FileText className="h-4 w-4" /> },
-    { id: 'team', label: 'Time', icon: <User className="h-4 w-4" /> },
-    { id: 'company', label: 'Empresa', icon: <Building2 className="h-4 w-4" /> },
-    { id: 'market', label: 'Mercado', icon: <TrendingUp className="h-4 w-4" /> },
-    { id: 'business', label: 'Negócio', icon: <BarChartBig className="h-4 w-4" /> },
-    { id: 'financial', label: 'Financeiro', icon: <FileSpreadsheet className="h-4 w-4" /> },
-    { id: 'metrics', label: 'Métricas', icon: <PercentSquare className="h-4 w-4" /> },
-    { id: 'analysis', label: 'Análise', icon: <Info className="h-4 w-4" /> },
-  ];
-  
   return (
-    <div className="space-y-4 sticky top-0 bg-background z-10 py-2">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Formulário de Startup</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{progress}% completo</span>
-        </div>
+        <h3 className="text-sm font-medium">
+          Progresso do formulário
+        </h3>
+        <span className="text-sm text-muted-foreground">
+          {progress}%
+        </span>
       </div>
-      
       <Progress value={progress} className="h-2" />
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex w-full h-auto flex-wrap mb-2 bg-muted/50">
-          {tabs.map((tab) => (
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+        <TabsList className="w-full flex flex-wrap h-auto bg-transparent space-x-1 space-y-1">
+          <div className="w-full flex flex-wrap gap-1">
             <TabsTrigger 
-              key={tab.id} 
-              value={tab.id}
-              className="flex items-center gap-1 py-1.5 px-2 text-xs"
+              value="status" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
+              Status
             </TabsTrigger>
-          ))}
+            <TabsTrigger 
+              value="basic" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Básico
+            </TabsTrigger>
+            <TabsTrigger 
+              value="team" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Time
+            </TabsTrigger>
+          </div>
+          
+          <div className="w-full flex flex-wrap gap-1">
+            <TabsTrigger 
+              value="company" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Empresa
+            </TabsTrigger>
+            <TabsTrigger 
+              value="market" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Mercado
+            </TabsTrigger>
+            <TabsTrigger 
+              value="business" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Negócio
+            </TabsTrigger>
+          </div>
+          
+          <div className="w-full flex flex-wrap gap-1">
+            <TabsTrigger 
+              value="financial" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Financeiro
+            </TabsTrigger>
+            <TabsTrigger 
+              value="metrics" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Métricas
+            </TabsTrigger>
+            <TabsTrigger 
+              value="analysis" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Análise
+            </TabsTrigger>
+            <TabsTrigger 
+              value="attachments" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Anexos
+            </TabsTrigger>
+          </div>
         </TabsList>
       </Tabs>
     </div>

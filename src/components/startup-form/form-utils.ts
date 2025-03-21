@@ -1,3 +1,4 @@
+
 import { StartupFormValues } from './schema';
 import { Status } from '@/types';
 
@@ -16,6 +17,8 @@ export const mapStartupToFormValues = (startup: any, statuses: Status[]): Startu
     statusId: startup.status_id || statuses[0]?.id || '',
     dueDate: startup.due_date || '',
     assignedTo: startup.assigned_to || '',
+    pitchDeck: startup.pitch_deck || null,
+    attachments: startup.attachments || [],
     values: {
       Startup: startup.name || '',
       'Site da Startup': startup.website || '',
