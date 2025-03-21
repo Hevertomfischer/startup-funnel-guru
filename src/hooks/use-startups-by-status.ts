@@ -4,9 +4,24 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
+import { formatErrorMessage } from './queries/startups/query-helpers/error-handling';
 
-// Definir um tipo para possíveis erros
+// Define a type for possible errors
 type QueryError = Error | PostgrestError | string | unknown;
+
+// Define a type for the query result
+interface QueryResult {
+  data?: any[] | null;
+  error?: QueryError;
+  isLoading: boolean;
+  isError: boolean;
+  isSuccess: boolean;
+  isFetching: boolean;
+  isFetched: boolean;
+  status: string;
+  fetchStatus: string;
+  isRefetching: boolean;
+}
 
 export const useStartupsByStatus = (statusId: string) => {
   const { toast } = useToast();
@@ -48,7 +63,7 @@ export const useStartupsByStatus = (statusId: string) => {
   }, [statusId, hasVerifiedTable, toast]);
   
   // Use o hook de query no nível superior com um statusId válido
-  const query = useStartupsByStatusQuery(statusId);
+  const query = useStartupsByStatusQuery(statusId) as QueryResult;
   
   // Monitorar primeiro carregamento para feedback
   useEffect(() => {
@@ -70,10 +85,10 @@ export const useStartupsByStatus = (statusId: string) => {
   // Adicionar logging mais detalhado para solucionar problemas de conectividade com o Supabase
   useEffect(() => {
     // Extrair erro de forma segura para logging
-    const errorForLogging = query.error
+    const errorForLogging = query.error !== undefined
       ? (typeof query.error === 'object' 
-        ? (query.error instanceof Error || 'message' in query.error)
-          ? String((query.error as Error | { message: unknown }).message)
+        ? (query.error instanceof Error || (query.error !== null && 'message' in query.error))
+          ? String(((query.error as any).message))
           : JSON.stringify(query.error)
         : String(query.error))
       : null;
@@ -107,23 +122,9 @@ export const useStartupsByStatus = (statusId: string) => {
   
   // Se houver um erro e não for um ID de placeholder, mostrar toast
   useEffect(() => {
-    if (query.error && !statusId.startsWith('placeholder-')) {
-      // Obter a mensagem de erro de forma segura
-      let errorMessage: string;
-      
-      if (query.error instanceof Error) {
-        errorMessage = query.error.message;
-      } else if (typeof query.error === 'object' && query.error !== null) {
-        if ('message' in query.error && query.error.message) {
-          errorMessage = String(query.error.message);
-        } else {
-          errorMessage = JSON.stringify(query.error);
-        }
-      } else if (typeof query.error === 'string') {
-        errorMessage = query.error;
-      } else {
-        errorMessage = 'Erro desconhecido';
-      }
+    if (query.error !== undefined && !statusId.startsWith('placeholder-')) {
+      // Obter a mensagem de erro de forma segura utilizando a função helper
+      const errorMessage = formatErrorMessage(query.error);
           
       console.error(`Erro ao buscar startups para status ${statusId}:`, errorMessage);
       
