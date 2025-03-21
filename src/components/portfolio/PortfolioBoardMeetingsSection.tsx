@@ -19,6 +19,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { AttachmentUploader } from '@/components/shared/AttachmentUploader';
 
+const FileItemSchema = z.object({
+  name: z.string(),
+  size: z.number(),
+  type: z.string(),
+  url: z.string()
+});
+
 const boardMeetingFormSchema = z.object({
   startup_id: z.string(),
   title: z.string().min(1, 'O título é obrigatório'),
@@ -34,14 +41,7 @@ const boardMeetingFormSchema = z.object({
       member_role: z.string().optional()
     })
   ).optional(),
-  attachments: z.array(
-    z.object({
-      name: z.string(),
-      size: z.number(),
-      type: z.string(),
-      url: z.string()
-    })
-  ).optional(),
+  attachments: z.array(FileItemSchema).optional(),
 });
 
 type BoardMeetingFormValues = z.infer<typeof boardMeetingFormSchema>;
@@ -94,7 +94,6 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
     setSelectedMeeting(meeting);
     setIsEditing(true);
     
-    // Prepare attendees for form
     const attendeesData = meeting.attendees && meeting.attendees.length > 0
       ? meeting.attendees.map((a: any) => ({
           member_name: a.member_name || '',
@@ -102,6 +101,15 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
           member_role: a.member_role || ''
         }))
       : [{ member_name: '', member_email: '', member_role: '' }];
+    
+    const attachmentsData = meeting.attachments && meeting.attachments.length > 0
+      ? meeting.attachments.map((a: any) => ({
+          name: a.name || '',
+          size: a.size || 0,
+          type: a.type || '',
+          url: a.url || ''
+        }))
+      : [];
     
     form.reset({
       startup_id: startupId,
@@ -112,14 +120,13 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
       minutes: meeting.minutes || '',
       decisions: meeting.decisions || '',
       attendees: attendeesData,
-      attachments: meeting.attachments || []
+      attachments: attachmentsData
     });
     setOpenDialog(true);
   };
   
   const onSubmit = async (values: BoardMeetingFormValues) => {
     try {
-      // Filter out empty attendees
       const filteredAttendees = values.attendees?.filter(a => a.member_name.trim() !== '') || [];
       
       const meetingData = {
@@ -161,16 +168,14 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
     }
   };
   
-  // Function to add a new attendee field
   const addAttendee = () => {
     const currentAttendees = form.getValues('attendees') || [];
     form.setValue('attendees', [...currentAttendees, { member_name: '', member_email: '', member_role: '' }]);
   };
   
-  // Function to remove an attendee field
   const removeAttendee = (index: number) => {
     const currentAttendees = form.getValues('attendees') || [];
-    if (currentAttendees.length <= 1) return; // Keep at least one attendee field
+    if (currentAttendees.length <= 1) return;
     
     form.setValue('attendees', currentAttendees.filter((_, i) => i !== index));
   };
@@ -265,7 +270,6 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
         </ScrollArea>
       )}
       
-      {/* Board Meeting Form Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
@@ -459,9 +463,10 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
                 render={({ field }) => (
                   <AttachmentUploader
                     attachments={field.value || []}
-                    onChange={(attachments) => form.setValue('attachments', attachments)}
+                    onChange={(attachments) => field.onChange(attachments)}
                     label="Documentos da Reunião"
                     folderPath={`board-meetings/${startupId}`}
+                    relatedType="board_meeting"
                   />
                 )}
               />

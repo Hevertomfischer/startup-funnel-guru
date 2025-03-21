@@ -14,12 +14,15 @@ interface FileItem {
   url: string;
 }
 
-interface AttachmentUploaderProps {
+export interface AttachmentUploaderProps {
   attachments: FileItem[];
   onChange: (attachments: FileItem[]) => void;
   label?: string;
   bucketName?: string;
   folderPath?: string;
+  startupId?: string;
+  relatedType?: string;
+  existingAttachments?: FileItem[];
 }
 
 export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
@@ -27,9 +30,13 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
   onChange,
   label = "Anexos",
   bucketName = "startup-attachments",
-  folderPath = ""
+  folderPath = "",
+  startupId,
+  relatedType,
+  existingAttachments = []
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const actualAttachments = existingAttachments.length > 0 ? existingAttachments : attachments;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -65,7 +72,7 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
       });
       
       const fileItems = await Promise.all(fileItemsPromises);
-      onChange([...attachments, ...fileItems]);
+      onChange([...actualAttachments, ...fileItems]);
       toast.success('Arquivos enviados com sucesso');
     } catch (error: any) {
       toast.error('Erro ao enviar arquivos', {
@@ -82,7 +89,7 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
   };
 
   const removeAttachment = (index: number) => {
-    const updatedAttachments = [...attachments];
+    const updatedAttachments = [...actualAttachments];
     updatedAttachments.splice(index, 1);
     onChange(updatedAttachments);
   };
@@ -117,11 +124,11 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
         </div>
       </FormItem>
 
-      {attachments.length > 0 && (
+      {actualAttachments.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Arquivos anexados</h4>
           <ul className="space-y-2">
-            {attachments.map((file: FileItem, index: number) => (
+            {actualAttachments.map((file: FileItem, index: number) => (
               <li key={index} className="flex items-center justify-between rounded-md border p-2 text-sm">
                 <div className="truncate">
                   <span className="font-medium">{file.name}</span>

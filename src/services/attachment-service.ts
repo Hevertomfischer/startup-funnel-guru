@@ -1,6 +1,6 @@
 
 import { supabase, handleError } from './base-service';
-import type { Attachment } from '@/integrations/supabase/client';
+import type { Attachment } from '@/types/index';
 
 export const getStartupAttachments = async (startupId: string): Promise<Attachment[]> => {
   try {
@@ -18,7 +18,15 @@ export const getStartupAttachments = async (startupId: string): Promise<Attachme
   }
 };
 
-export const addAttachment = async (attachment: Omit<Attachment, 'id' | 'uploaded_at'>): Promise<Attachment | null> => {
+export const addAttachment = async (attachment: {
+  startup_id?: string;
+  type: string;
+  name: string;
+  url: string;
+  size?: number;
+  related_id?: string;
+  related_type?: string;
+}): Promise<Attachment | null> => {
   try {
     const { data, error } = await supabase
       .from('attachments')
