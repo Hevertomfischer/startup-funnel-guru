@@ -71,7 +71,7 @@ export const useStartupsByStatus = (statusId: string) => {
       hasData: Boolean(query.data),
       isLoading: query.isLoading,
       isError: query.isError,
-      error: query.error ? `${query.error}` : null,
+      error: query.error ? (typeof query.error === 'object' ? JSON.stringify(query.error) : String(query.error)) : null,
       isFetching: query.isFetching,
       isFetched: query.isFetched,
       isPlaceholder: statusId.startsWith('placeholder-'),
