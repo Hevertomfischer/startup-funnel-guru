@@ -1,29 +1,23 @@
 
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { InfoIcon } from 'lucide-react';
 import { useAuth } from '@/auth';
-import { supabase } from '@/integrations/supabase/client';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { useLoginForm } from '@/hooks/use-login-form';
+import { LoginForm } from '@/components/login/LoginForm';
+import { LoginAlerts } from '@/components/login/LoginAlerts';
+import { LoginLoadingState } from '@/components/login/LoginLoadingState';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isResending, setIsResending] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
-  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const { signIn, isLoading, user, devSignIn, initializationComplete } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Obter a localização anterior, se houver
-  const from = location.state?.from?.pathname || '/dashboard';
+  const { 
+    email, setEmail, 
+    password, setPassword,
+    isResending, resendSuccess, emailNotConfirmed, loginError,
+    from, handleSubmit, handleResendConfirmation, handleDevLogin
+  } = useLoginForm();
+  
+  const { isLoading, user, initializationComplete } = useAuth();
 
   useEffect(() => {
     console.log('Login: Estado atual -', { 
@@ -39,78 +33,13 @@ export default function Login() {
       toast.success('Redirecionando para o dashboard', {
         description: 'Você já está autenticado'
       });
-      navigate(from, { replace: true });
+      window.location.href = from;
     }
-  }, [user, isLoading, navigate, from, initializationComplete]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setLoginError(null);
-      setEmailNotConfirmed(false);
-      console.log('Tentando login com:', email);
-      
-      const { success, error } = await signIn(email, password);
-      
-      if (!success && error) {
-        console.error('Login falhou:', error);
-        if (error.includes('Email not confirmed')) {
-          setEmailNotConfirmed(true);
-        } else {
-          setLoginError(error);
-        }
-      } else {
-        console.log('Login bem-sucedido, redirecionando para', from);
-        toast.success('Login bem-sucedido', {
-          description: 'Redirecionando para o dashboard'
-        });
-        navigate(from, { replace: true });
-      }
-    } catch (error: any) {
-      console.error('Erro de login:', error);
-      
-      if (error?.message?.includes('Email not confirmed')) {
-        setEmailNotConfirmed(true);
-      } else {
-        setLoginError(error?.message || 'Falha na autenticação');
-      }
-    }
-  };
-
-  const handleResendConfirmation = async () => {
-    try {
-      setIsResending(true);
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      setResendSuccess(true);
-      toast.success('Email de confirmação reenviado');
-    } catch (error) {
-      console.error('Erro ao reenviar email de confirmação:', error);
-      toast.error('Erro ao reenviar email');
-    } finally {
-      setIsResending(false);
-    }
-  };
+  }, [user, isLoading, from, initializationComplete]);
 
   // Se estiver carregando e já existir um usuário, mostrar carregamento
   if (isLoading && user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="text-center">
-          <Skeleton className="h-12 w-12 rounded-full mx-auto mb-4" />
-          <Skeleton className="h-4 w-48 mx-auto mb-2" />
-          <Skeleton className="h-3 w-32 mx-auto" />
-          <p className="text-muted-foreground mt-4">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
+    return <LoginLoadingState />;
   }
 
   // Formulário de login
@@ -124,74 +53,22 @@ export default function Login() {
           </p>
         </div>
 
-        {emailNotConfirmed && (
-          <Alert variant="destructive">
-            <InfoIcon className="h-4 w-4" />
-            <AlertTitle>Email não confirmado</AlertTitle>
-            <AlertDescription>
-              Por favor, verifique seu email e confirme sua conta antes de fazer login.
-              <Button 
-                variant="outline" 
-                className="mt-2 w-full"
-                onClick={handleResendConfirmation}
-                disabled={isResending || resendSuccess}
-              >
-                {isResending ? 'Enviando...' : resendSuccess ? 'Email reenviado' : 'Reenviar email de confirmação'}
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
+        <LoginAlerts
+          loginError={loginError}
+          emailNotConfirmed={emailNotConfirmed}
+          resendSuccess={resendSuccess}
+          isResending={isResending}
+          onResend={handleResendConfirmation}
+        />
 
-        {loginError && (
-          <Alert variant="destructive">
-            <InfoIcon className="h-4 w-4" />
-            <AlertTitle>Erro de login</AlertTitle>
-            <AlertDescription>{loginError}</AlertDescription>
-          </Alert>
-        )}
-
-        {resendSuccess && (
-          <Alert>
-            <InfoIcon className="h-4 w-4" />
-            <AlertTitle>Email reenviado</AlertTitle>
-            <AlertDescription>
-              Um novo email de confirmação foi enviado. Por favor, verifique sua caixa de entrada.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="password">Senha</Label>
-              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                Esqueceu a senha?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="********"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Entrando...' : 'Entrar'}
-          </Button>
-        </form>
+        <LoginForm
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          isLoading={isLoading}
+          onSubmit={handleSubmit}
+        />
         
         <div className="text-center text-sm">
           <span className="text-muted-foreground">Ainda não tem uma conta? </span>
@@ -206,10 +83,7 @@ export default function Login() {
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={() => {
-                devSignIn();
-                navigate(from);
-              }}
+              onClick={handleDevLogin}
             >
               Dev Login (Admin)
             </Button>

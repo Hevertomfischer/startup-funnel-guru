@@ -66,10 +66,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const handleSignOut = async () => {
       try {
         setIsLoading(true);
-        await signOut();
+        const result = await signOut();
         setProfile(null);
         setUser(null);
         setIsAdmin(false);
+        return result; // This now returns the { success: boolean, error?: string } object
       } finally {
         setIsLoading(false);
       }
