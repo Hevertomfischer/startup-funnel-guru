@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,6 +17,7 @@ import { createBoardMeeting, updateBoardMeeting, deleteBoardMeeting } from '@/se
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { AttachmentUploader } from '@/components/shared/AttachmentUploader';
 
 const boardMeetingFormSchema = z.object({
   startup_id: z.string(),
@@ -33,7 +33,15 @@ const boardMeetingFormSchema = z.object({
       member_email: z.string().email('Email inválido').optional().or(z.literal('')),
       member_role: z.string().optional()
     })
-  ).optional()
+  ).optional(),
+  attachments: z.array(
+    z.object({
+      name: z.string(),
+      size: z.number(),
+      type: z.string(),
+      url: z.string()
+    })
+  ).optional(),
 });
 
 type BoardMeetingFormValues = z.infer<typeof boardMeetingFormSchema>;
@@ -60,7 +68,8 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
       description: '',
       minutes: '',
       decisions: '',
-      attendees: [{ member_name: '', member_email: '', member_role: '' }]
+      attendees: [{ member_name: '', member_email: '', member_role: '' }],
+      attachments: [],
     },
   });
   
@@ -73,7 +82,8 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
       description: '',
       minutes: '',
       decisions: '',
-      attendees: [{ member_name: '', member_email: '', member_role: '' }]
+      attendees: [{ member_name: '', member_email: '', member_role: '' }],
+      attachments: [],
     });
     setIsEditing(false);
     setSelectedMeeting(null);
@@ -101,7 +111,8 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
       description: meeting.description || '',
       minutes: meeting.minutes || '',
       decisions: meeting.decisions || '',
-      attendees: attendeesData
+      attendees: attendeesData,
+      attachments: meeting.attachments || []
     });
     setOpenDialog(true);
   };
@@ -439,6 +450,19 @@ const PortfolioBoardMeetingsSection: React.FC<PortfolioBoardMeetingsSectionProps
                     </FormControl>
                     <FormMessage />
                   </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="attachments"
+                render={({ field }) => (
+                  <AttachmentUploader
+                    attachments={field.value || []}
+                    onChange={(attachments) => form.setValue('attachments', attachments)}
+                    label="Documentos da Reunião"
+                    folderPath={`board-meetings/${startupId}`}
+                  />
                 )}
               />
               

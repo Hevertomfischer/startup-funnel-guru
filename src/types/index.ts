@@ -1,4 +1,3 @@
-
 export type DataType = 
   | 'shortText' 
   | 'longText' 
@@ -50,6 +49,9 @@ export interface Attachment {
   type: string;
   size?: number;
   uploadedAt: string;
+  startup_id?: string;
+  related_id?: string;
+  related_type?: 'kpi' | 'board_meeting' | 'startup';
 }
 
 export interface StartupFieldValues {

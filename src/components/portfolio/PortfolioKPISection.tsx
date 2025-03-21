@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -19,6 +18,7 @@ import { createKPI, updateKPI, deleteKPI } from '@/services/portfolio';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { AttachmentUploader } from '@/components/shared/AttachmentUploader';
 
 const kpiFormSchema = z.object({
   startup_id: z.string(),
@@ -32,6 +32,14 @@ const kpiFormSchema = z.object({
   custom_metric_name: z.string().optional(),
   custom_metric_value: z.string().optional(),
   notes: z.string().optional(),
+  attachments: z.array(
+    z.object({
+      name: z.string(),
+      size: z.number(),
+      type: z.string(),
+      url: z.string()
+    })
+  ).optional(),
 });
 
 type KpiFormValues = z.infer<typeof kpiFormSchema>;
@@ -63,6 +71,7 @@ const PortfolioKPISection: React.FC<PortfolioKPISectionProps> = ({ startupId, po
       custom_metric_name: '',
       custom_metric_value: '',
       notes: '',
+      attachments: [],
     },
   });
   
@@ -79,6 +88,7 @@ const PortfolioKPISection: React.FC<PortfolioKPISectionProps> = ({ startupId, po
       custom_metric_name: '',
       custom_metric_value: '',
       notes: '',
+      attachments: [],
     });
     setIsEditing(false);
     setSelectedKpi(null);
@@ -100,13 +110,13 @@ const PortfolioKPISection: React.FC<PortfolioKPISectionProps> = ({ startupId, po
       custom_metric_name: kpi.custom_metric_name || '',
       custom_metric_value: kpi.custom_metric_value?.toString() || '',
       notes: kpi.notes || '',
+      attachments: kpi.attachments || [],
     });
     setOpenDialog(true);
   };
   
   const onSubmit = async (values: KpiFormValues) => {
     try {
-      // Convert string values to numbers where appropriate
       const numericFields = ['revenue', 'ebitda', 'burn_rate', 'cash_balance', 'client_count', 'team_size', 'custom_metric_value'];
       const preparedData: any = { ...values };
       
@@ -233,7 +243,6 @@ const PortfolioKPISection: React.FC<PortfolioKPISectionProps> = ({ startupId, po
         </ScrollArea>
       )}
       
-      {/* KPI Form Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -413,20 +422,8 @@ const PortfolioKPISection: React.FC<PortfolioKPISectionProps> = ({ startupId, po
                 )}
               />
               
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpenDialog(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {isEditing ? 'Atualizar KPI' : 'Adicionar KPI'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
+              <FormField
+                control={form.control}
+                name="attachments"
+               
 
-export default PortfolioKPISection;

@@ -11,7 +11,8 @@ export const getStartupBoardMeetings = async (startupId: string) => {
       .from('board_meetings')
       .select(`
         *,
-        attendees:board_meeting_attendees(*)
+        attendees:board_meeting_attendees(*),
+        attachments:attachments(*)
       `)
       .eq('startup_id', startupId)
       .order('meeting_date', { ascending: false });
@@ -29,17 +30,20 @@ export const getStartupBoardMeetings = async (startupId: string) => {
  */
 export const createBoardMeeting = async (meetingData: any) => {
   try {
+    // Extract attachments and attendees
+    const { attachments, attendees, ...meetingFields } = meetingData;
+    
     // First create the board meeting
     const { data, error } = await supabase
       .from('board_meetings')
       .insert({
-        title: meetingData.title,
-        startup_id: meetingData.startup_id,
-        meeting_date: meetingData.meeting_date,
-        location: meetingData.location,
-        description: meetingData.description,
-        minutes: meetingData.minutes,
-        decisions: meetingData.decisions
+        title: meetingFields.title,
+        startup_id: meetingFields.startup_id,
+        meeting_date: meetingFields.meeting_date,
+        location: meetingFields.location,
+        description: meetingFields.description,
+        minutes: meetingFields.minutes,
+        decisions: meetingFields.decisions
       })
       .select()
       .single();
@@ -47,8 +51,8 @@ export const createBoardMeeting = async (meetingData: any) => {
     if (error) throw error;
     
     // Then, if there are attendees, add them
-    if (meetingData.attendees && Array.isArray(meetingData.attendees) && meetingData.attendees.length > 0) {
-      const attendeesData = meetingData.attendees.map((attendee: any) => ({
+    if (attendees && Array.isArray(attendees) && attendees.length > 0) {
+      const attendeesData = attendees.map((attendee: any) => ({
         board_meeting_id: data.id,
         member_name: attendee.member_name,
         member_email: attendee.member_email,
@@ -60,6 +64,25 @@ export const createBoardMeeting = async (meetingData: any) => {
         .insert(attendeesData);
       
       if (attendeesError) throw attendeesError;
+    }
+    
+    // Handle attachments if any
+    if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+      const attachmentPromises = attachments.map(attachment => {
+        return supabase
+          .from('attachments')
+          .insert({
+            startup_id: meetingFields.startup_id,
+            name: attachment.name,
+            url: attachment.url,
+            type: attachment.type,
+            size: attachment.size,
+            related_id: data.id,
+            related_type: 'board_meeting'
+          });
+      });
+      
+      await Promise.all(attachmentPromises);
     }
     
     toast.success('Reunião agendada com sucesso');
@@ -75,16 +98,19 @@ export const createBoardMeeting = async (meetingData: any) => {
  */
 export const updateBoardMeeting = async (id: string, meetingData: any) => {
   try {
+    // Extract attachments and attendees
+    const { attachments, attendees, ...meetingFields } = meetingData;
+    
     // First update the board meeting
     const { data, error } = await supabase
       .from('board_meetings')
       .update({
-        title: meetingData.title,
-        meeting_date: meetingData.meeting_date,
-        location: meetingData.location,
-        description: meetingData.description,
-        minutes: meetingData.minutes,
-        decisions: meetingData.decisions
+        title: meetingFields.title,
+        meeting_date: meetingFields.meeting_date,
+        location: meetingFields.location,
+        description: meetingFields.description,
+        minutes: meetingFields.minutes,
+        decisions: meetingFields.decisions
       })
       .eq('id', id)
       .select()
@@ -93,7 +119,7 @@ export const updateBoardMeeting = async (id: string, meetingData: any) => {
     if (error) throw error;
     
     // Handle attendees - first delete existing attendees
-    if (meetingData.attendees && Array.isArray(meetingData.attendees)) {
+    if (attendees && Array.isArray(attendees)) {
       const { error: deleteError } = await supabase
         .from('board_meeting_attendees')
         .delete()
@@ -102,8 +128,8 @@ export const updateBoardMeeting = async (id: string, meetingData: any) => {
       if (deleteError) throw deleteError;
       
       // Then add the new/updated attendees
-      if (meetingData.attendees.length > 0) {
-        const attendeesData = meetingData.attendees.map((attendee: any) => ({
+      if (attendees.length > 0) {
+        const attendeesData = attendees.map((attendee: any) => ({
           board_meeting_id: id,
           member_name: attendee.member_name,
           member_email: attendee.member_email,
@@ -115,6 +141,36 @@ export const updateBoardMeeting = async (id: string, meetingData: any) => {
           .insert(attendeesData);
         
         if (attendeesError) throw attendeesError;
+      }
+    }
+    
+    // Handle attachments if provided - delete existing and add new ones
+    if (attachments !== undefined) {
+      // Delete existing attachments
+      await supabase
+        .from('attachments')
+        .delete()
+        .eq('related_id', id)
+        .eq('related_type', 'board_meeting');
+      
+      // Add new attachments if any
+      if (Array.isArray(attachments) && attachments.length > 0) {
+        const startup_id = data.startup_id;
+        const attachmentPromises = attachments.map(attachment => {
+          return supabase
+            .from('attachments')
+            .insert({
+              startup_id,
+              name: attachment.name,
+              url: attachment.url,
+              type: attachment.type,
+              size: attachment.size,
+              related_id: id,
+              related_type: 'board_meeting'
+            });
+        });
+        
+        await Promise.all(attachmentPromises);
       }
     }
     
@@ -138,6 +194,13 @@ export const deleteBoardMeeting = async (id: string) => {
       .eq('board_meeting_id', id);
     
     if (attendeesError) throw attendeesError;
+    
+    // Delete related attachments
+    await supabase
+      .from('attachments')
+      .delete()
+      .eq('related_id', id)
+      .eq('related_type', 'board_meeting');
     
     // Then delete the board meeting
     const { error } = await supabase
