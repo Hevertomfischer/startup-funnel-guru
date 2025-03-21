@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Usar maybeSingle em vez de single para evitar erros quando nenhum perfil é encontrado
         
       if (error) {
         console.error('Erro ao buscar perfil:', error);
@@ -27,6 +28,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       console.log('Dados do perfil recuperados:', data);
+      
+      // Se não encontrou perfil, retornar um perfil padrão
+      if (!data) {
+        console.warn(`Nenhum perfil encontrado para o usuário ${userId}. Usando perfil padrão.`);
+        // Retorna um perfil padrão para evitar estado nulo
+        return {
+          id: userId,
+          email: user?.email || '',
+          full_name: null,
+          avatar_url: null,
+          role: 'investor',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as Profile;
+      }
+      
       return data as Profile;
     } catch (error) {
       console.error('Erro inesperado ao buscar perfil:', error);
@@ -84,6 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (profileError) {
           console.error('Erro ao buscar perfil:', profileError);
           if (mounted) {
+            // Mesmo com erro, finaliza carregamento e inicialização
             setIsLoading(false);
             setInitializationComplete(true);
           }
@@ -108,6 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setProfile(null);
             setIsAdmin(false);
             setIsLoading(false);
+            setInitializationComplete(true);
           }
           console.log('Nenhuma sessão encontrada, usuário definido como null');
           return;
@@ -123,11 +142,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setProfile(profileData);
             setIsAdmin(profileData?.role === 'admin');
             setIsLoading(false);
+            setInitializationComplete(true);
           }
         } catch (error) {
           console.error('Erro ao buscar perfil:', error);
           if (mounted) {
+            // Mesmo com erro, finaliza carregamento
             setIsLoading(false);
+            setInitializationComplete(true);
           }
         }
       }
