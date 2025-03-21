@@ -3,6 +3,7 @@ import { useStartupsByStatusQuery } from './queries/startups';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { PostgrestError } from '@supabase/supabase-js';
 
 export const useStartupsByStatus = (statusId: string) => {
   const { toast } = useToast();
