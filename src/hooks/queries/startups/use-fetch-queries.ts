@@ -30,53 +30,52 @@ const directFetchStartupsByStatus = async (statusId: string) => {
       
     if (statusCheck.error) {
       console.error(`Erro ao verificar se status ${statusId} existe:`, statusCheck.error);
+      throw new Error(`Falha ao verificar status: ${statusCheck.error.message}`);
     } else if (!statusCheck.data) {
       console.warn(`Status com ID ${statusId} não encontrado no banco de dados`);
+      throw new Error(`Status com ID ${statusId} não existe no banco de dados`);
     } else {
       console.log(`Status confirmado: ${statusCheck.data.name} (${statusId})`);
     }
     
-    // Buscar as startups com retry
+    // Usar a técnica de exponential backoff para retry
     let attempts = 0;
-    let data;
-    let error;
+    let lastError;
     
     while (attempts < 3) {
-      const result = await supabase
-        .from('startups')
-        .select('*')
-        .eq('status_id', statusId);
+      try {
+        console.log(`Tentativa ${attempts + 1} de buscar startups para status ${statusId}`);
         
-      if (result.error) {
-        error = result.error;
-        console.error(`Tentativa ${attempts + 1}: Erro ao buscar startups para status ${statusId}:`, error);
+        const result = await supabase
+          .from('startups')
+          .select('*')
+          .eq('status_id', statusId);
+          
+        if (result.error) {
+          console.error(`Erro na tentativa ${attempts + 1}:`, result.error);
+          lastError = result.error;
+          attempts++;
+          await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempts)));
+          continue;
+        }
+        
+        // Sucesso - registrar detalhes e retornar
+        console.log(`Encontradas ${result.data?.length || 0} startups para status ${statusId}`);
+        if (result.data && result.data.length > 0) {
+          console.log(`Primeira startup: ${result.data[0].name} (${result.data[0].id})`);
+        }
+        
+        return result.data || [];
+      } catch (e) {
+        console.error(`Erro na tentativa ${attempts + 1}:`, e);
+        lastError = e;
         attempts++;
-        // Esperar um pouco antes de tentar novamente (backoff exponencial)
         await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempts)));
-      } else {
-        data = result.data;
-        error = null;
-        break;
       }
     }
     
-    if (error) {
-      console.error(`Falha em todas as tentativas para status ${statusId}:`, error);
-      throw error;
-    }
-    
-    // Log mais detalhado com detalhes sobre a resposta
-    console.log(`Resultado da consulta direta para status ${statusId}:`, {
-      count: data?.length || 0,
-      firstItem: data && data.length > 0 ? {
-        id: data[0].id,
-        name: data[0].name,
-        status_id: data[0].status_id
-      } : null,
-      allIds: data ? data.map(s => s.id) : []
-    });
-    
-    return data || [];
+    // Se chegamos aqui, todas as tentativas falharam
+    throw lastError || new Error(`Falha ao buscar startups após ${attempts} tentativas`);
   } catch (e) {
     console.error(`Erro crítico em directFetchStartupsByStatus para status ${statusId}:`, e);
     throw e;
@@ -87,24 +86,93 @@ const directFetchStartupsByStatus = async (statusId: string) => {
 const checkAllStatuses = async () => {
   try {
     console.log('Buscando todos os statuses para verificar a conexão com o banco');
-    const { data, error } = await supabase
-      .from('statuses')
-      .select('*')
-      .order('position', { ascending: true });
-      
-    if (error) {
-      console.error('Erro ao buscar statuses:', error);
-      throw error;
+    
+    // Usar a técnica de exponential backoff para retry
+    let attempts = 0;
+    let lastError;
+    
+    while (attempts < 3) {
+      try {
+        const result = await supabase
+          .from('statuses')
+          .select('*')
+          .order('position', { ascending: true });
+          
+        if (result.error) {
+          console.error(`Erro na tentativa ${attempts + 1}:`, result.error);
+          lastError = result.error;
+          attempts++;
+          await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempts)));
+          continue;
+        }
+        
+        // Sucesso
+        console.log(`Encontrados ${result.data?.length || 0} statuses no banco de dados`);
+        if (result.data && result.data.length > 0) {
+          console.log('Status disponíveis:', result.data.map(s => ({ 
+            id: s.id, 
+            name: s.name, 
+            position: s.position 
+          })));
+        } else {
+          console.warn('Nenhum status encontrado no banco de dados');
+        }
+        
+        return result.data || [];
+      } catch (e) {
+        console.error(`Erro na tentativa ${attempts + 1}:`, e);
+        lastError = e;
+        attempts++;
+        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempts)));
+      }
     }
     
-    console.log(`Encontrados ${data?.length || 0} statuses no banco de dados`);
-    if (data && data.length > 0) {
-      console.log('Status disponíveis:', data.map(s => ({ id: s.id, name: s.name, position: s.position })));
-    }
-    return data || [];
+    // Se chegamos aqui, todas as tentativas falharam
+    throw lastError || new Error(`Falha ao buscar statuses após ${attempts} tentativas`);
   } catch (e) {
     console.error('Erro crítico ao buscar statuses:', e);
     throw e;
+  }
+};
+
+// Função para verificar a existência de tabelas no banco
+export const checkDatabaseTables = async () => {
+  try {
+    console.log('Verificando a existência de tabelas no banco de dados');
+    
+    // Lista de tabelas essenciais para verificar
+    const essentialTables = ['statuses', 'startups', 'team_members', 'attachments'];
+    const results: Record<string, boolean> = {};
+    
+    for (const table of essentialTables) {
+      try {
+        console.log(`Verificando tabela ${table}...`);
+        const { error } = await supabase.from(table).select('count');
+        
+        if (error) {
+          console.error(`Erro ao verificar tabela ${table}:`, error);
+          results[table] = false;
+        } else {
+          console.log(`Tabela ${table} existe e está acessível`);
+          results[table] = true;
+        }
+      } catch (e) {
+        console.error(`Erro ao verificar tabela ${table}:`, e);
+        results[table] = false;
+      }
+    }
+    
+    return {
+      allTablesExist: Object.values(results).every(exists => exists),
+      tables: results
+    };
+  } catch (e) {
+    console.error('Erro ao verificar tabelas do banco:', e);
+    return {
+      allTablesExist: false,
+      tables: {},
+      error: e instanceof Error ? e.message : String(e)
+    };
   }
 };
 
@@ -127,12 +195,24 @@ export const useStartupsByStatusQuery = (statusId: string) => {
     queryFn: async () => {
       console.log(`Executando função de query para status ${statusId}`);
       
-      // Primeiro verificar se podemos buscar status (teste de conexão)
+      // Primeiro verificar tabelas do banco (teste de estrutura)
       if (!isPlaceholder) {
+        try {
+          const dbCheck = await checkDatabaseTables();
+          if (!dbCheck.allTablesExist) {
+            console.error('Estrutura do banco incompleta:', dbCheck);
+            throw new Error('Algumas tabelas essenciais não foram encontradas no banco');
+          }
+        } catch (error) {
+          console.error('Falha ao verificar estrutura do banco:', error);
+          // Continuar mesmo assim para dar uma chance à query principal
+        }
+      
+        // Verificar status disponíveis (teste de dados)
         try {
           await checkAllStatuses();
         } catch (error) {
-          console.error('Falha ao verificar conexão com o banco:', error);
+          console.error('Falha ao verificar status disponíveis:', error);
           // Continuar mesmo assim para dar uma chance à query principal
         }
       }

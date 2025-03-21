@@ -1,116 +1,74 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from './components/ui/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/hooks/use-auth';
-import Sidebar from '@/components/Sidebar';
-import Index from '@/pages/Index';
-import Dashboard from '@/pages/Dashboard';
-import Board from '@/pages/Board';
-import ListView from '@/pages/ListView';
-import Investors from '@/pages/Investors';
-import Analytics from '@/pages/Analytics';
-import Reports from '@/pages/Reports';
-import Tasks from '@/pages/Tasks';
-import Emails from '@/pages/Emails';
-import WorkflowEditor from '@/pages/WorkflowEditor';
-import Team from '@/pages/Team';
-import Settings from '@/pages/Settings';
-import Profile from '@/pages/Profile';
-import Login from '@/pages/Login';
-import NotFound from '@/pages/NotFound';
-import Portfolio from '@/pages/Portfolio';
-import { GoalModal } from '@/components/GoalModal';
+import { AuthProvider, RequireAuth } from './contexts/AuthContext';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Board from './pages/Board';
+import ListView from './pages/ListView';
+import Tasks from './pages/Tasks';
+import Analytics from './pages/Analytics';
+import Investors from './pages/Investors';
+import Team from './pages/Team';
+import Portfolio from './pages/Portfolio';
+import Reports from './pages/Reports';
+import Emails from './pages/Emails';
+import Settings from './pages/Settings';
+import WorkflowEditor from './pages/WorkflowEditor';
+import Profile from './pages/Profile';
+import NotFound from './pages/NotFound';
+import Layout from './components/Layout';
+import Diagnostico from './pages/Diagnostico';
 
-// Global constants
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const queryClient = new QueryClient();
 
-// Initialize query client with improved caching strategies
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60000, // 1 minute
-      gcTime: 300000, // 5 minutes for better performance (previously cacheTime)
-      refetchOnWindowFocus: false, // Reduces unnecessary requests
-      retry: 1, // Limit retries to improve performance
-    },
-  },
-});
-
-const App = () => {
-  // State for managing the visibility of the goal modal
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-
-  // Function to open the goal modal
-  const openGoalModal = () => {
-    setIsGoalModalOpen(true);
-  };
-
-  // Function to close the goal modal
-  const closeGoalModal = () => {
-    setIsGoalModalOpen(false);
-  };
-
-  // Mock data for demonstration purposes
-  const mockGoals = [
-    { id: 1, name: 'Increase MRR by 20%', target: 50000, current: 40000 },
-    { id: 2, name: 'Acquire 5 new customers', target: 5, current: 3 },
-  ];
-
-  // State to hold the list of goals
-  const [goals, setGoals] = useState(mockGoals);
-
-  // Function to add a new goal
-  const addGoal = (newGoal: any) => {
-    setGoals([...goals, { ...newGoal, id: goals.length + 1 }]);
-  };
-
-  // Function to update a goal
-  const updateGoal = (updatedGoal: any) => {
-    setGoals(goals.map(goal => (goal.id === updatedGoal.id ? updatedGoal : goal)));
-  };
-
-  // Function to delete a goal
-  const deleteGoal = (goalId: number) => {
-    setGoals(goals.filter(goal => goal.id !== goalId));
-  };
-
-  console.log("App rendering");
-
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
-          <div className="app flex min-h-screen dark:bg-background">
-            <Toaster />
-            <Sidebar />
-            <GoalModal isOpen={isGoalModalOpen} onClose={closeGoalModal} />
-            <main className="flex-1 max-h-screen overflow-y-auto pb-10 pl-64">
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <div className="min-h-screen bg-background font-sans antialiased">
+          <AuthProvider>
+            <Router>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/board" element={<Board />} />
-                <Route path="/list" element={<ListView />} />
-                <Route path="/portfolio" element={<Portfolio />} />
-                <Route path="/investors" element={<Investors />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/emails" element={<Emails />} />
-                <Route path="/workflow" element={<WorkflowEditor />} />
-                <Route path="/team" element={<Team />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/profile" element={<Profile />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="*" element={<NotFound />} />
+                <Route path="/diagnostico" element={<Diagnostico />} />
+                <Route
+                  path="/*"
+                  element={
+                    <RequireAuth>
+                      <Layout>
+                        <Routes>
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/board" element={<Board />} />
+                          <Route path="/list-view" element={<ListView />} />
+                          <Route path="/tasks" element={<Tasks />} />
+                          <Route path="/analytics" element={<Analytics />} />
+                          <Route path="/investors" element={<Investors />} />
+                          <Route path="/team" element={<Team />} />
+                          <Route path="/portfolio" element={<Portfolio />} />
+                          <Route path="/reports" element={<Reports />} />
+                          <Route path="/emails" element={<Emails />} />
+                          <Route path="/settings" element={<Settings />} />
+                          <Route path="/workflow" element={<WorkflowEditor />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Layout>
+                    </RequireAuth>
+                  }
+                />
               </Routes>
-            </main>
-          </div>
-        </AuthProvider>
-      </Router>
+            </Router>
+          </AuthProvider>
+          <Toaster />
+        </div>
+      </ThemeProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

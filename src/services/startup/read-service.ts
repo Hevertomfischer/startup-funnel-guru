@@ -9,13 +9,34 @@ import type { Startup } from '@/integrations/supabase/client';
 export const getStartups = async (): Promise<Startup[]> => {
   try {
     console.log('Buscando todas as startups');
-    const { data, error } = await supabase
-      .from('startups')
-      .select('*')
-      .order('created_at', { ascending: false });
+    
+    // Usar a técnica de exponential backoff para retry
+    let attempts = 0;
+    let data;
+    let error;
+    
+    while (attempts < 3) {
+      console.log(`Tentativa ${attempts + 1} de buscar todas as startups`);
+      
+      const result = await supabase
+        .from('startups')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (result.error) {
+        error = result.error;
+        console.error(`Erro na tentativa ${attempts + 1}:`, error);
+        attempts++;
+        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempts)));
+      } else {
+        data = result.data;
+        error = null;
+        break;
+      }
+    }
     
     if (error) {
-      console.error('Erro ao buscar todas as startups:', error);
+      console.error('Erro ao buscar todas as startups após múltiplas tentativas:', error);
       throw error;
     }
     
@@ -43,19 +64,37 @@ export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> 
     console.log(`Buscando startups para status: ${statusId}`);
     
     // Primeiro verificar se o status existe
-    const { data: statusCheck, error: statusError } = await supabase
-      .from('statuses')
-      .select('id, name')
-      .eq('id', statusId)
-      .maybeSingle();
+    let statusCheckAttempts = 0;
+    let statusFound = false;
+    let statusName = '';
+    
+    while (statusCheckAttempts < 3 && !statusFound) {
+      console.log(`Verificando existência do status ${statusId} (tentativa ${statusCheckAttempts + 1})`);
       
-    if (statusError) {
-      console.warn(`Status com ID ${statusId} pode não existir:`, statusError);
+      const { data: statusCheck, error: statusError } = await supabase
+        .from('statuses')
+        .select('id, name')
+        .eq('id', statusId)
+        .maybeSingle();
+      
+      if (statusError) {
+        console.warn(`Erro ao verificar status ${statusId} (tentativa ${statusCheckAttempts + 1}):`, statusError);
+        statusCheckAttempts++;
+        await new Promise(r => setTimeout(r, 200 * Math.pow(2, statusCheckAttempts)));
+      } else if (statusCheck) {
+        console.log(`Status encontrado: ${statusCheck.name} (${statusId})`);
+        statusFound = true;
+        statusName = statusCheck.name;
+      } else {
+        console.warn(`Status com ID ${statusId} não encontrado (tentativa ${statusCheckAttempts + 1})`);
+        statusCheckAttempts++;
+        await new Promise(r => setTimeout(r, 200 * Math.pow(2, statusCheckAttempts)));
+      }
+    }
+    
+    if (!statusFound) {
+      console.error(`Status com ID ${statusId} não encontrado após ${statusCheckAttempts} tentativas`);
       // Continuar mesmo assim, pois o erro pode ser por outro motivo
-    } else if (statusCheck) {
-      console.log(`Status encontrado: ${statusCheck.name} (${statusId})`);
-    } else {
-      console.warn(`Status com ID ${statusId} não encontrado`);
     }
     
     // Agora buscar as startups com retry
@@ -64,6 +103,8 @@ export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> 
     let error;
     
     while (attempts < 3) {
+      console.log(`Buscando startups para status ${statusId} (${statusName || 'desconhecido'}) - Tentativa ${attempts + 1}`);
+      
       const result = await supabase
         .from('startups')
         .select('*')
@@ -89,11 +130,14 @@ export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> 
     
     console.log(`Recuperadas ${data?.length || 0} startups para status ${statusId}`);
     if (data && data.length > 0) {
-      console.log(`Primeiro startup para status ${statusId}:`, {
+      console.log(`Primeira startup para status ${statusId}:`, {
         id: data[0].id,
         name: data[0].name,
         created_at: data[0].created_at
       });
+      
+      // Listar IDs das startups para facilitar debugging
+      console.log(`IDs das startups para status ${statusId}:`, data.map(s => s.id));
     } else {
       console.log(`Nenhuma startup encontrada para status ${statusId}`);
     }
@@ -119,14 +163,35 @@ export const getStartup = async (id: string): Promise<Startup | null> => {
     }
     
     console.log(`Buscando startup com ID: ${id}`);
-    const { data, error } = await supabase
-      .from('startups')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
+    
+    // Usar a técnica de exponential backoff para retry
+    let attempts = 0;
+    let data;
+    let error;
+    
+    while (attempts < 3) {
+      console.log(`Tentativa ${attempts + 1} de buscar startup ${id}`);
+      
+      const result = await supabase
+        .from('startups')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (result.error) {
+        error = result.error;
+        console.error(`Erro na tentativa ${attempts + 1}:`, error);
+        attempts++;
+        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempts)));
+      } else {
+        data = result.data;
+        error = null;
+        break;
+      }
+    }
     
     if (error) {
-      console.error(`Erro ao buscar startup ${id}:`, error);
+      console.error(`Erro ao buscar startup ${id} após múltiplas tentativas:`, error);
       throw error;
     }
     
