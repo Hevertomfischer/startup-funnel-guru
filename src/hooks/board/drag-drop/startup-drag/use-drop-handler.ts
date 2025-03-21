@@ -16,7 +16,8 @@ export const useDropHandler = ({
   columns,
   setColumns,
   statuses,
-  getStartupById
+  getStartupById,
+  queryClient
 }: StartupDragHandlerParams) => {
   const updateStartupStatusMutation = useUpdateStartupStatusMutation();
   const { processStartup } = useWorkflowRules();
@@ -66,6 +67,10 @@ export const useDropHandler = ({
       return;
     }
     
+    // Check if this is a move to "Investida" status
+    const isInvestedStatus = targetStatus.name.toLowerCase().includes('investida');
+    console.log('Moving to invested status:', isInvestedStatus);
+    
     // Get startup data
     const startup = getStartupById(startupId);
     if (!startup) {
@@ -107,6 +112,12 @@ export const useDropHandler = ({
         const newStatus = statuses.find(s => s.id === columnId);
         toast.success(`Startup movido para ${newStatus?.name || 'novo status'}`);
         
+        // If this is a move to "Investida", invalidate portfolio queries
+        if (isInvestedStatus) {
+          console.log('Invalidating portfolio queries after moving to Investida status');
+          queryClient?.invalidateQueries({ queryKey: ['startups', 'portfolio'] });
+        }
+        
         if (data) {
           const startupForWorkflow: Startup = {
             id: startup.id,
@@ -126,7 +137,20 @@ export const useDropHandler = ({
       onError: (error) => {
         console.error('Error updating startup status:', error);
         
-        toast.error(error instanceof Error ? error.message : "Ocorreu um erro. Por favor, tente novamente.");
+        // More detailed error message for debugging
+        if (error instanceof Error) {
+          console.error('Error details:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+          });
+        }
+        
+        const errorMessage = error instanceof Error 
+          ? `Erro ao atualizar status: ${error.message}` 
+          : "Ocorreu um erro ao mover o card. Por favor, tente novamente.";
+        
+        toast.error(errorMessage);
         
         // Revert the optimistic update on error
         setColumns(columns);

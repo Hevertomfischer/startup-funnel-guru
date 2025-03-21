@@ -110,6 +110,12 @@ export const useUpdateStartupStatusMutation = () => {
     onSuccess: (data, variables) => {
       console.log("Status update succeeded:", data);
       
+      // Check if this is a move to Investida status
+      const isInvestedStatus = data && statuses => {
+        const status = statuses.find(s => s.id === variables.newStatusId);
+        return status && status.name.toLowerCase().includes('investida');
+      };
+      
       // Invalidate all potentially affected queries
       queryClient.invalidateQueries({ queryKey: ['startups'] });
       queryClient.invalidateQueries({ queryKey: ['startup', variables.id] });
@@ -126,13 +132,37 @@ export const useUpdateStartupStatusMutation = () => {
         });
       }
       
+      // Additional invalidation for portfolio when moving to Investida
+      if (data && data.status_id) {
+        // This happens after the status has been updated, so we can rely on the status name
+        const status = statuses?.find?.(s => s.id === data.status_id);
+        
+        if (status && status.name.toLowerCase().includes('investida')) {
+          console.log('Portfolio change detected, invalidating portfolio queries');
+          queryClient.invalidateQueries({ 
+            queryKey: ['startups', 'portfolio']
+          });
+        }
+      }
+      
       toast.success('Card movido com sucesso');
     },
     onError: (error, variables, context) => {
       console.error("Status update failed:", error);
       console.error("Failed variables:", variables);
       
-      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar o status da startup');
+      // More detailed error message and logging
+      if (error instanceof Error) {
+        console.error("Error details:", {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+      }
+      
+      toast.error(error instanceof Error 
+        ? `Falha ao atualizar status: ${error.message}` 
+        : 'Falha ao atualizar o status da startup');
       
       // Invalidate queries to ensure UI is up-to-date
       queryClient.invalidateQueries({ queryKey: ['startups'] });

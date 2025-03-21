@@ -12,27 +12,30 @@ export const usePortfolioStartups = () => {
     queryKey: ['startups', 'portfolio'],
     queryFn: async (): Promise<Startup[]> => {
       try {
-        // Fetch startups that have the "Investida" status
-        // First, get the status ID for "Investida"
+        console.log('Fetching portfolio startups...');
+        
+        // Fetch statuses that could represent invested startups
         const { data: statusData, error: statusError } = await supabase
           .from('statuses')
-          .select('id')
-          .ilike('name', '%investida%')
-          .single();
+          .select('id, name')
+          .or('name.ilike.%investida%,name.ilike.%invested%')
+          .order('position');
 
         if (statusError) {
           console.error('Error fetching invested status:', statusError);
-          return [];
+          throw statusError;
         }
 
-        const investedStatusId = statusData?.id;
-        
-        if (!investedStatusId) {
+        if (!statusData || statusData.length === 0) {
           console.warn('No invested status found. You may need to create a status named "Investida"');
           return [];
         }
 
-        // Now fetch all startups with this status
+        // Log the found statuses
+        console.log('Found invested statuses:', statusData);
+        const investedStatusIds = statusData.map(status => status.id);
+        
+        // Now fetch all startups with these statuses
         const { data, error } = await supabase
           .from('startups')
           .select(`
@@ -41,19 +44,23 @@ export const usePortfolioStartups = () => {
             labels:startups_labels(label_id),
             kpis:startup_kpis(*)
           `)
-          .eq('status_id', investedStatusId)
+          .in('status_id', investedStatusIds)
           .order('name');
 
         if (error) {
+          console.error('Error fetching startups by invested status:', error);
           throw error;
         }
 
+        console.log(`Found ${data?.length || 0} invested startups`);
         return data || [];
       } catch (error: any) {
-        console.error('Error fetching portfolio startups:', error);
+        console.error('Error in usePortfolioStartups hook:', error);
         toast.error('Falha ao carregar portfólio de startups investidas');
         return [];
       }
     },
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
