@@ -30,44 +30,44 @@ export const StartupFormTabs: React.FC<StartupFormTabsProps> = ({
   statuses
 }) => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue={activeTab}>
-      <TabsContent value="status" className="m-0">
+    <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue={activeTab} className="mt-2">
+      <TabsContent value="status" className="m-0 pt-4">
         <StatusDescriptionSection form={form} statuses={statuses} />
       </TabsContent>
       
-      <TabsContent value="basic" className="m-0">
+      <TabsContent value="basic" className="m-0 pt-4">
         <BasicInfoSection form={form} />
       </TabsContent>
       
-      <TabsContent value="team" className="m-0">
+      <TabsContent value="team" className="m-0 pt-4">
         <TeamSection form={form} />
       </TabsContent>
       
-      <TabsContent value="company" className="m-0">
+      <TabsContent value="company" className="m-0 pt-4">
         <CompanyDetailsSection form={form} />
       </TabsContent>
       
-      <TabsContent value="market" className="m-0">
+      <TabsContent value="market" className="m-0 pt-4">
         <MarketSection form={form} />
       </TabsContent>
       
-      <TabsContent value="business" className="m-0">
+      <TabsContent value="business" className="m-0 pt-4">
         <BusinessSection form={form} />
       </TabsContent>
       
-      <TabsContent value="financial" className="m-0">
+      <TabsContent value="financial" className="m-0 pt-4">
         <FinancialSection form={form} />
       </TabsContent>
       
-      <TabsContent value="metrics" className="m-0">
+      <TabsContent value="metrics" className="m-0 pt-4">
         <MetricsSection form={form} />
       </TabsContent>
       
-      <TabsContent value="analysis" className="m-0">
+      <TabsContent value="analysis" className="m-0 pt-4">
         <AnalysisSection form={form} />
       </TabsContent>
       
-      <TabsContent value="attachments" className="m-0">
+      <TabsContent value="attachments" className="m-0 pt-4">
         <div className="space-y-8">
           <PitchDeckSection />
           <AttachmentSection />
