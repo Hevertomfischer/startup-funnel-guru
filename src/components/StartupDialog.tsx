@@ -34,7 +34,7 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
   console.log('Status length:', statuses?.length);
   
   // Get workflow rules for automation
-  const { workflowRules } = useWorkflowRules();
+  const { rules } = useWorkflowRules();
   
   useEffect(() => {
     console.log('StartupDialog useEffect - open state changed to:', open);
