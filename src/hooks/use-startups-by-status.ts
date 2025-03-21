@@ -1,36 +1,46 @@
 
 import { useStartupsByStatusQuery } from './queries/startups';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export const useStartupsByStatus = (statusId: string) => {
   const { toast } = useToast();
   
-  // Use the query hook at the top level with a valid statusId
-  const query = useStartupsByStatusQuery(statusId);
-  
-  // Add more detailed logging to troubleshoot Supabase connectivity
-  console.log(`useStartupsByStatus hook for statusId ${statusId}:`, {
-    dataLength: query.data ? query.data.length : 0,
-    hasData: Boolean(query.data),
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error ? `${query.error}` : null,
-    isFetching: query.isFetching,
-    isFetched: query.isFetched,
+  // Log para acompanhar o fluxo da aplicação
+  console.log(`useStartupsByStatus hook inicializado para statusId ${statusId}`, {
     isPlaceholder: statusId.startsWith('placeholder-'),
-    status: query.status,
-    statusIds: query.data ? query.data.map(s => s.id) : [],
   });
   
-  // If there's an error and it's not a placeholder ID, show toast
-  if (query.error && !statusId.startsWith('placeholder-')) {
-    console.error(`Error fetching startups for status ${statusId}:`, query.error);
-    toast({
-      title: "Erro ao carregar dados",
-      description: "Não foi possível carregar as startups. Tente recarregar a página.",
-      variant: "destructive",
+  // Use o hook de query no nível superior com um statusId válido
+  const query = useStartupsByStatusQuery(statusId);
+  
+  // Adicionar logging mais detalhado para solucionar problemas de conectividade com o Supabase
+  useEffect(() => {
+    console.log(`useStartupsByStatus hook para statusId ${statusId}:`, {
+      dataLength: query.data ? query.data.length : 0,
+      hasData: Boolean(query.data),
+      isLoading: query.isLoading,
+      isError: query.isError,
+      error: query.error ? `${query.error}` : null,
+      isFetching: query.isFetching,
+      isFetched: query.isFetched,
+      isPlaceholder: statusId.startsWith('placeholder-'),
+      status: query.status,
+      statusIds: query.data ? query.data.map(s => s.id) : [],
     });
-  }
+  }, [statusId, query.data, query.isLoading, query.isError, query.error, query.isFetching, query.isFetched, query.status]);
+  
+  // Se houver um erro e não for um ID de placeholder, mostrar toast
+  useEffect(() => {
+    if (query.error && !statusId.startsWith('placeholder-')) {
+      console.error(`Erro ao buscar startups para status ${statusId}:`, query.error);
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Não foi possível carregar as startups. Tentando novamente...",
+        variant: "destructive",
+      });
+    }
+  }, [query.error, statusId, toast]);
   
   return {
     data: query.data || [],
