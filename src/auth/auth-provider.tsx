@@ -14,104 +14,73 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("Auth provider mounted");
     let mounted = true;
-    let authListener: { subscription: { unsubscribe: () => void } } | null = null;
     
-    // Set up auth state listener FIRST to catch all auth events
-    const setupAuthListener = async () => {
-      const { data } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log('Auth state changed:', event);
-          
-          if (session?.user) {
-            if (mounted) setUser(session.user);
-            
-            try {
-              // Fetch the complete profile data
-              const profileData = await fetchUserProfile(session.user.id);
-              if (mounted) {
-                setProfile(profileData);
-                setIsAdmin(profileData?.role === 'admin');
-                setIsLoading(false);
-              }
-            } catch (error) {
-              console.error('Error checking admin status:', error);
-              if (mounted) setIsLoading(false);
-            }
-          } else {
-            if (mounted) {
-              setUser(null);
-              setProfile(null);
-              setIsAdmin(false);
-              setIsLoading(false);
-            }
-          }
-        }
-      );
-      
-      if (mounted) {
-        authListener = data;
-      }
-    };
-
-    // THEN check for existing session
-    const checkSession = async () => {
+    // Function to handle session state changes
+    const handleSessionChange = async (session: any) => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) {
-            setUser(null);
-            setProfile(null);
-            setIsLoading(false);
-          }
-        } else if (data?.session) {
-          if (mounted) setUser(data.session.user);
+        if (session?.user) {
+          console.log("Session found with user:", session.user.email);
+          if (mounted) setUser(session.user);
           
-          // Fetch complete profile data
+          // Fetch the complete profile data
           try {
-            const profileData = await fetchUserProfile(data.session.user.id);
+            const profileData = await fetchUserProfile(session.user.id);
             
             if (mounted) {
               setProfile(profileData);
               setIsAdmin(profileData?.role === 'admin');
-              setIsLoading(false);
             }
           } catch (error) {
-            console.error('Error checking admin status:', error);
-            if (mounted) setIsLoading(false);
+            console.error('Error fetching profile:', error);
           }
         } else {
-          // No active session
+          console.log("No session found");
           if (mounted) {
             setUser(null);
             setProfile(null);
-            setIsLoading(false);
+            setIsAdmin(false);
           }
         }
-      } catch (error) {
-        console.error('Session check error:', error);
+      } finally {
         if (mounted) {
-          setUser(null);
-          setProfile(null);
           setIsLoading(false);
         }
       }
     };
 
-    // Start auth setup
-    Promise.all([setupAuthListener(), checkSession()])
-      .catch(error => {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setIsLoading(false);
+    // Set up auth state listener for future auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event);
+        await handleSessionChange(session);
+      }
+    );
+
+    // Check for existing session
+    const initializeAuth = async () => {
+      try {
+        console.log("Checking for existing session...");
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (mounted) setIsLoading(false);
+          return;
         }
-      });
+        
+        await handleSessionChange(data.session);
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     // Cleanup
     return () => {
       mounted = false;
-      if (authListener) {
+      if (authListener && authListener.subscription) {
         authListener.subscription.unsubscribe();
       }
     };
