@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PostgrestError } from '@supabase/supabase-js';
 
+// Definir um tipo para possíveis erros
+type QueryError = Error | PostgrestError | string | unknown;
+
 export const useStartupsByStatus = (statusId: string) => {
   const { toast } = useToast();
   const [isFirstAttempt, setIsFirstAttempt] = useState(true);
@@ -66,12 +69,21 @@ export const useStartupsByStatus = (statusId: string) => {
   
   // Adicionar logging mais detalhado para solucionar problemas de conectividade com o Supabase
   useEffect(() => {
+    // Extrair erro de forma segura para logging
+    const errorForLogging = query.error
+      ? (typeof query.error === 'object' 
+        ? (query.error instanceof Error || 'message' in query.error)
+          ? String((query.error as Error | { message: unknown }).message)
+          : JSON.stringify(query.error)
+        : String(query.error))
+      : null;
+      
     console.log(`useStartupsByStatus hook para statusId ${statusId}:`, {
       dataLength: query.data ? query.data.length : 0,
       hasData: Boolean(query.data),
       isLoading: query.isLoading,
       isError: query.isError,
-      error: query.error ? (typeof query.error === 'object' ? JSON.stringify(query.error) : String(query.error)) : null,
+      error: errorForLogging,
       isFetching: query.isFetching,
       isFetched: query.isFetched,
       isPlaceholder: statusId.startsWith('placeholder-'),
@@ -96,14 +108,22 @@ export const useStartupsByStatus = (statusId: string) => {
   // Se houver um erro e não for um ID de placeholder, mostrar toast
   useEffect(() => {
     if (query.error && !statusId.startsWith('placeholder-')) {
-      // Use type narrowing to ensure we can safely access error properties
-      const errorMessage = typeof query.error === 'object' && query.error !== null
-        ? 'message' in query.error 
-          ? String((query.error as { message: unknown }).message)
-          : JSON.stringify(query.error)
-        : typeof query.error === 'string'
-          ? query.error
-          : 'Erro desconhecido';
+      // Obter a mensagem de erro de forma segura
+      let errorMessage: string;
+      
+      if (query.error instanceof Error) {
+        errorMessage = query.error.message;
+      } else if (typeof query.error === 'object' && query.error !== null) {
+        if ('message' in query.error && query.error.message) {
+          errorMessage = String(query.error.message);
+        } else {
+          errorMessage = JSON.stringify(query.error);
+        }
+      } else if (typeof query.error === 'string') {
+        errorMessage = query.error;
+      } else {
+        errorMessage = 'Erro desconhecido';
+      }
           
       console.error(`Erro ao buscar startups para status ${statusId}:`, errorMessage);
       
