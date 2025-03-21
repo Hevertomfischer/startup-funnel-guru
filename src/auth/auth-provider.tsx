@@ -29,10 +29,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (mounted) {
               setProfile(profileData);
               setIsAdmin(profileData?.role === 'admin');
+              setIsLoading(false);
             }
           } catch (error) {
             console.error('Error checking admin status:', error);
-          } finally {
             if (mounted) setIsLoading(false);
           }
         } else {
@@ -68,12 +68,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (mounted) {
               setProfile(profileData);
               setIsAdmin(profileData?.role === 'admin');
+              setIsLoading(false);
             }
           } catch (error) {
             console.error('Error checking admin status:', error);
-          } finally {
             if (mounted) setIsLoading(false);
-          }
+          } 
         } else {
           // No active session
           if (mounted) {

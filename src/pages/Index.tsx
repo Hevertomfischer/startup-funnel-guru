@@ -17,7 +17,7 @@ const Index = () => {
     }
   }, [user, isLoading, navigate]);
 
-  // Show a loading state while checking authentication
+  // Show a loading state while checking authentication but limit the time to avoid loading indefinitely
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4 p-4">
