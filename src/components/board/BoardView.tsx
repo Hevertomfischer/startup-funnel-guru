@@ -4,26 +4,24 @@ import { useBoardState } from '@/hooks/board/use-board-state';
 import { useConnectionCheck } from '@/hooks/board/use-connection-check';
 import BoardContent from '@/components/board/BoardContent';
 import BoardDialogs from '@/components/board/BoardDialogs';
-import BoardLoadingState from '@/components/board/states/BoardLoadingState';
-import BoardErrorState from '@/components/board/states/BoardErrorState';
-import ConnectionErrorState from '@/components/board/states/ConnectionErrorState';
-import EmptyBoardState from '@/components/board/states/EmptyBoardState';
+import BoardStateManager from '@/components/board/states/BoardStateManager';
+import BoardDebugInfo from '@/components/board/debug/BoardDebugInfo';
 import { toast } from '@/components/ui/use-toast';
 
 const BoardView = () => {
-  // Estado do componente
+  // Component state
   const [showCompactCards, setShowCompactCards] = useState(false);
   const [loadingStartTime] = useState(Date.now());
   const [showExtendedDebug, setShowExtendedDebug] = useState(false);
   
-  // Verificar conexão com Supabase
+  // Check connection with Supabase
   const { connectionError, isRetrying, statusesCount, handleRetryConnection } = useConnectionCheck();
   
-  // Usar o hook de estado do board para obter todos os dados e manipuladores
+  // Use the board state hook to get all data and handlers
   const boardState = useBoardState();
   
   const {
-    // Estado do board
+    // Board state
     columns,
     statuses,
     isLoadingStatuses,
@@ -32,7 +30,7 @@ const BoardView = () => {
     searchTerm,
     setSearchTerm,
     
-    // Manipuladores
+    // Handlers
     getStartupById,
     handleDragStart,
     handleDragOver,
@@ -42,18 +40,18 @@ const BoardView = () => {
     handleDeleteStartup,
     handleCreateTask,
     
-    // Manipuladores de arrastar coluna
+    // Column drag handlers
     handleColumnDragStart,
     handleColumnDragOver,
     handleColumnDrop,
     
-    // Estado do diálogo
+    // Dialog state
     showCreateStatusDialog,
     setShowCreateStatusDialog,
     statusToEdit,
     setStatusToEdit,
     
-    // Ações de startup
+    // Startup actions
     handleAddStartup,
     handleCardClick,
     handleCreateStartup,
@@ -66,12 +64,12 @@ const BoardView = () => {
     showEditDialog,
     setShowEditDialog,
     
-    // Manipuladores de toast
+    // Toast handlers
     handleStatusCreated,
     handleStatusUpdated
   } = boardState;
   
-  // Verificar se está demorando muito para carregar
+  // Check if loading is taking too long
   useEffect(() => {
     const loadingTimeoutId = setTimeout(() => {
       if (isLoadingStatuses && !connectionError) {
@@ -81,15 +79,15 @@ const BoardView = () => {
           description: "O carregamento está demorando mais que o esperado. Tentando reconectar...",
         });
         
-        // Mostrar informações de debug adicionais
+        // Show additional debug information
         setShowExtendedDebug(true);
       }
-    }, 10000); // 10 segundos
+    }, 10000); // 10 seconds
 
     return () => clearTimeout(loadingTimeoutId);
   }, [isLoadingStatuses, connectionError]);
   
-  // Logs detalhados sobre o estado atual
+  // Detailed logs about current state
   console.log("BoardView renderizando", { 
     columnsCount: columns?.length || 0,
     statusesCount: statuses?.length || 0,
@@ -97,7 +95,7 @@ const BoardView = () => {
     isErrorStatuses,
     hasQueries: Object.keys(mappedQueries || {}).length,
     connectionError,
-    loadingTime: (Date.now() - loadingStartTime) / 1000, // tempo de carregamento em segundos
+    loadingTime: (Date.now() - loadingStartTime) / 1000, // loading time in seconds
     queriesSummary: Object.entries(mappedQueries || {}).map(([key, val]) => ({
       statusId: key,
       dataCount: (val as any).data?.length || 0,
@@ -106,59 +104,26 @@ const BoardView = () => {
     }))
   });
   
-  // Função para mostrar informações de depuração
+  // Function to toggle debug mode
   const toggleDebugMode = () => {
     setShowExtendedDebug(prev => !prev);
   };
   
-  if (connectionError) {
-    return (
-      <ConnectionErrorState
-        isRetrying={isRetrying}
-        onRetry={handleRetryConnection}
-      />
-    );
-  }
-  
-  if (isLoadingStatuses) {
-    return (
-      <div onClick={toggleDebugMode}>
-        <BoardLoadingState />
-        {showExtendedDebug && (
-          <div className="fixed bottom-4 right-4 bg-muted p-4 rounded-md text-xs font-mono overflow-auto max-h-64 max-w-md text-muted-foreground">
-            <p className="font-bold mb-2">Informações de Debug:</p>
-            <p>Tempo de carregamento: {((Date.now() - loadingStartTime) / 1000).toFixed(1)}s</p>
-            <p>Status encontrados: {statusesCount}</p>
-            <p>Colunas: {columns?.length || 0}</p>
-            <p>Queries: {Object.keys(mappedQueries || {}).length}</p>
-            <p className="mt-2 text-primary cursor-pointer" onClick={() => window.location.reload()}>
-              Recarregar página
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  if (isErrorStatuses) {
-    return (
-      <BoardErrorState
-        isRetrying={isRetrying}
-        onRetry={handleRetryConnection}
-      />
-    );
-  }
-  
-  if (!statuses || statuses.length === 0) {
-    return (
-      <EmptyBoardState
-        onAddColumn={() => setShowCreateStatusDialog(true)}
-      />
-    );
-  }
-  
   return (
-    <>
+    <BoardStateManager
+      connectionError={connectionError}
+      isRetrying={isRetrying}
+      handleRetryConnection={handleRetryConnection}
+      isLoadingStatuses={isLoadingStatuses}
+      isErrorStatuses={isErrorStatuses}
+      statuses={statuses}
+      showExtendedDebug={showExtendedDebug}
+      toggleDebugMode={toggleDebugMode}
+      loadingStartTime={loadingStartTime}
+      statusesCount={statusesCount}
+      columns={columns}
+      setShowCreateStatusDialog={setShowCreateStatusDialog}
+    >
       <BoardContent
         columns={columns}
         statuses={statuses}
@@ -203,19 +168,15 @@ const BoardView = () => {
         updateStartupMutation={updateStartupMutation}
       />
       
-      {showExtendedDebug && (
-        <div className="fixed bottom-4 right-4 bg-muted p-4 rounded-md text-xs font-mono overflow-auto max-h-64 max-w-md text-muted-foreground">
-          <p className="font-bold mb-2">Informações de Debug:</p>
-          <p>Tempo de carregamento: {((Date.now() - loadingStartTime) / 1000).toFixed(1)}s</p>
-          <p>Status encontrados: {statusesCount}</p>
-          <p>Colunas: {columns?.length || 0}</p>
-          <p>Queries: {Object.keys(mappedQueries || {}).length}</p>
-          <p className="mt-2 text-primary cursor-pointer" onClick={() => setShowExtendedDebug(false)}>
-            Fechar debug
-          </p>
-        </div>
-      )}
-    </>
+      <BoardDebugInfo
+        showExtendedDebug={showExtendedDebug}
+        setShowExtendedDebug={setShowExtendedDebug}
+        loadingStartTime={loadingStartTime}
+        statusesCount={statusesCount}
+        columns={columns}
+        mappedQueries={mappedQueries}
+      />
+    </BoardStateManager>
   );
 };
 
