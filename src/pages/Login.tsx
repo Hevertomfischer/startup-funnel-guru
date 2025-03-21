@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { InfoIcon } from 'lucide-react';
 import { useAuth } from '@/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,38 +20,49 @@ export default function Login() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const { signIn, isLoading, user, devSignIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Redirect if already authenticated
+  // Obter a localização anterior, se houver
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  // Redirecionar se já estiver autenticado
   useEffect(() => {
-    console.log('Login page - Auth state:', { user: !!user, isLoading });
+    console.log('Login: Estado de autenticação -', { user: !!user, isLoading, from });
     
     if (user && !isLoading) {
-      console.log('User already authenticated, redirecting to dashboard');
-      navigate('/dashboard');
+      console.log('Login: Usuário já autenticado, redirecionando para', from);
+      toast.success('Redirecionando para o dashboard', {
+        description: 'Você já está autenticado'
+      });
+      navigate(from);
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoginError(null);
       setEmailNotConfirmed(false);
-      console.log('Attempting login with:', email);
+      console.log('Tentando login com:', email);
+      
       const { success, error } = await signIn(email, password);
       
       if (!success && error) {
-        console.error('Login failed:', error);
+        console.error('Login falhou:', error);
         if (error.includes('Email not confirmed')) {
           setEmailNotConfirmed(true);
         } else {
           setLoginError(error);
         }
       } else {
-        console.log('Login successful, redirecting...');
-        navigate('/dashboard');
+        console.log('Login bem-sucedido, redirecionando para', from);
+        toast.success('Login bem-sucedido', {
+          description: 'Redirecionando para o dashboard'
+        });
+        navigate(from);
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Erro de login:', error);
       
       if (error?.message?.includes('Email not confirmed')) {
         setEmailNotConfirmed(true);
@@ -73,14 +85,16 @@ export default function Login() {
       }
       
       setResendSuccess(true);
+      toast.success('Email de confirmação reenviado');
     } catch (error) {
-      console.error('Error resending confirmation email:', error);
+      console.error('Erro ao reenviar email de confirmação:', error);
+      toast.error('Erro ao reenviar email');
     } finally {
       setIsResending(false);
     }
   };
 
-  // Show loading while checking authentication
+  // Mostrar carregamento enquanto verifica autenticação
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -94,7 +108,7 @@ export default function Login() {
     );
   }
 
-  // If already authenticated, return null (will redirect in useEffect)
+  // Se já estiver autenticado, retornar null (redirecionará em useEffect)
   if (user) {
     return null;
   }
@@ -193,7 +207,7 @@ export default function Login() {
               className="w-full"
               onClick={() => {
                 devSignIn();
-                navigate('/dashboard');
+                navigate(from);
               }}
             >
               Dev Login (Admin)

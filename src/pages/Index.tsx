@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/auth';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const Index = () => {
   const { user, isLoading } = useAuth();
@@ -11,18 +12,23 @@ const Index = () => {
   const [extendedLoading, setExtendedLoading] = useState(false);
   
   useEffect(() => {
-    // If user is authenticated, redirect to dashboard
+    console.log('Index: Estado atual -', { isLoading, user: !!user });
+    
+    // Se o usuário estiver autenticado, redirecionar para o dashboard
     if (!isLoading) {
       if (user) {
+        console.log('Index: Usuário autenticado, redirecionando para dashboard');
         navigate('/dashboard', { replace: true });
       } else {
+        console.log('Index: Usuário não autenticado, redirecionando para login');
         navigate('/login', { replace: true });
       }
     }
     
-    // Set a timeout to show extended loading message if auth takes too long
+    // Configurar um timeout para mostrar mensagem de carregamento estendido se a autenticação demorar muito
     const timer = setTimeout(() => {
       if (isLoading) {
+        console.log('Index: Tempo estendido de carregamento atingido');
         setExtendedLoading(true);
       }
     }, 5000);
@@ -30,7 +36,7 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, [user, isLoading, navigate]);
 
-  // Show a loading state while checking authentication
+  // Mostrar um estado de carregamento enquanto verifica a autenticação
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4 p-4">
@@ -44,26 +50,33 @@ const Index = () => {
         {extendedLoading && (
           <div className="mt-4 space-y-4">
             <p className="text-amber-500">O carregamento está demorando mais que o normal.</p>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/login', { replace: true })}
-            >
-              Ir para login
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => window.location.reload()}
-              className="ml-2"
-            >
-              Recarregar página
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                variant="default" 
+                onClick={() => {
+                  console.log('Index: Redirecionando manualmente para login');
+                  navigate('/login', { replace: true });
+                }}
+              >
+                Ir para login
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  console.log('Index: Recarregando página');
+                  window.location.reload();
+                }}
+              >
+                Recarregar página
+              </Button>
+            </div>
           </div>
         )}
       </div>
     );
   }
 
-  // This should almost never be seen, as the useEffect should redirect immediately
+  // Isso quase nunca deve ser visto, pois o useEffect deve redirecionar imediatamente
   return (
     <div className="flex h-screen items-center justify-center p-4">
       <div className="text-center">

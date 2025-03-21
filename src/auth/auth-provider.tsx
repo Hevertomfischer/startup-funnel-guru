@@ -11,96 +11,96 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    console.log("Auth provider mounted");
-    let mounted = true;
-    
-    // Function to fetch profile for a user
-    const fetchUserProfile = async (userId: string) => {
-      try {
-        console.log(`Fetching profile for user ID: ${userId}`);
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching profile:', error);
-          return null;
-        }
+  // Função para buscar o perfil do usuário
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      console.log(`Buscando perfil para o usuário ID: ${userId}`);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
         
-        console.log('Profile data retrieved:', data);
-        return data as Profile;
-      } catch (error) {
-        console.error('Unexpected error fetching profile:', error);
+      if (error) {
+        console.error('Erro ao buscar perfil:', error);
         return null;
       }
-    };
+      
+      console.log('Dados do perfil recuperados:', data);
+      return data as Profile;
+    } catch (error) {
+      console.error('Erro inesperado ao buscar perfil:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    console.log("Auth provider montado");
+    let mounted = true;
     
-    // Function to handle session state changes
-    const handleSessionChange = async (session: any) => {
-      try {
-        if (session?.user) {
-          console.log("Session found with user:", session.user.email);
-          if (mounted) setUser(session.user);
-          
-          // Fetch the complete profile data
-          try {
-            const profileData = await fetchUserProfile(session.user.id);
-            
-            if (mounted) {
-              setProfile(profileData);
-              setIsAdmin(profileData?.role === 'admin');
-            }
-          } catch (error) {
-            console.error('Error fetching profile:', error);
-          }
-        } else {
-          console.log("No session found");
-          if (mounted) {
-            setUser(null);
-            setProfile(null);
-            setIsAdmin(false);
-          }
-        }
-      } finally {
+    // Função para lidar com alterações na sessão
+    const handleSession = async (session: any) => {
+      console.log('Processando sessão:', session ? 'Sessão encontrada' : 'Sem sessão');
+      
+      if (!session) {
         if (mounted) {
+          setUser(null);
+          setProfile(null);
+          setIsAdmin(false);
           setIsLoading(false);
         }
+        console.log('Nenhuma sessão encontrada, usuário definido como null');
+        return;
+      }
+      
+      if (mounted) setUser(session.user);
+      console.log("Sessão encontrada com usuário:", session.user.email);
+      
+      try {
+        const profileData = await fetchUserProfile(session.user.id);
+        
+        if (mounted) {
+          setProfile(profileData);
+          setIsAdmin(profileData?.role === 'admin');
+          setIsLoading(false);
+        }
+        console.log('Perfil definido:', profileData?.role);
+      } catch (error) {
+        console.error('Erro ao buscar perfil:', error);
+        if (mounted) setIsLoading(false);
       }
     };
-
-    // Set up auth state listener for future auth changes
+    
+    // Configurar ouvinte de eventos de autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event);
-        await handleSessionChange(session);
+        console.log('Estado da autenticação alterado:', event);
+        await handleSession(session);
       }
     );
-
-    // Check for existing session
+    
+    // Verificar sessão existente
     const initializeAuth = async () => {
       try {
-        console.log("Checking for existing session...");
+        console.log("Verificando sessão existente...");
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('Erro ao obter sessão:', error);
           if (mounted) setIsLoading(false);
           return;
         }
         
-        await handleSessionChange(data.session);
+        await handleSession(data.session);
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('Erro de inicialização de autenticação:', error);
         if (mounted) setIsLoading(false);
       }
     };
-
+    
     initializeAuth();
-
-    // Cleanup
+    
+    // Limpeza
     return () => {
       mounted = false;
       if (authListener && authListener.subscription) {
@@ -109,41 +109,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Memoize the auth value to prevent unnecessary re-renders
+  // Memorizar o valor de autenticação para evitar renderizações desnecessárias
   const authValue = useMemo(() => {
     const signIn = async (email: string, password: string) => {
       try {
         setIsLoading(true);
+        console.log(`Tentando login com: ${email}`);
+        
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro de login:', error.message);
+          toast.error(`Erro de login: ${error.message}`);
+          return { success: false, error: error.message };
+        }
         
-        // Fetch profile after successful login
+        console.log('Login bem-sucedido:', data.user?.email);
+        
+        // Buscar perfil após login bem-sucedido
         if (data.user) {
           try {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', data.user.id)
-              .single();
-
-            if (!profileError && profileData) {
-              setProfile(profileData as Profile);
-              setIsAdmin(profileData?.role === 'admin');
+            const profileData = await fetchUserProfile(data.user.id);
+            
+            if (profileData) {
+              setProfile(profileData);
+              setIsAdmin(profileData.role === 'admin');
+              console.log('Perfil carregado após login:', profileData.role);
             }
           } catch (profileError) {
-            console.error('Error fetching profile after login:', profileError);
+            console.error('Erro ao buscar perfil após login:', profileError);
           }
         }
         
-        console.log('Sign in successful:', data);
         toast.success('Login bem-sucedido');
         return { success: true, data };
       } catch (error: any) {
-        console.error('Sign in error:', error.message);
+        console.error('Erro de login:', error.message);
         toast.error(`Erro de login: ${error.message}`);
         return { success: false, error: error.message };
       } finally {
@@ -154,21 +158,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const signOut = async () => {
       try {
         setIsLoading(true);
+        console.log('Tentando fazer logout');
+        
         const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Erro de logout:', error.message);
+          toast.error(`Erro ao fazer logout: ${error.message}`);
+          return;
+        }
+        
         setProfile(null);
         setUser(null);
-        console.log('Sign out successful');
+        setIsAdmin(false);
+        
+        console.log('Logout bem-sucedido');
         toast.success('Logout realizado com sucesso');
       } catch (error: any) {
-        console.error('Sign out error:', error.message);
+        console.error('Erro de logout:', error.message);
         toast.error(`Erro ao fazer logout: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // For development only - signs in as admin without checking credentials
+    // Para desenvolvimento apenas - faz login como administrador sem verificar credenciais
     const devSignIn = () => {
       const mockProfile: Profile = {
         id: 'dev-user',

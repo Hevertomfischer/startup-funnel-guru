@@ -3,24 +3,48 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './use-auth-hook';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 export const RequireAuth = ({ children }: { children: JSX.Element }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   const [extendedLoading, setExtendedLoading] = useState(false);
   
-  // Set a timeout to show extended loading message if auth takes too long
+  // Configurar um timeout para mostrar mensagem de carregamento estendido se a autenticação demorar muito
   useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    
     if (isLoading) {
-      const timer = setTimeout(() => {
+      console.log('RequireAuth: Iniciando timer para carregamento estendido');
+      timer = setTimeout(() => {
+        console.log('RequireAuth: Tempo estendido de carregamento atingido');
         setExtendedLoading(true);
-      }, 3000);
+        
+        // Após um tempo adicional, automaticamente redirecionar para login
+        setTimeout(() => {
+          if (isLoading) {
+            console.log('RequireAuth: Redirecionando para login após tempo limite');
+            toast.error('Tempo limite de autenticação excedido', {
+              description: 'Redirecionando para a página de login'
+            });
+            // O Navigate será acionado na próxima renderização devido ao estado extendedLoading
+          }
+        }, 5000); // 5 segundos adicionais antes de redirecionar
+      }, 3000); // 3 segundos
       
-      return () => clearTimeout(timer);
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
     } else {
       setExtendedLoading(false);
     }
   }, [isLoading]);
+
+  console.log('RequireAuth: Estado atual -', { 
+    isLoading, 
+    user: !!user, 
+    extendedLoading 
+  });
 
   if (isLoading) {
     return (
@@ -34,7 +58,7 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
           {extendedLoading && (
             <div className="mt-4 text-amber-500 text-sm max-w-md">
               <p>A verificação está demorando mais que o normal.</p>
-              <p className="mt-2">Se o problema persistir, tente recarregar a página ou fazer login novamente.</p>
+              <p className="mt-2">Redirecionando para a página de login...</p>
               <Navigate to="/login" state={{ from: location }} replace />
             </div>
           )}
@@ -44,9 +68,11 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
   }
 
   if (!user) {
-    // Redirect to login, but save the current location to redirect back after login
+    console.log('RequireAuth: Usuário não autenticado, redirecionando para login');
+    // Redirecionar para login, mas salvar a localização atual para redirecionar de volta após o login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  console.log('RequireAuth: Usuário autenticado, renderizando conteúdo protegido');
   return children;
 };
