@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { AuthContext } from './auth-context';
-import { fetchUserProfile } from './utils';
+import { toast } from 'sonner';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
@@ -14,6 +14,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("Auth provider mounted");
     let mounted = true;
+    
+    // Function to fetch profile for a user
+    const fetchUserProfile = async (userId: string) => {
+      try {
+        console.log(`Fetching profile for user ID: ${userId}`);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return null;
+        }
+        
+        console.log('Profile data retrieved:', data);
+        return data as Profile;
+      } catch (error) {
+        console.error('Unexpected error fetching profile:', error);
+        return null;
+      }
+    };
     
     // Function to handle session state changes
     const handleSessionChange = async (session: any) => {
@@ -100,15 +123,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Fetch profile after successful login
         if (data.user) {
-          const profileData = await fetchUserProfile(data.user.id);
-          setProfile(profileData);
-          setIsAdmin(profileData?.role === 'admin');
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .single();
+
+            if (!profileError && profileData) {
+              setProfile(profileData as Profile);
+              setIsAdmin(profileData?.role === 'admin');
+            }
+          } catch (profileError) {
+            console.error('Error fetching profile after login:', profileError);
+          }
         }
         
         console.log('Sign in successful:', data);
+        toast.success('Login bem-sucedido');
         return { success: true, data };
       } catch (error: any) {
         console.error('Sign in error:', error.message);
+        toast.error(`Erro de login: ${error.message}`);
         return { success: false, error: error.message };
       } finally {
         setIsLoading(false);
@@ -121,9 +157,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
         setProfile(null);
+        setUser(null);
         console.log('Sign out successful');
+        toast.success('Logout realizado com sucesso');
       } catch (error: any) {
         console.error('Sign out error:', error.message);
+        toast.error(`Erro ao fazer logout: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -145,6 +184,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(mockProfile);
       setIsAdmin(true);
       setIsLoading(false);
+      toast.success('Dev login realizado');
     };
 
     return {

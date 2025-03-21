@@ -63,6 +63,7 @@ const Index = () => {
     );
   }
 
+  // This should almost never be seen, as the useEffect should redirect immediately
   return (
     <div className="flex h-screen items-center justify-center p-4">
       <div className="text-center">

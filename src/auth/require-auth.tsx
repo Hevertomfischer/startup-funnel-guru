@@ -35,6 +35,7 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
             <div className="mt-4 text-amber-500 text-sm max-w-md">
               <p>A verificação está demorando mais que o normal.</p>
               <p className="mt-2">Se o problema persistir, tente recarregar a página ou fazer login novamente.</p>
+              <Navigate to="/login" state={{ from: location }} replace />
             </div>
           )}
         </div>

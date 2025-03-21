@@ -17,7 +17,7 @@ export default function Login() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const { signIn, isLoading, user } = useAuth();
+  const { signIn, isLoading, user, devSignIn } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -192,7 +192,6 @@ export default function Login() {
               variant="outline" 
               className="w-full"
               onClick={() => {
-                const { devSignIn } = useAuth();
                 devSignIn();
                 navigate('/dashboard');
               }}
@@ -204,4 +203,4 @@ export default function Login() {
       </div>
     </div>
   );
-};
+}
