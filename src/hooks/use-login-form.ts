@@ -82,7 +82,7 @@ export function useLoginForm() {
 
   const handleDevLogin = () => {
     devSignIn();
-    navigate(from);
+    navigate(from, { replace: true });
   };
 
   return {
