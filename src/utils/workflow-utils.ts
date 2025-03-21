@@ -1,12 +1,10 @@
 
-// This file is being replaced by src/hooks/workflow/workflow-utils.ts
-// Re-exporting for backward compatibility
-import { getWorkflowRules, saveWorkflowRules, getTasks, saveTasks, initializeWorkflowRules } from '@/hooks/workflow';
+import { WorkflowRule } from '@/types';
 
-export {
-  getWorkflowRules,
-  saveWorkflowRules,
-  getTasks,
-  saveTasks,
-  initializeWorkflowRules
+// Initialize workflow rules if they don't exist
+export const initializeWorkflowRules = (): void => {
+  const existingRules = localStorage.getItem('workflowRules');
+  if (!existingRules) {
+    localStorage.setItem('workflowRules', JSON.stringify([]));
+  }
 };

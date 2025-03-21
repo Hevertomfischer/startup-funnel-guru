@@ -1,60 +1,62 @@
 
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
+  Kanban, 
   List, 
-  KanbanSquare, 
-  Users, 
-  BarChartHorizontal, 
-  FileText, 
-  Mail, 
-  Settings, 
+  TrendingUp, 
   Workflow, 
-  ListTodo,
-  Briefcase
+  Users, 
+  Mail, 
+  Settings,
+  FileBarChart,
+  ClipboardList,
+  DollarSign
 } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { ProtectedContent } from '@/hooks/use-role-guard';
 
-interface SidebarLinkProps {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-}
+const SidebarNav = () => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const { isAdmin } = useAuth();
 
-const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label }) => {
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
-          isActive
-            ? 'bg-accent text-accent-foreground font-medium'
-            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-        }`
-      }
-    >
-      <span className="mr-3">{icon}</span>
-      {label}
-    </NavLink>
-  );
-};
+  // Define all navigation items
+  const allNavItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" />, adminOnly: false },
+    { name: 'Board', path: '/board', icon: <Kanban className="h-5 w-5" />, adminOnly: true },
+    { name: 'List View', path: '/list', icon: <List className="h-5 w-5" />, adminOnly: true },
+    { name: 'Tasks', path: '/tasks', icon: <ClipboardList className="h-5 w-5" />, adminOnly: true },
+    { name: 'Workflow', path: '/workflow', icon: <Workflow className="h-5 w-5" />, adminOnly: true },
+    { name: 'Analytics', path: '/analytics', icon: <TrendingUp className="h-5 w-5" />, adminOnly: true },
+    { name: 'Team', path: '/team', icon: <Users className="h-5 w-5" />, adminOnly: true },
+    { name: 'Email Templates', path: '/emails', icon: <Mail className="h-5 w-5" />, adminOnly: true },
+    { name: 'Reports', path: '/reports', icon: <FileBarChart className="h-5 w-5" />, adminOnly: true },
+    { name: 'Área do Investidor', path: '/investors', icon: <DollarSign className="h-5 w-5" />, adminOnly: false },
+    { name: 'Settings', path: '/settings', icon: <Settings className="h-5 w-5" />, adminOnly: false },
+  ];
 
-const SidebarNav: React.FC = () => {
-  const iconSize = { size: 18 };
+  // Filter items based on user role
+  const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <nav className="space-y-1 px-2">
-      <SidebarLink to="/dashboard" icon={<LayoutDashboard {...iconSize} />} label="Dashboard" />
-      <SidebarLink to="/board" icon={<KanbanSquare {...iconSize} />} label="Board" />
-      <SidebarLink to="/list" icon={<List {...iconSize} />} label="Lista" />
-      <SidebarLink to="/portfolio" icon={<Briefcase {...iconSize} />} label="Portfólio" />
-      <SidebarLink to="/tasks" icon={<ListTodo {...iconSize} />} label="Tarefas" />
-      <SidebarLink to="/workflow" icon={<Workflow {...iconSize} />} label="Workflow" />
-      <SidebarLink to="/team" icon={<Users {...iconSize} />} label="Equipe" />
-      <SidebarLink to="/analytics" icon={<BarChartHorizontal {...iconSize} />} label="Analytics" />
-      <SidebarLink to="/reports" icon={<FileText {...iconSize} />} label="Relatórios" />
-      <SidebarLink to="/emails" icon={<Mail {...iconSize} />} label="E-mails" />
-      <SidebarLink to="/settings" icon={<Settings {...iconSize} />} label="Configurações" />
+      {navItems.map((item, index) => (
+        <Link
+          key={index}
+          to={item.path}
+          className={`
+            flex items-center px-3 py-2 text-sm rounded-md transition-colors
+            ${currentPath === item.path || (item.path !== '/dashboard' && currentPath.includes(item.path))
+              ? 'bg-accent text-accent-foreground'
+              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+            }
+          `}
+        >
+          {item.icon}
+          <span className="ml-3">{item.name}</span>
+        </Link>
+      ))}
     </nav>
   );
 };

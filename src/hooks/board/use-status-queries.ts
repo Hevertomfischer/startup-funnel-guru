@@ -1,47 +1,8 @@
 
 import { useMemo, useEffect } from 'react';
 import { useStartupsByStatus } from '../use-startups-by-status';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useStatusQueries = ({ statuses, columns }: { statuses: any[], columns: any[] }) => {
-  const { toast } = useToast();
-  
-  // Verificar diretamente a conexão com o Supabase
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        console.log("Checking Supabase connection in useStatusQueries");
-        const { data, error } = await supabase.from('statuses').select('count');
-        
-        if (error) {
-          console.error("Failed to connect to Supabase:", error);
-          toast({
-            title: "Erro de conexão",
-            description: "Não foi possível conectar ao banco de dados. Tente novamente mais tarde.",
-            variant: "destructive",
-          });
-        } else {
-          console.log("Supabase connection verified successfully");
-        }
-      } catch (e) {
-        console.error("Unexpected error checking Supabase connection:", e);
-      }
-    };
-    
-    checkConnection();
-  }, [toast]);
-  
-  // Log detailed information about statuses and columns for debugging
-  useEffect(() => {
-    console.log("useStatusQueries received:", { 
-      statusesCount: statuses?.length || 0, 
-      columnsCount: columns?.length || 0,
-      statusesData: statuses?.map(s => ({id: s.id, name: s.name})) || [],
-      columnsData: columns?.map(c => ({id: c.id, title: c.title})) || []
-    });
-  }, [statuses, columns]);
-  
   // Get all status IDs from the columns array
   const statusIds = useMemo(() => 
     columns.map(column => column.id),
@@ -50,6 +11,7 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
 
   // Each hook must be called unconditionally at the top level
   // We'll use fixed number of hooks based on maximum possible number of statuses
+  // We're using 12 as the maximum number of possible statuses
   const query1 = useStartupsByStatus(statusIds[0] || 'placeholder-1');
   const query2 = useStartupsByStatus(statusIds[1] || 'placeholder-2');
   const query3 = useStartupsByStatus(statusIds[2] || 'placeholder-3');
@@ -95,17 +57,6 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
       result[statusId] = query;
     });
     
-    console.log("Final mapped queries:", {
-      queriesCount: Object.keys(result).length,
-      queriesKeys: Object.keys(result),
-      queriesSummary: Object.entries(result).map(([key, val]) => ({
-        statusId: key,
-        dataCount: (val as any).data?.length || 0,
-        isLoading: (val as any).isLoading,
-        isError: (val as any).isError
-      }))
-    });
-    
     return result;
   }, [queryResults]);
   
@@ -127,20 +78,8 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
       });
 
       // Update columns with startupIds
-      if (updatedColumns.some((col, i) => 
-          col.startupIds?.length !== columns[i].startupIds?.length)) {
-        console.log('Updating columns with startupIds', 
-          { 
-            updatedColumns: updatedColumns.map(c => ({ 
-              id: c.id, 
-              startupIds: c.startupIds?.length 
-            })),
-            originals: columns.map(c => ({ 
-              id: c.id, 
-              startupIds: c.startupIds?.length 
-            }))
-          }
-        );
+      if (updatedColumns.some((col, i) => col.startupIds.length !== columns[i].startupIds.length)) {
+        console.log('Updating columns with startupIds', updatedColumns);
       }
     }
   }, [columns, queries]);
@@ -148,26 +87,36 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
   // Check if any real query (not placeholder) is loading
   const isLoading = useMemo(() => {
     return statusIds.some((id, index) => {
-      if (!id || id.startsWith('placeholder-')) return false;
-      const query = queries[id];
-      return query?.isLoading;
+      if (!id) return false;
+      const queryIndex = index + 1;
+      const query = eval(`query${queryIndex}`);
+      return query.isLoading;
     });
-  }, [statusIds, queries]);
+  }, [
+    statusIds,
+    query1, query2, query3, query4, query5, query6,
+    query7, query8, query9, query10, query11, query12
+  ]);
   
   // Check if any real query (not placeholder) has an error
   const isError = useMemo(() => {
     return statusIds.some((id, index) => {
-      if (!id || id.startsWith('placeholder-')) return false;
-      const query = queries[id];
-      return query?.isError;
+      if (!id) return false;
+      const queryIndex = index + 1;
+      const query = eval(`query${queryIndex}`);
+      return query.isError;
     });
-  }, [statusIds, queries]);
+  }, [
+    statusIds,
+    query1, query2, query3, query4, query5, query6,
+    query7, query8, query9, query10, query11, query12
+  ]);
 
   // Create a function to get a startup by its ID from any of the queries
   const getStartupById = (id: string) => {
     // Check all status queries
     for (const statusId of statusIds) {
-      if (!statusId || statusId.startsWith('placeholder-')) continue;
+      if (!statusId) continue;
       const query = queries[statusId];
       if (!query || !query.data) continue;
       
@@ -177,18 +126,6 @@ export const useStatusQueries = ({ statuses, columns }: { statuses: any[], colum
     }
     return undefined;
   };
-
-  // If there are no boards yet and we're not loading, notify the user via toast
-  useEffect(() => {
-    if (!isLoading && columns.length === 0 && statuses.length === 0) {
-      console.log("No statuses available. Suggesting to add a column.");
-      toast({
-        title: "Board vazio",
-        description: "Adicione uma coluna para começar a organizar suas startups.",
-        duration: 5000,
-      });
-    }
-  }, [isLoading, columns.length, statuses.length, toast]);
   
   return { 
     queries, 

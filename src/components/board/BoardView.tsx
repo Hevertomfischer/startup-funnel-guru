@@ -1,23 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
-import { useBoardState } from '@/hooks/board/use-board-state';
-import { useConnectionCheck } from '@/hooks/board/use-connection-check';
-import BoardContent from '@/components/board/BoardContent';
+import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import BoardHeader from '@/components/BoardHeader';
+import BoardContainer from '@/components/board/BoardContainer';
 import BoardDialogs from '@/components/board/BoardDialogs';
-import BoardStateManager from '@/components/board/states/BoardStateManager';
-import BoardDebugInfo from '@/components/board/debug/BoardDebugInfo';
-import { toast } from '@/components/ui/use-toast';
+import { useBoardState } from '@/hooks/board/use-board-state';
 
 const BoardView = () => {
   // Component state
   const [showCompactCards, setShowCompactCards] = useState(false);
-  const [loadingStartTime] = useState(Date.now());
-  const [showExtendedDebug, setShowExtendedDebug] = useState(false);
   
-  // Check connection with Supabase
-  const { connectionError, isRetrying, statusesCount, handleRetryConnection } = useConnectionCheck();
-  
-  // Use the board state hook to get all data and handlers
+  // Use the board state hook to get all the data and handlers
   const boardState = useBoardState();
   
   const {
@@ -69,85 +63,90 @@ const BoardView = () => {
     handleStatusUpdated
   } = boardState;
   
-  // Check if loading is taking too long
-  useEffect(() => {
-    const loadingTimeoutId = setTimeout(() => {
-      if (isLoadingStatuses && !connectionError) {
-        console.log("Carregamento demorado detectado");
-        toast({
-          title: "Carregamento demorado",
-          description: "O carregamento está demorando mais que o esperado. Tentando reconectar...",
-        });
-        
-        // Show additional debug information
-        setShowExtendedDebug(true);
-      }
-    }, 10000); // 10 seconds
-
-    return () => clearTimeout(loadingTimeoutId);
-  }, [isLoadingStatuses, connectionError]);
-  
-  // Detailed logs about current state
-  console.log("BoardView renderizando", { 
-    columnsCount: columns?.length || 0,
-    statusesCount: statuses?.length || 0,
-    isLoadingStatuses,
-    isErrorStatuses,
-    hasQueries: Object.keys(mappedQueries || {}).length,
-    connectionError,
-    loadingTime: (Date.now() - loadingStartTime) / 1000, // loading time in seconds
-    queriesSummary: Object.entries(mappedQueries || {}).map(([key, val]) => ({
-      statusId: key,
-      dataCount: (val as any).data?.length || 0,
-      isLoading: (val as any).isLoading,
-      isError: (val as any).isError
-    }))
-  });
-  
-  // Function to toggle debug mode
-  const toggleDebugMode = () => {
-    setShowExtendedDebug(prev => !prev);
+  // Function to open the add startup dialog with the first status
+  const openAddStartupDialog = () => {
+    if (statuses && statuses.length > 0) {
+      console.log("Opening add startup dialog with status:", statuses[0]);
+      handleAddStartup(statuses[0].id);
+    } else {
+      console.log("No statuses available to add startup");
+    }
   };
   
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+  
+  if (isLoadingStatuses) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Loading board...</span>
+      </div>
+    );
+  }
+  
+  if (isErrorStatuses) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-destructive">Failed to load board</h2>
+          <p className="text-muted-foreground mt-2">Please try again later</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <BoardStateManager
-      connectionError={connectionError}
-      isRetrying={isRetrying}
-      handleRetryConnection={handleRetryConnection}
-      isLoadingStatuses={isLoadingStatuses}
-      isErrorStatuses={isErrorStatuses}
-      statuses={statuses}
-      showExtendedDebug={showExtendedDebug}
-      toggleDebugMode={toggleDebugMode}
-      loadingStartTime={loadingStartTime}
-      statusesCount={statusesCount}
-      columns={columns}
-      setShowCreateStatusDialog={setShowCreateStatusDialog}
-    >
-      <BoardContent
-        columns={columns}
-        statuses={statuses}
-        mappedQueries={mappedQueries}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        showCompactCards={showCompactCards}
-        setShowCompactCards={setShowCompactCards}
-        handleDragStart={handleDragStart}
-        handleDragOver={handleDragOver}
-        handleDrop={handleDrop}
-        handleDragEnd={handleDragEnd}
-        draggingStartupId={draggingStartupId}
-        handleAddStartup={handleAddStartup}
-        createStartupMutation={createStartupMutation}
-        handleCardClick={handleCardClick}
-        handleDeleteStartup={handleDeleteStartup}
-        setShowCreateStatusDialog={setShowCreateStatusDialog}
-        setStatusToEdit={setStatusToEdit}
-        handleColumnDragStart={handleColumnDragStart}
-        handleColumnDragOver={handleColumnDragOver}
-        handleColumnDrop={handleColumnDrop}
-        handleCreateTask={handleCreateTask}
-      />
+    <>
+      <div className="h-[calc(100vh-4rem)] flex flex-col">
+        <BoardHeader 
+          showCompactCards={showCompactCards}
+          setShowCompactCards={setShowCompactCards}
+          addNewStartup={openAddStartupDialog}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+        />
+        
+        {columns.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center flex-col gap-4">
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-4 w-56" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+            <button 
+              onClick={() => setShowCreateStatusDialog(true)}
+              className="text-primary hover:underline"
+            >
+              Add your first column
+            </button>
+          </div>
+        ) : (
+          <BoardContainer
+            columns={columns}
+            statuses={statuses}
+            columnQueries={mappedQueries}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            draggingStartupId={draggingStartupId}
+            onAddStartup={handleAddStartup}
+            isPendingAdd={createStartupMutation.isPending}
+            pendingAddStatusId={createStartupMutation.isPending ? createStartupMutation.variables?.status_id : null}
+            onCardClick={handleCardClick}
+            onDeleteStartup={handleDeleteStartup}
+            showCompactCards={showCompactCards}
+            addNewColumn={() => setShowCreateStatusDialog(true)}
+            onEditColumn={setStatusToEdit}
+            onColumnDragStart={handleColumnDragStart}
+            onColumnDragOver={handleColumnDragOver}
+            onColumnDrop={handleColumnDrop}
+            onCreateTask={handleCreateTask}
+          />
+        )}
+      </div>
       
       <BoardDialogs
         showCreateStatusDialog={showCreateStatusDialog}
@@ -167,16 +166,7 @@ const BoardView = () => {
         createStartupMutation={createStartupMutation}
         updateStartupMutation={updateStartupMutation}
       />
-      
-      <BoardDebugInfo
-        showExtendedDebug={showExtendedDebug}
-        setShowExtendedDebug={setShowExtendedDebug}
-        loadingStartTime={loadingStartTime}
-        statusesCount={statusesCount}
-        columns={columns}
-        mappedQueries={mappedQueries}
-      />
-    </BoardStateManager>
+    </>
   );
 };
 

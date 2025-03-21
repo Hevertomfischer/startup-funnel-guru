@@ -1,97 +1,74 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import { Toaster } from 'sonner';
+import ViewToggle from '@/components/ViewToggle';
+import { ViewMode } from '@/types';
+import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/auth';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 
 const Index = () => {
-  const { user, isLoading, initializationComplete } = useAuth();
+  const [viewMode, setViewMode] = useState<ViewMode>('board');
+  const [searchTerm, setSearchTerm] = useState('');
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [extendedLoading, setExtendedLoading] = useState(false);
   
-  useEffect(() => {
-    console.log('Index: Estado atual -', { 
-      isLoading, 
-      user: !!user, 
-      initializationComplete 
-    });
-    
-    // Só redirecionar quando a inicialização estiver completa
-    if (initializationComplete) {
-      if (user) {
-        console.log('Index: Usuário autenticado, redirecionando para dashboard');
-        navigate('/dashboard', { replace: true });
-      } else {
-        console.log('Index: Usuário não autenticado, redirecionando para login');
-        navigate('/login', { replace: true });
-      }
-    }
-    
-    // Configurar timeout para mostrar mensagem de carregamento estendido
-    const timer = setTimeout(() => {
-      if (isLoading || !initializationComplete) {
-        console.log('Index: Tempo estendido de carregamento atingido');
-        setExtendedLoading(true);
-      }
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, [user, isLoading, navigate, initializationComplete]);
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    console.log('Searching for:', term);
+    // Further search implementation would go here
+  };
 
-  // Mostrar estado de carregamento enquanto verifica a autenticação
-  if (isLoading || !initializationComplete) {
+  useEffect(() => {
+    // Redirect to login if not authenticated and not currently loading
+    if (!isLoading && !user) {
+      console.log('No user detected, redirecting to login page');
+      navigate('/login');
+    }
+  }, [user, isLoading, navigate]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center flex-col gap-4 p-4">
-        <div className="text-center max-w-sm w-full">
+      <div className="flex h-screen items-center justify-center flex-col gap-4">
+        <div className="text-center">
           <Skeleton className="h-12 w-12 rounded-full mx-auto mb-4" />
           <Skeleton className="h-4 w-48 mx-auto mb-2" />
           <Skeleton className="h-3 w-32 mx-auto" />
         </div>
         <p className="text-muted-foreground">Carregando aplicação...</p>
-        
-        {extendedLoading && (
-          <div className="mt-4 space-y-4">
-            <p className="text-amber-500">O carregamento está demorando mais que o normal.</p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                variant="default" 
-                onClick={() => {
-                  console.log('Index: Forçando redirecionamento para login');
-                  navigate('/login', { replace: true });
-                }}
-              >
-                Ir para login
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  console.log('Index: Recarregando página');
-                  window.location.reload();
-                }}
-              >
-                Recarregar página
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
 
-  // Isso quase nunca deve ser visto, pois o useEffect deve redirecionar imediatamente
+  // If not loading and no user, return null (will redirect in useEffect)
+  if (!user) {
+    return null;
+  }
+
   return (
-    <div className="flex h-screen items-center justify-center p-4">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Bem-vindo ao Sistema</h1>
-        <p className="mt-4 text-muted-foreground">Redirecionando...</p>
-        <Button 
-          className="mt-6" 
-          onClick={() => navigate('/login')}
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <Sidebar />
+      
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden ml-64">
+        <Header 
+          view={viewMode} 
+          setView={setViewMode} 
+          onSearch={handleSearch}
         >
-          Ir para Login
-        </Button>
+          <div className="flex items-center gap-4">
+            <ViewToggle view={viewMode} setView={setViewMode} />
+          </div>
+        </Header>
+        
+        <main className="flex-1 overflow-auto p-4">
+          <Outlet />
+          <Toaster position="top-right" />
+        </main>
       </div>
     </div>
   );

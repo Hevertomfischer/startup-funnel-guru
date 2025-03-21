@@ -10,7 +10,7 @@ import { useBoardDragDrop } from './use-board-drag-drop';
 import { useBoardDialogs } from './use-board-dialogs';
 import { useBoardSearch } from './use-board-search';
 import { useStartupDeletion } from './use-startup-deletion';
-import { useStatusQueries } from './status-queries';
+import { useStatusQueries } from './use-status-queries';
 
 export function useBoardState() {
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ export function useBoardState() {
   // Get the startup deletion handler
   const { handleDeleteStartup } = useStartupDeletion();
   
-  // Get all the startup actions
+  // Get all the startup dialog handlers
   const {
     createStartupMutation,
     updateStartupMutation,
@@ -73,11 +73,9 @@ export function useBoardState() {
     setShowEditDialog,
     handleAddStartup,
     handleCreateStartup,
-    handleUpdateStartup,
-    handleCardClick,
     handleEditStartup,
-    handleCopyStartup,
-    handleStartupDetail
+    handleUpdateStartup,
+    handleCardClick
   } = useStartupActions();
   
   // Get all the status dialog handlers

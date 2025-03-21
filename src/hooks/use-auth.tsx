@@ -1,6 +1,17 @@
 
-// This file serves as a transitional export to maintain compatibility
-// with existing imports while we refactor the codebase.
-// In the future, all imports should come directly from '@/auth'
+import { useAuthContext } from '@/contexts/auth-context';
+import { Profile } from '@/types/auth';
 
-export { AuthProvider, useAuth, RequireAuth } from '@/auth';
+// Re-export the AuthProvider from the context
+export { AuthProvider } from '@/contexts/auth-context';
+
+// Re-export the Profile type
+export type { Profile };
+
+// Custom hook to use the auth context
+export const useAuth = () => {
+  return useAuthContext();
+};
+
+// Re-export the useRoleGuard functionality
+export { useRoleGuard } from '@/hooks/use-role-guard';

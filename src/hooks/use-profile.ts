@@ -6,9 +6,6 @@ import { fetchProfile } from '@/services/auth-service';
 
 /**
  * Hook to manage loading and fetching user profile
- * 
- * Note: Consider using the useAuth hook from @/auth instead as it provides
- * similar functionality with the profile already loaded.
  */
 export const useProfile = (user: User | null) => {
   const [profile, setProfile] = useState<Profile | null>(null);
