@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [initializationComplete, setInitializationComplete] = useState(false);
 
-  // Função para buscar o perfil do usuário
+  // Função para buscar o perfil do usuário de forma confiável
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log(`Buscando perfil para o usuário ID: ${userId}`);
@@ -38,67 +38,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Auth provider montado");
     let mounted = true;
     
-    // Função para lidar com mudanças na sessão
-    const handleSessionChange = async (currentSession: any) => {
-      console.log('Processando mudança de sessão:', currentSession ? 'Sessão encontrada' : 'Sem sessão');
-      
-      if (!currentSession) {
-        if (mounted) {
-          setUser(null);
-          setProfile(null);
-          setIsAdmin(false);
-          setIsLoading(false);
-        }
-        console.log('Nenhuma sessão encontrada, usuário definido como null');
-        return;
-      }
-      
-      if (mounted) setUser(currentSession.user);
-      console.log("Sessão encontrada com usuário:", currentSession.user.email);
-      
-      try {
-        const profileData = await fetchUserProfile(currentSession.user.id);
-        
-        if (mounted) {
-          setProfile(profileData);
-          setIsAdmin(profileData?.role === 'admin');
-        }
-      } catch (error) {
-        console.error('Erro ao buscar perfil:', error);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-          setInitializationComplete(true);
-        }
-      }
-    };
-    
-    // Configurar ouvinte de eventos de autenticação primeiro
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Estado da autenticação alterado:', event);
-        await handleSessionChange(session);
-      }
-    );
-    
-    // Depois verificar a sessão atual
+    // Verificar sessão atual imediatamente ao montar o componente
     const checkCurrentSession = async () => {
       try {
         console.log("Verificando sessão existente...");
-        setIsLoading(true);
         
-        const { data, error } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Erro ao obter sessão:', error);
+        if (sessionError) {
+          console.error('Erro ao obter sessão:', sessionError);
           if (mounted) {
+            setUser(null);
+            setProfile(null);
             setIsLoading(false);
             setInitializationComplete(true);
           }
           return;
         }
         
-        await handleSessionChange(data.session);
+        const session = sessionData?.session;
+        
+        if (!session) {
+          console.log('Nenhuma sessão encontrada, usuário definido como null');
+          if (mounted) {
+            setUser(null);
+            setProfile(null);
+            setIsLoading(false);
+            setInitializationComplete(true);
+          }
+          return;
+        }
+        
+        console.log("Sessão encontrada com usuário:", session.user.email);
+        if (mounted) setUser(session.user);
+        
+        try {
+          const profileData = await fetchUserProfile(session.user.id);
+          
+          if (mounted) {
+            setProfile(profileData);
+            setIsAdmin(profileData?.role === 'admin');
+            setIsLoading(false);
+            setInitializationComplete(true);
+          }
+        } catch (profileError) {
+          console.error('Erro ao buscar perfil:', profileError);
+          if (mounted) {
+            setIsLoading(false);
+            setInitializationComplete(true);
+          }
+        }
       } catch (error) {
         console.error('Erro de inicialização de autenticação:', error);
         if (mounted) {
@@ -108,6 +97,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
     
+    // Configurar ouvinte de eventos de autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Estado da autenticação alterado:', event);
+        
+        if (!session) {
+          if (mounted) {
+            setUser(null);
+            setProfile(null);
+            setIsAdmin(false);
+            setIsLoading(false);
+          }
+          console.log('Nenhuma sessão encontrada, usuário definido como null');
+          return;
+        }
+        
+        console.log("Sessão encontrada com usuário:", session.user.email);
+        if (mounted) setUser(session.user);
+        
+        try {
+          const profileData = await fetchUserProfile(session.user.id);
+          
+          if (mounted) {
+            setProfile(profileData);
+            setIsAdmin(profileData?.role === 'admin');
+            setIsLoading(false);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar perfil:', error);
+          if (mounted) {
+            setIsLoading(false);
+          }
+        }
+      }
+    );
+    
+    // Iniciar verificação de sessão
     checkCurrentSession();
     
     // Limpeza

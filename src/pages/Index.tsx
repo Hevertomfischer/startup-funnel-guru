@@ -7,14 +7,19 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 const Index = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, initializationComplete } = useAuth();
   const navigate = useNavigate();
   const [extendedLoading, setExtendedLoading] = useState(false);
   
   useEffect(() => {
-    console.log('Index: Estado atual -', { isLoading, user: !!user });
+    console.log('Index: Estado atual -', { 
+      isLoading, 
+      user: !!user, 
+      initializationComplete 
+    });
     
-    const redirectUser = () => {
+    // Só redirecionar quando a inicialização estiver completa
+    if (initializationComplete && !isLoading) {
       if (user) {
         console.log('Index: Usuário autenticado, redirecionando para dashboard');
         navigate('/dashboard', { replace: true });
@@ -22,26 +27,21 @@ const Index = () => {
         console.log('Index: Usuário não autenticado, redirecionando para login');
         navigate('/login', { replace: true });
       }
-    };
-    
-    // Somente redirecionar se o carregamento estiver concluído
-    if (!isLoading) {
-      redirectUser();
     }
     
-    // Configurar um timeout para mostrar mensagem de carregamento estendido se a autenticação demorar muito
+    // Configurar timeout para mostrar mensagem de carregamento estendido
     const timer = setTimeout(() => {
       if (isLoading) {
         console.log('Index: Tempo estendido de carregamento atingido');
         setExtendedLoading(true);
       }
-    }, 5000);
+    }, 3000);
     
     return () => clearTimeout(timer);
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, initializationComplete]);
 
-  // Mostrar um estado de carregamento enquanto verifica a autenticação
-  if (isLoading) {
+  // Mostrar estado de carregamento enquanto verifica a autenticação
+  if (isLoading || !initializationComplete) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4 p-4">
         <div className="text-center max-w-sm w-full">

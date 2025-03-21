@@ -18,7 +18,7 @@ export default function Login() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const { signIn, isLoading, user, devSignIn } = useAuth();
+  const { signIn, isLoading, user, devSignIn, initializationComplete } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,17 +26,22 @@ export default function Login() {
   const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
-    console.log('Login: Estado atual -', { user: !!user, isLoading, from });
+    console.log('Login: Estado atual -', { 
+      user: !!user, 
+      isLoading, 
+      from,
+      initializationComplete
+    });
     
-    // Se não estiver carregando e o usuário estiver autenticado, redirecionar
-    if (user && !isLoading) {
+    // Se a autenticação estiver completa e o usuário estiver autenticado, redirecionar
+    if (user && initializationComplete && !isLoading) {
       console.log('Login: Usuário já autenticado, redirecionando para', from);
       toast.success('Redirecionando para o dashboard', {
         description: 'Você já está autenticado'
       });
-      navigate(from);
+      navigate(from, { replace: true });
     }
-  }, [user, isLoading, navigate, from]);
+  }, [user, isLoading, navigate, from, initializationComplete]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +64,7 @@ export default function Login() {
         toast.success('Login bem-sucedido', {
           description: 'Redirecionando para o dashboard'
         });
-        navigate(from);
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
       console.error('Erro de login:', error);

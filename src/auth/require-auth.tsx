@@ -11,51 +11,54 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
   const [extendedLoading, setExtendedLoading] = useState(false);
   const [redirectToLogin, setRedirectToLogin] = useState(false);
   
-  // Configurar um timeout para mostrar mensagem de carregamento estendido se a autenticação demorar muito
+  // Configurar timeout para mostrar mensagem de carregamento estendido e redirecionar
   useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
+    let extendedTimer: NodeJS.Timeout | undefined;
     let redirectTimer: NodeJS.Timeout | undefined;
     
-    if (isLoading) {
+    if (isLoading && !redirectToLogin) {
       console.log('RequireAuth: Iniciando timer para carregamento estendido');
-      timer = setTimeout(() => {
+      extendedTimer = setTimeout(() => {
         console.log('RequireAuth: Tempo estendido de carregamento atingido');
         setExtendedLoading(true);
         
-        // Após um tempo adicional, automaticamente redirecionar para login
+        // Após mais tempo, forçar redirecionamento para login
         redirectTimer = setTimeout(() => {
-          if (isLoading) {
-            console.log('RequireAuth: Redirecionando para login após tempo limite');
-            toast.error('Tempo limite de autenticação excedido', {
-              description: 'Redirecionando para a página de login'
-            });
-            setRedirectToLogin(true);
-          }
-        }, 5000); // 5 segundos adicionais antes de redirecionar
-      }, 3000); // 3 segundos
-      
-      return () => {
-        if (timer) clearTimeout(timer);
-        if (redirectTimer) clearTimeout(redirectTimer);
-      };
-    } else {
-      setExtendedLoading(false);
-      if (timer) clearTimeout(timer);
-      if (redirectTimer) clearTimeout(redirectTimer);
+          console.log('RequireAuth: Redirecionando para login após tempo limite');
+          toast.error('Tempo limite de autenticação excedido', {
+            description: 'Redirecionando para a página de login'
+          });
+          setRedirectToLogin(true);
+        }, 3000); // 3 segundos adicionais antes de redirecionar
+      }, 2000); // 2 segundos
     }
-  }, [isLoading]);
+    
+    return () => {
+      if (extendedTimer) clearTimeout(extendedTimer);
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
+  }, [isLoading, redirectToLogin]);
+
+  // Adicionar efeito para forçar redirecionamento quando a inicialização estiver completa e não houver usuário
+  useEffect(() => {
+    if (initializationComplete && !user && !isLoading) {
+      console.log('RequireAuth: Inicialização completa, sem usuário, redirecionando para login');
+      setRedirectToLogin(true);
+    }
+  }, [initializationComplete, user, isLoading]);
 
   console.log('RequireAuth: Estado atual -', { 
     isLoading, 
     user: !!user, 
     extendedLoading,
     initializationComplete,
-    redirectToLogin
+    redirectToLogin,
+    path: location.pathname
   });
 
-  // Redirecionar para login se o timer de redirecionamento for ativado
-  if (redirectToLogin) {
-    console.log('RequireAuth: Redirecionando para login devido ao timer de redirecionamento');
+  // Redirecionar para login se o timer de redirecionamento for ativado ou não houver usuário após inicialização
+  if (redirectToLogin || (initializationComplete && !user && !isLoading)) {
+    console.log('RequireAuth: Redirecionando para login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -78,12 +81,6 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
         </div>
       </div>
     );
-  }
-
-  // Redirecionar para login se não houver usuário autenticado
-  if (!user) {
-    console.log('RequireAuth: Usuário não autenticado, redirecionando para login');
-    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Mostrar conteúdo protegido para usuários autenticados
