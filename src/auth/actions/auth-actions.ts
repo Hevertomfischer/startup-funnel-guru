@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { fetchUserProfile } from '../utils/profile-utils';
 import { Profile } from '@/types/auth';
+import { User } from '@supabase/supabase-js';
 
 /**
  * Sign in with email and password
@@ -60,7 +61,7 @@ export const signOut = async () => {
 /**
  * Development-only mock sign in function
  */
-export const devSignIn = (): { mockUser: any; mockProfile: Profile } => {
+export const devSignIn = (): { mockUser: User; mockProfile: Profile } => {
   const mockProfile: Profile = {
     id: 'dev-user',
     email: 'dev@example.com',
@@ -74,7 +75,15 @@ export const devSignIn = (): { mockUser: any; mockProfile: Profile } => {
   toast.success('Dev login realizado');
   
   return {
-    mockUser: { id: 'dev-user', email: 'dev@example.com' },
+    mockUser: { 
+      id: 'dev-user', 
+      email: 'dev@example.com',
+      // Add other required User properties
+      app_metadata: {},
+      user_metadata: {},
+      aud: 'authenticated',
+      created_at: new Date().toISOString()
+    } as User,
     mockProfile
   };
 };

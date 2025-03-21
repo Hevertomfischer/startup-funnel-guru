@@ -82,6 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(mockProfile);
       setIsAdmin(true);
       setIsLoading(false);
+      return { mockUser, mockProfile }; // Return the objects to match the AuthContextType
     };
 
     return {
