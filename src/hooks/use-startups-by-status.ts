@@ -96,13 +96,14 @@ export const useStartupsByStatus = (statusId: string) => {
   // Se houver um erro e não for um ID de placeholder, mostrar toast
   useEffect(() => {
     if (query.error && !statusId.startsWith('placeholder-')) {
-      const errorMessage = query.error instanceof Error 
-        ? query.error.message 
-        : typeof query.error === 'string' 
-          ? query.error 
-          : query.error && typeof query.error === 'object' && 'message' in query.error
-            ? (query.error as { message: string }).message
-            : 'Erro desconhecido';
+      // Use type narrowing to ensure we can safely access error properties
+      const errorMessage = typeof query.error === 'object' && query.error !== null
+        ? 'message' in query.error 
+          ? String((query.error as { message: unknown }).message)
+          : JSON.stringify(query.error)
+        : typeof query.error === 'string'
+          ? query.error
+          : 'Erro desconhecido';
           
       console.error(`Erro ao buscar startups para status ${statusId}:`, errorMessage);
       
