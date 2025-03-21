@@ -14,28 +14,17 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
   // Configurar timeout para mostrar mensagem de carregamento estendido e redirecionar
   useEffect(() => {
     let extendedTimer: NodeJS.Timeout | undefined;
-    let redirectTimer: NodeJS.Timeout | undefined;
     
     if (isLoading && !redirectToLogin) {
       console.log('RequireAuth: Iniciando timer para carregamento estendido');
       extendedTimer = setTimeout(() => {
         console.log('RequireAuth: Tempo estendido de carregamento atingido');
         setExtendedLoading(true);
-        
-        // Após mais tempo, forçar redirecionamento para login
-        redirectTimer = setTimeout(() => {
-          console.log('RequireAuth: Redirecionando para login após tempo limite');
-          toast.error('Tempo limite de autenticação excedido', {
-            description: 'Redirecionando para a página de login'
-          });
-          setRedirectToLogin(true);
-        }, 3000); // 3 segundos adicionais antes de redirecionar
       }, 2000); // 2 segundos
     }
     
     return () => {
       if (extendedTimer) clearTimeout(extendedTimer);
-      if (redirectTimer) clearTimeout(redirectTimer);
     };
   }, [isLoading, redirectToLogin]);
 
@@ -56,14 +45,14 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
     path: location.pathname
   });
 
-  // Redirecionar para login se o timer de redirecionamento for ativado ou não houver usuário após inicialização
-  if (redirectToLogin || (initializationComplete && !user && !isLoading)) {
+  // Redirecionar para login se não houver usuário após inicialização
+  if ((initializationComplete && !user && !isLoading) || redirectToLogin) {
     console.log('RequireAuth: Redirecionando para login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Mostrar carregamento durante a inicialização
-  if (isLoading) {
+  if (isLoading || !initializationComplete) {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4 p-4">
         <div className="text-center space-y-4">
@@ -75,7 +64,7 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
           {extendedLoading && (
             <div className="mt-4 text-amber-500 text-sm max-w-md">
               <p>A verificação está demorando mais que o normal.</p>
-              <p className="mt-2">Redirecionando para a página de login em breve...</p>
+              <p className="mt-2">Tentando verificar sua autenticação...</p>
             </div>
           )}
         </div>

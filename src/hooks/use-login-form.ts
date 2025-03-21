@@ -12,6 +12,7 @@ export function useLoginForm() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { signIn, devSignIn } = useAuth();
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export function useLoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       setLoginError(null);
       setEmailNotConfirmed(false);
       console.log('Tentando login com:', email);
@@ -51,6 +53,8 @@ export function useLoginForm() {
       } else {
         setLoginError(error?.message || 'Falha na autenticação');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -90,6 +94,7 @@ export function useLoginForm() {
     resendSuccess,
     emailNotConfirmed,
     loginError,
+    isSubmitting,
     from,
     handleSubmit,
     handleResendConfirmation,

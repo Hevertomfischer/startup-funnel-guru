@@ -18,13 +18,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Auth provider montado");
     mounted.current = true;
     
-    // Verificar sessão atual imediatamente ao montar o componente
-    initializeSession(setUser, setProfile, setIsAdmin, setIsLoading, setInitializationComplete, mounted);
-    
-    // Configurar ouvinte de eventos de autenticação
-    const { data: authListener } = setupAuthChangeListener(
+    // Configurar ouvinte de eventos de autenticação primeiro
+    const authListener = setupAuthChangeListener(
       setUser, setProfile, setIsAdmin, setIsLoading, setInitializationComplete, mounted
     );
+    
+    // Então verificar sessão atual
+    initializeSession(setUser, setProfile, setIsAdmin, setIsLoading, setInitializationComplete, mounted);
     
     // Limpeza
     return () => {
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setProfile(null);
         setUser(null);
         setIsAdmin(false);
-        return result; // This now returns the { success: boolean, error?: string } object
+        return result; 
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(mockProfile);
       setIsAdmin(true);
       setIsLoading(false);
-      return { mockUser, mockProfile }; // Return the objects to match the AuthContextType
+      return { mockUser, mockProfile }; 
     };
 
     return {

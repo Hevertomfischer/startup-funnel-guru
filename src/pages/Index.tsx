@@ -19,7 +19,7 @@ const Index = () => {
     });
     
     // Só redirecionar quando a inicialização estiver completa
-    if (initializationComplete && !isLoading) {
+    if (initializationComplete) {
       if (user) {
         console.log('Index: Usuário autenticado, redirecionando para dashboard');
         navigate('/dashboard', { replace: true });
@@ -31,7 +31,7 @@ const Index = () => {
     
     // Configurar timeout para mostrar mensagem de carregamento estendido
     const timer = setTimeout(() => {
-      if (isLoading) {
+      if (isLoading || !initializationComplete) {
         console.log('Index: Tempo estendido de carregamento atingido');
         setExtendedLoading(true);
       }

@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { fetchUserProfile } from '../utils/profile-utils';
+import { toast } from 'sonner';
 
 /**
  * Initializes and manages the authentication session
@@ -75,7 +76,9 @@ export const setupAuthChangeListener = (
   setInitializationComplete: Function,
   mounted: { current: boolean }
 ) => {
-  return supabase.auth.onAuthStateChange(
+  console.log("Configurando listener de autenticação");
+  
+  const { data } = supabase.auth.onAuthStateChange(
     async (event, session) => {
       console.log('Estado da autenticação alterado:', event);
       
@@ -113,4 +116,6 @@ export const setupAuthChangeListener = (
       }
     }
   );
+  
+  return data;
 };
