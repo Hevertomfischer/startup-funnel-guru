@@ -3,12 +3,21 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Tables } from '@/integrations/supabase/client';
+
+// Define the tables we want to check
+const TABLES_TO_CHECK = ['startups', 'statuses', 'team_members', 'attachments'] as const;
+type TableName = typeof TABLES_TO_CHECK[number];
+
+// Define result types
+type CheckStatus = 'checking' | 'success' | 'error';
+type TableResult = { status: CheckStatus, count?: number, message: string };
 
 const SupabaseConnectionDiagnostic = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [results, setResults] = useState<{
-    connection: { status: 'checking' | 'success' | 'error', message: string },
-    tables: { [key: string]: { status: 'checking' | 'success' | 'error', count?: number, message: string } }
+    connection: { status: CheckStatus, message: string },
+    tables: Record<TableName, TableResult>
   }>({
     connection: { status: 'checking', message: 'Verificando conexão com Supabase...' },
     tables: {
@@ -59,12 +68,13 @@ const SupabaseConnectionDiagnostic = () => {
       }));
       
       // Check tables one by one
-      const tables = ['startups', 'statuses', 'team_members', 'attachments'];
-      
-      for (const table of tables) {
+      for (const table of TABLES_TO_CHECK) {
         try {
           console.log(`Verificando tabela ${table}...`);
-          const { data, error } = await supabase.from(table).select('count');
+          // Type assertion to ensure table is a valid table name
+          const { data, error } = await supabase
+            .from(table)
+            .select('count');
           
           if (error) {
             console.error(`Erro ao verificar tabela ${table}:`, error);
@@ -125,7 +135,7 @@ const SupabaseConnectionDiagnostic = () => {
     runDiagnostics();
   }, []);
 
-  const StatusIcon = ({ status }: { status: 'checking' | 'success' | 'error' }) => {
+  const StatusIcon = ({ status }: { status: CheckStatus }) => {
     if (status === 'checking') return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
     if (status === 'success') return <CheckCircle className="h-4 w-4 text-green-500" />;
     return <XCircle className="h-4 w-4 text-red-500" />;
@@ -183,8 +193,8 @@ const SupabaseConnectionDiagnostic = () => {
       <div className="mt-4 text-sm text-muted-foreground border-t pt-4">
         <h4 className="font-medium mb-2">Informações de Conexão</h4>
         <div className="space-y-1">
-          <p><span className="font-mono">URL:</span> {supabase.supabaseUrl}</p>
-          <p><span className="font-mono">API Key:</span> {supabase.supabaseKey.substring(0, 8)}...{supabase.supabaseKey.substring(supabase.supabaseKey.length - 8)}</p>
+          <p><span className="font-mono">URL:</span> {process.env.SUPABASE_URL || window.location.origin}</p>
+          <p><span className="font-mono">API Key:</span> {"************"}</p>
           <p><span className="font-mono">Timestamp:</span> {new Date().toISOString()}</p>
         </div>
       </div>

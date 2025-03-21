@@ -141,7 +141,7 @@ export const checkDatabaseTables = async () => {
     console.log('Verificando a existência de tabelas no banco de dados');
     
     // Lista de tabelas essenciais para verificar
-    const essentialTables = ['statuses', 'startups', 'team_members', 'attachments'];
+    const essentialTables = ['statuses', 'startups', 'team_members', 'attachments'] as const;
     const results: Record<string, boolean> = {};
     
     for (const table of essentialTables) {

@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from './components/ui/theme-provider';
+import { ThemeProvider } from '@/components/ui/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider, RequireAuth } from './contexts/AuthContext';
+import { AuthProvider, RequireAuth } from '@/contexts/AuthContext';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -20,7 +21,7 @@ import Settings from './pages/Settings';
 import WorkflowEditor from './pages/WorkflowEditor';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
-import Layout from './components/Layout';
+import Layout from '@/components/Layout';
 import Diagnostico from './pages/Diagnostico';
 
 const queryClient = new QueryClient();
