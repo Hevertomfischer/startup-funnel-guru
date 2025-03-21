@@ -1,97 +1,86 @@
 
-import { Startup } from '@/types';
+import { Startup } from './startup';
+import { Status } from './status';
+import { Task } from './task';
 
-export type PortfolioKPI = {
+export interface PortfolioKPI {
   id: string;
   name: string;
-  description: string;
-  category: 'financial' | 'operational' | 'customer' | 'growth' | 'custom';
+  description?: string;
+  category: 'financial' | 'operational' | 'customer' | 'other';
   unit: string;
   targetValue?: number;
-  isHigherBetter: boolean; // true if higher values are better (e.g., revenue), false if lower values are better (e.g., burn rate)
-};
+  isHigherBetter: boolean;
+}
 
-export type KPIValue = {
+export interface KPIValue {
   id: string;
   kpiId: string;
   startupId: string;
   value: number;
   date: Date;
-  quarter: string; // e.g., "Q1 2023"
-  notes?: string;
-};
+  quarter: string;
+}
 
-export type BoardMeeting = {
+export interface BoardMeeting {
   id: string;
   startupId: string;
+  title: string;
   scheduledDate: Date;
   actualDate?: Date;
   status: 'scheduled' | 'completed' | 'cancelled';
-  title: string;
   agenda?: string;
   minutes?: string;
-  attendees: string[]; // Array of team member IDs
   decisions?: string[];
-  actionItems: BoardMeetingActionItem[];
-  attachments?: BoardMeetingAttachment[];
-};
+  attendees: string[];
+  actionItems: BoardMeetingAction[];
+}
 
-export type BoardMeetingActionItem = {
+export interface BoardMeetingAction {
   id: string;
   meetingId: string;
   description: string;
-  assignedTo: string; // team member ID
-  dueDate?: Date;
-  status: 'pending' | 'in-progress' | 'completed';
-  completion?: number; // Percentage of completion (0-100)
-};
+  assignedTo: string;
+  dueDate: Date;
+  status: 'pending' | 'completed' | 'in_progress' | 'blocked';
+  completion: number;
+}
 
-export type BoardMeetingAttachment = {
-  id: string;
-  meetingId: string;
-  name: string;
-  url: string;
-  uploadedAt: Date;
-  type: string;
-};
-
-export type StartupHighlight = {
+export interface StartupHighlight {
   id: string;
   startupId: string;
   type: 'achievement' | 'concern' | 'need';
   title: string;
   description: string;
   date: Date;
-  status: 'active' | 'resolved' | 'archived';
-  priority?: 'low' | 'medium' | 'high';
-  relatedKPIs?: string[]; // Array of KPI IDs
-};
+  status: 'active' | 'archived';
+  priority: 'low' | 'medium' | 'high';
+}
 
-export type QuarterlyReport = {
+export interface QuarterlyReport {
   id: string;
   startupId: string;
-  quarter: string; // e.g., "Q1 2023"
+  quarter: string;
   startDate: Date;
   endDate: Date;
-  kpiValues: KPIValue[];
-  highlights: StartupHighlight[];
-  summary?: string;
-  goals?: string[];
+  kpiValues: string[];
+  highlights: string[];
+  summary: string;
+  goals: string[];
   status: 'draft' | 'published';
-};
+}
 
-export type PortfolioSummary = {
+export interface PortfolioSummary {
   totalInvested: number;
   startupCount: number;
-  sectorsDistribution: Record<string, number>; // e.g., { "Fintech": 3, "Healthtech": 2 }
-  stageDistribution: Record<string, number>; // e.g., { "Seed": 2, "Series A": 3 }
-  performanceByQuarter: Record<string, number>; // e.g., { "Q1 2023": 10.5, "Q2 2023": 12.3 }
-};
+  sectorsDistribution: Record<string, number>;
+  stageDistribution: Record<string, number>;
+  performanceByQuarter: Record<string, number>;
+}
 
 export interface InvestedStartup extends Startup {
-  kpis?: PortfolioKPI[];
   kpiValues?: KPIValue[];
-  highlights?: StartupHighlight[];
   boardMeetings?: BoardMeeting[];
+  highlights?: StartupHighlight[];
   quarterlyReports?: QuarterlyReport[];
 }
