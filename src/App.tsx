@@ -20,6 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import Investors from "./pages/Investors";
 import Profile from "./pages/Profile";
+import Portfolio from "./pages/Portfolio";
 import { initializeWorkflowRules } from "./utils/workflow-utils";
 
 // Initialize workflow rules with mock data if none exist
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="emails" element={<Emails />} />
               <Route path="reports" element={<Reports />} />
               <Route path="investors" element={<Investors />} />
+              <Route path="portfolio" element={<Portfolio />} />
               <Route path="profile" element={<Profile />} />
             </Route>
             <Route path="*" element={<NotFound />} />

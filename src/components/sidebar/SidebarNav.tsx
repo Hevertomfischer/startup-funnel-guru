@@ -11,7 +11,8 @@ import {
   Settings,
   FileBarChart,
   ClipboardList,
-  DollarSign
+  DollarSign,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { ProtectedContent } from '@/hooks/use-role-guard';
@@ -28,6 +29,7 @@ const SidebarNav = () => {
     { name: 'List View', path: '/list', icon: <List className="h-5 w-5" />, adminOnly: true },
     { name: 'Tasks', path: '/tasks', icon: <ClipboardList className="h-5 w-5" />, adminOnly: true },
     { name: 'Workflow', path: '/workflow', icon: <Workflow className="h-5 w-5" />, adminOnly: true },
+    { name: 'Portfolio', path: '/portfolio', icon: <Briefcase className="h-5 w-5" />, adminOnly: true },
     { name: 'Analytics', path: '/analytics', icon: <TrendingUp className="h-5 w-5" />, adminOnly: true },
     { name: 'Team', path: '/team', icon: <Users className="h-5 w-5" />, adminOnly: true },
     { name: 'Email Templates', path: '/emails', icon: <Mail className="h-5 w-5" />, adminOnly: true },

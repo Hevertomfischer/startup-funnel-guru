@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import DialogContentWrapper from './startup-dialog/DialogContentWrapper';
 import { Status } from '@/types';
+import { useWorkflowRules } from '@/hooks/use-workflow-rules';
 
 interface StartupDialogProps {
   open: boolean;
@@ -32,11 +33,20 @@ const StartupDialog: React.FC<StartupDialogProps> = ({
   console.log('Startup data:', startup);
   console.log('Status length:', statuses?.length);
   
+  // Get workflow rules for automation
+  const { workflowRules } = useWorkflowRules();
+  
   useEffect(() => {
     console.log('StartupDialog useEffect - open state changed to:', open);
   }, [open]);
   
   const handleCancel = () => onOpenChange(false);
+  
+  // Check if any status has "Investida" in its name - for portfolio integration
+  const hasInvestedStatus = statuses.some(status => 
+    status.name.toLowerCase().includes('investida')
+  );
+  console.log('Has invested status option:', hasInvestedStatus);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
