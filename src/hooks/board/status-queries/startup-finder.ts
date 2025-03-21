@@ -12,7 +12,7 @@ export const createStartupFinder = (
   return (id: string) => {
     // Check all status queries
     for (const statusId of statusIds) {
-      if (!statusId || statusId.startsWith('placeholder-')) continue;
+      if (!id || statusId.startsWith('placeholder-')) continue;
       const query = queries[statusId];
       if (!query || !query.data) continue;
       
