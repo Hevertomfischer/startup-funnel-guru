@@ -21,13 +21,13 @@ export const useStartupsByStatus = (statusId: string) => {
       
       try {
         console.log(`Verificando estrutura da tabela startups para statusId ${statusId}`);
-        const { error } = await supabase.from('startups').select('count');
+        const { error: supabaseError } = await supabase.from('startups').select('count');
         
-        if (error) {
-          console.error('Erro ao verificar estrutura da tabela startups:', error);
+        if (supabaseError) {
+          console.error('Erro ao verificar estrutura da tabela startups:', supabaseError);
           toast({
             title: "Erro estrutural",
-            description: `Problema ao acessar a tabela 'startups': ${error.message}`,
+            description: `Problema ao acessar a tabela 'startups': ${supabaseError.message}`,
             variant: "destructive",
           });
         } else {
