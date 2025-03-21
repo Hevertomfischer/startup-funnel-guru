@@ -6,6 +6,18 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Activity,
+  FileText,
+  Users,
+  Building,
+  Globe,
+  Briefcase,
+  DollarSign,
+  BarChart2,
+  Search,
+  Paperclip
+} from "lucide-react";
 
 interface FormNavigationProps {
   activeTab: string;
@@ -36,60 +48,70 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
             value="status" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <Activity className="w-4 h-4 mr-1" />
             Status
           </TabsTrigger>
           <TabsTrigger 
             value="basic" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <FileText className="w-4 h-4 mr-1" />
             Básico
           </TabsTrigger>
           <TabsTrigger 
             value="team" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <Users className="w-4 h-4 mr-1" />
             Time
           </TabsTrigger>
           <TabsTrigger 
             value="company" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <Building className="w-4 h-4 mr-1" />
             Empresa
           </TabsTrigger>
           <TabsTrigger 
             value="market" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <Globe className="w-4 h-4 mr-1" />
             Mercado
           </TabsTrigger>
           <TabsTrigger 
             value="business" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <Briefcase className="w-4 h-4 mr-1" />
             Negócio
           </TabsTrigger>
           <TabsTrigger 
             value="financial" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <DollarSign className="w-4 h-4 mr-1" />
             Financeiro
           </TabsTrigger>
           <TabsTrigger 
             value="metrics" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <BarChart2 className="w-4 h-4 mr-1" />
             Métricas
           </TabsTrigger>
           <TabsTrigger 
             value="analysis" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <Search className="w-4 h-4 mr-1" />
             Análise
           </TabsTrigger>
           <TabsTrigger 
             value="attachments" 
             className="flex-shrink-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
+            <Paperclip className="w-4 h-4 mr-1" />
             Anexos
           </TabsTrigger>
         </TabsList>
