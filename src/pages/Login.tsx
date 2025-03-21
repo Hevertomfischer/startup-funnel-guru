@@ -25,10 +25,10 @@ export default function Login() {
   // Obter a localização anterior, se houver
   const from = location.state?.from?.pathname || '/dashboard';
 
-  // Redirecionar se já estiver autenticado
   useEffect(() => {
-    console.log('Login: Estado de autenticação -', { user: !!user, isLoading, from });
+    console.log('Login: Estado atual -', { user: !!user, isLoading, from });
     
+    // Se não estiver carregando e o usuário estiver autenticado, redirecionar
     if (user && !isLoading) {
       console.log('Login: Usuário já autenticado, redirecionando para', from);
       toast.success('Redirecionando para o dashboard', {
@@ -94,8 +94,8 @@ export default function Login() {
     }
   };
 
-  // Mostrar carregamento enquanto verifica autenticação
-  if (isLoading) {
+  // Se estiver carregando e já existir um usuário, mostrar carregamento
+  if (isLoading && user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="text-center">
@@ -108,11 +108,7 @@ export default function Login() {
     );
   }
 
-  // Se já estiver autenticado, retornar null (redirecionará em useEffect)
-  if (user) {
-    return null;
-  }
-
+  // Formulário de login
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">

@@ -14,8 +14,7 @@ const Index = () => {
   useEffect(() => {
     console.log('Index: Estado atual -', { isLoading, user: !!user });
     
-    // Se o usuário estiver autenticado, redirecionar para o dashboard
-    if (!isLoading) {
+    const redirectUser = () => {
       if (user) {
         console.log('Index: Usuário autenticado, redirecionando para dashboard');
         navigate('/dashboard', { replace: true });
@@ -23,6 +22,11 @@ const Index = () => {
         console.log('Index: Usuário não autenticado, redirecionando para login');
         navigate('/login', { replace: true });
       }
+    };
+    
+    // Somente redirecionar se o carregamento estiver concluído
+    if (!isLoading) {
+      redirectUser();
     }
     
     // Configurar um timeout para mostrar mensagem de carregamento estendido se a autenticação demorar muito
@@ -54,7 +58,7 @@ const Index = () => {
               <Button 
                 variant="default" 
                 onClick={() => {
-                  console.log('Index: Redirecionando manualmente para login');
+                  console.log('Index: Forçando redirecionamento para login');
                   navigate('/login', { replace: true });
                 }}
               >

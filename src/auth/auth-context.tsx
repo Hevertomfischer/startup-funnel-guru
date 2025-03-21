@@ -8,6 +8,7 @@ export type AuthContextType = {
   profile: Profile | null;
   isLoading: boolean;
   isAdmin: boolean;
+  initializationComplete: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; data?: any }>;
   signOut: () => Promise<void>;
   devSignIn: () => void;

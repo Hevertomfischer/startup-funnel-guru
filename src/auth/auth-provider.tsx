@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
@@ -10,6 +9,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [initializationComplete, setInitializationComplete] = useState(false);
 
   // Função para buscar o perfil do usuário
   const fetchUserProfile = async (userId: string) => {
@@ -38,11 +38,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Auth provider montado");
     let mounted = true;
     
-    // Função para lidar com alterações na sessão
-    const handleSession = async (session: any) => {
-      console.log('Processando sessão:', session ? 'Sessão encontrada' : 'Sem sessão');
+    // Função para lidar com mudanças na sessão
+    const handleSessionChange = async (currentSession: any) => {
+      console.log('Processando mudança de sessão:', currentSession ? 'Sessão encontrada' : 'Sem sessão');
       
-      if (!session) {
+      if (!currentSession) {
         if (mounted) {
           setUser(null);
           setProfile(null);
@@ -53,52 +53,62 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      if (mounted) setUser(session.user);
-      console.log("Sessão encontrada com usuário:", session.user.email);
+      if (mounted) setUser(currentSession.user);
+      console.log("Sessão encontrada com usuário:", currentSession.user.email);
       
       try {
-        const profileData = await fetchUserProfile(session.user.id);
+        const profileData = await fetchUserProfile(currentSession.user.id);
         
         if (mounted) {
           setProfile(profileData);
           setIsAdmin(profileData?.role === 'admin');
-          setIsLoading(false);
         }
-        console.log('Perfil definido:', profileData?.role);
       } catch (error) {
         console.error('Erro ao buscar perfil:', error);
-        if (mounted) setIsLoading(false);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+          setInitializationComplete(true);
+        }
       }
     };
     
-    // Configurar ouvinte de eventos de autenticação
+    // Configurar ouvinte de eventos de autenticação primeiro
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Estado da autenticação alterado:', event);
-        await handleSession(session);
+        await handleSessionChange(session);
       }
     );
     
-    // Verificar sessão existente
-    const initializeAuth = async () => {
+    // Depois verificar a sessão atual
+    const checkCurrentSession = async () => {
       try {
         console.log("Verificando sessão existente...");
+        setIsLoading(true);
+        
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Erro ao obter sessão:', error);
-          if (mounted) setIsLoading(false);
+          if (mounted) {
+            setIsLoading(false);
+            setInitializationComplete(true);
+          }
           return;
         }
         
-        await handleSession(data.session);
+        await handleSessionChange(data.session);
       } catch (error) {
         console.error('Erro de inicialização de autenticação:', error);
-        if (mounted) setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+          setInitializationComplete(true);
+        }
       }
     };
     
-    initializeAuth();
+    checkCurrentSession();
     
     // Limpeza
     return () => {
@@ -209,8 +219,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signIn,
       signOut,
       devSignIn,
+      initializationComplete
     };
-  }, [user, profile, isLoading, isAdmin]);
+  }, [user, profile, isLoading, isAdmin, initializationComplete]);
 
   return (
     <AuthContext.Provider value={authValue}>
