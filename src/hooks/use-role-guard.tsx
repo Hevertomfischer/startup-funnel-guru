@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './use-auth';
+import { useAuth } from '@/auth';
 
 /**
  * Hook to guard routes based on user role
