@@ -425,5 +425,36 @@ const PortfolioKPISection: React.FC<PortfolioKPISectionProps> = ({ startupId, po
               <FormField
                 control={form.control}
                 name="attachments"
-               
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Anexos</FormLabel>
+                    <FormControl>
+                      <AttachmentUploader 
+                        startupId={startupId}
+                        existingAttachments={field.value || []}
+                        onChange={(attachments) => field.onChange(attachments)}
+                        relatedType="kpi"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setOpenDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {isEditing ? 'Atualizar' : 'Adicionar'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
+export default PortfolioKPISection;
