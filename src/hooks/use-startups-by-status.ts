@@ -100,7 +100,9 @@ export const useStartupsByStatus = (statusId: string) => {
         ? query.error.message 
         : typeof query.error === 'string' 
           ? query.error 
-          : 'Erro desconhecido';
+          : query.error && typeof query.error === 'object' && 'message' in query.error
+            ? (query.error as { message: string }).message
+            : 'Erro desconhecido';
           
       console.error(`Erro ao buscar startups para status ${statusId}:`, errorMessage);
       
