@@ -7,7 +7,7 @@ import { FormItem, FormLabel } from '@/components/ui/form';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface FileItem {
+export interface FileItem {
   name: string;
   size: number;
   type: string;
@@ -20,7 +20,7 @@ export interface AttachmentUploaderProps {
   label?: string;
   bucketName?: string;
   folderPath?: string;
-  startupId?: string;
+  startup_id?: string;
   relatedType?: string;
   existingAttachments?: FileItem[];
 }
@@ -31,7 +31,7 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
   label = "Anexos",
   bucketName = "startup-attachments",
   folderPath = "",
-  startupId,
+  startup_id,
   relatedType,
   existingAttachments = []
 }) => {
