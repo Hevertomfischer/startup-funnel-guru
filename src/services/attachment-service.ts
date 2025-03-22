@@ -12,17 +12,17 @@ export const getStartupAttachments = async (startupId: string): Promise<Attachme
     
     if (error) throw error;
     
-    // Map the data to match the Attachment interface (convert uploaded_at to uploadedAt)
+    // Map the data to match the Attachment interface
     return data?.map(item => ({
       id: item.id,
       name: item.name,
       url: item.url,
       type: item.type,
-      size: item.size,
+      size: item.size || 0,
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
-      related_id: item.related_id,
-      related_type: item.related_type
+      related_id: item.related_id || undefined,
+      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching startup attachments');
@@ -57,8 +57,8 @@ export const addAttachment = async (attachment: {
       size: data.size || 0,
       uploadedAt: data.uploaded_at,
       startup_id: data.startup_id,
-      related_id: data.related_id,
-      related_type: data.related_type
+      related_id: data.related_id || undefined,
+      related_type: data.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     } : null;
   } catch (error: any) {
     handleError(error, 'Error adding attachment');
@@ -102,8 +102,8 @@ export const getKPIAttachments = async (kpiId: string): Promise<Attachment[]> =>
       size: item.size || 0,
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
-      related_id: item.related_id,
-      related_type: item.related_type
+      related_id: item.related_id || undefined,
+      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching KPI attachments');
@@ -131,8 +131,8 @@ export const getBoardMeetingAttachments = async (meetingId: string): Promise<Att
       size: item.size || 0,
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
-      related_id: item.related_id,
-      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup'
+      related_id: item.related_id || undefined,
+      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching board meeting attachments');

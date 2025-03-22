@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { PlusCircle, Trash2Icon, CalendarIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AttachmentUploader } from '@/components/shared/AttachmentUploader';
-import { BoardMeetingFormValues } from './schema';
+import { BoardMeetingFormValues, FileItem } from './schema';
 
 interface BoardMeetingFormProps {
   form: UseFormReturn<BoardMeetingFormValues>;
