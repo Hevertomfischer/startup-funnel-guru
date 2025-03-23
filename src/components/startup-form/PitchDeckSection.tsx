@@ -36,6 +36,8 @@ export const PitchDeckSection = () => {
       const fileName = `pitch_deck_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
       
+      console.log('Uploading pitch deck:', file.name, 'as', filePath);
+      
       // Upload file to Supabase Storage
       const { data, error } = await supabase.storage
         .from('startup-attachments')
@@ -43,26 +45,31 @@ export const PitchDeckSection = () => {
       
       if (error) throw error;
       
+      console.log('Pitch deck uploaded successfully:', data);
+      
       // Get public URL for the uploaded file
       const { data: urlData } = supabase.storage
         .from('startup-attachments')
         .getPublicUrl(filePath);
 
       // Set the pitch deck data
-      setValue('pitchDeck', {
+      const pitchDeckData = {
         name: file.name,
         size: file.size,
         type: file.type,
         url: urlData.publicUrl,
         isPitchDeck: true
-      });
+      };
+      
+      console.log('Setting pitch deck data in form:', pitchDeckData);
+      setValue('pitchDeck', pitchDeckData);
       
       toast.success('Pitch deck uploaded successfully');
     } catch (error: any) {
+      console.error('Error uploading pitch deck:', error);
       toast.error('Error uploading pitch deck', {
         description: error.message
       });
-      console.error('Error uploading pitch deck:', error);
     } finally {
       setIsUploading(false);
       // Clear the input
@@ -73,6 +80,7 @@ export const PitchDeckSection = () => {
   };
 
   const removePitchDeck = () => {
+    console.log('Removing pitch deck from form');
     setValue('pitchDeck', null);
   };
 

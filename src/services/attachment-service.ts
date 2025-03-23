@@ -1,16 +1,23 @@
 
 import { supabase, handleError } from './base-service';
+import { toast } from 'sonner';
 import type { Attachment } from '@/types/index';
 
 export const getStartupAttachments = async (startupId: string): Promise<Attachment[]> => {
   try {
+    console.log('Fetching attachments for startup:', startupId);
     const { data, error } = await supabase
       .from('attachments')
       .select('*')
       .eq('startup_id', startupId)
       .order('uploaded_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching attachments:', error);
+      throw error;
+    }
+    
+    console.log('Fetched attachments:', data);
     
     // Map the data to match the Attachment interface
     return data?.map(item => ({
@@ -40,13 +47,19 @@ export const addAttachment = async (attachment: {
   related_type?: string;
 }): Promise<Attachment | null> => {
   try {
+    console.log('Adding attachment:', attachment);
     const { data, error } = await supabase
       .from('attachments')
       .insert(attachment)
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error adding attachment:', error);
+      throw error;
+    }
+    
+    console.log('Attachment added successfully:', data);
     
     // Transform to match Attachment interface
     return data ? {
@@ -61,6 +74,7 @@ export const addAttachment = async (attachment: {
       related_type: data.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     } : null;
   } catch (error: any) {
+    console.error('Error in addAttachment:', error);
     handleError(error, 'Error adding attachment');
     return null;
   }

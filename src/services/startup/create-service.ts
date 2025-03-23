@@ -19,11 +19,6 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
     // Prepare data for Supabase
     const preparedData = prepareStartupData(startupData);
     
-    // If we have a pitch deck, add it to the prepared data
-    if (pitchDeck) {
-      preparedData.pitch_deck = pitchDeck;
-    }
-    
     console.log('Prepared data for Supabase insert:', preparedData);
     
     const { data, error } = await supabase
@@ -39,15 +34,31 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
     
     console.log('Startup created in Supabase:', data);
     
+    // Save the pitch deck as an attachment if provided
+    if (pitchDeck) {
+      console.log('Adding pitch deck as attachment:', pitchDeck);
+      const pitchDeckResult = await addAttachment({
+        startup_id: data.id,
+        name: pitchDeck.name,
+        type: pitchDeck.type,
+        size: pitchDeck.size,
+        url: pitchDeck.url
+      });
+      console.log('Pitch deck saved:', pitchDeckResult);
+    }
+    
+    // Save additional attachments
     if (attachments && attachments.length > 0) {
+      console.log(`Adding ${attachments.length} attachments`);
       for (const file of attachments) {
-        await addAttachment({
+        const attachmentResult = await addAttachment({
           startup_id: data.id,
           name: file.name,
           type: file.type,
           size: file.size,
           url: file.url
         });
+        console.log('Attachment saved:', attachmentResult);
       }
     }
     

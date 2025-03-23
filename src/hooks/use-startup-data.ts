@@ -83,7 +83,7 @@ export const useStartupData = () => {
           assignedTo: startup.assigned_to,
           dueDate: startup.due_date,
           timeTracking: startup.time_tracking || 0,
-          attachments: [],
+          attachments: 'attachments' in startup && Array.isArray(startup.attachments) ? startup.attachments : [],
           pitchDeck: pitchDeck ? {
             name: pitchDeck.name || 'Pitch Deck',
             url: pitchDeck.url || '',

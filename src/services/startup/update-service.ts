@@ -30,11 +30,6 @@ export const updateStartup = async (
     // Prepare the data for update
     const preparedData = prepareStartupData(startupData);
     
-    // If we have a pitch deck, add it to the prepared data
-    if (pitchDeck) {
-      preparedData.pitch_deck = pitchDeck;
-    }
-    
     console.log('Prepared data for Supabase update:', preparedData);
     
     // IMPORTANT FIX: Check if we have any data to update
@@ -59,17 +54,32 @@ export const updateStartup = async (
     
     console.log('Startup updated in Supabase:', data);
     
+    // Save or update the pitch deck if provided
+    if (pitchDeck) {
+      console.log('Adding or updating pitch deck:', pitchDeck);
+      const pitchDeckResult = await addAttachment({
+        startup_id: id,
+        name: pitchDeck.name,
+        type: pitchDeck.type,
+        size: pitchDeck.size,
+        url: pitchDeck.url
+      });
+      console.log('Pitch deck saved:', pitchDeckResult);
+    }
+    
     // Handle attachments if provided
     if (attachments && attachments.length > 0) {
+      console.log(`Processing ${attachments.length} attachments`);
       for (const file of attachments) {
-        if (!file.id) {
-          await addAttachment({
+        if (!file.id) { // Only add if it's a new attachment
+          const attachmentResult = await addAttachment({
             startup_id: id,
             name: file.name,
             type: file.type,
             size: file.size,
             url: file.url
           });
+          console.log('New attachment saved:', attachmentResult);
         }
       }
     }
