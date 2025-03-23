@@ -40,7 +40,7 @@ const StartupCard: React.FC<StartupCardProps> = ({
   const assignedUser = startup.assignedTo && users[startup.assignedTo];
   
   // Check if the startup has a pitchdeck
-  const hasPitchDeck = startup.pitchDeck?.url;
+  const hasPitchDeck = Boolean(startup.pitchDeck?.url);
   
   // Get tasks from localStorage
   const getOpenTasksCount = () => {
@@ -117,7 +117,7 @@ const StartupCard: React.FC<StartupCardProps> = ({
               onTaskIconClick={handleTaskIconClick}
               onPitchDeckClick={handlePitchDeckClick}
             />
-            <CardMenu onDelete={onDelete ? () => handleDelete : undefined} />
+            <CardMenu onDelete={onDelete ? handleDelete : undefined} />
           </div>
         </div>
         {!compact && (

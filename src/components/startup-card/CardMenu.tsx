@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface CardMenuProps {
-  onDelete?: () => void;
+  onDelete?: (e: React.MouseEvent) => void;
 }
 
 export const CardMenu: React.FC<CardMenuProps> = ({ onDelete }) => {
