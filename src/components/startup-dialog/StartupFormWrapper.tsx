@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import StartupForm from '../startup-form';
 import { Status } from '@/types';
 
@@ -23,6 +23,15 @@ const StartupFormWrapper: React.FC<StartupFormWrapperProps> = ({
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidPattern.test(id);
   };
+  
+  // Log startup data for debugging
+  useEffect(() => {
+    if (startup) {
+      console.log('StartupFormWrapper received startup data:', startup);
+      console.log('StartupFormWrapper startup has attachments:', startup.attachments);
+      console.log('StartupFormWrapper startup has pitchDeck:', startup.pitchDeck);
+    }
+  }, [startup]);
   
   const handleFormSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
@@ -118,6 +127,10 @@ const StartupFormWrapper: React.FC<StartupFormWrapperProps> = ({
       
       som: data.values.SOM !== undefined && data.values.SOM !== '' ? 
         parseFloat(data.values.SOM) : null,
+      
+      // Add attachments and pitchDeck to the data being submitted
+      attachments: data.attachments || [],
+      pitchDeck: data.pitchDeck || null,
       
       // If it's an update, include the id
       ...(startup?.id && { id: startup.id }),

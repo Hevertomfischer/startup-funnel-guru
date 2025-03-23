@@ -21,6 +21,9 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
   onTaskIconClick,
   onPitchDeckClick
 }) => {
+  console.log('CardBadges - hasPitchDeck:', hasPitchDeck);
+  console.log('CardBadges - startup pitchDeck:', startup.pitchDeck);
+  
   return (
     <div className="flex items-center gap-1">
       {openTasksCount > 0 ? (

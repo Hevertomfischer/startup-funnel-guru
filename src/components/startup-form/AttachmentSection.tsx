@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormItem, FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,11 @@ export const AttachmentSection = () => {
   const [isUploading, setIsUploading] = useState(false);
   const attachments = watch('attachments') || [];
 
+  // Debug log to check attachments
+  useEffect(() => {
+    console.log('Current attachments in form:', attachments);
+  }, [attachments]);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -33,17 +38,29 @@ export const AttachmentSection = () => {
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
         
+        console.log('Uploading attachment:', file.name, 'as', filePath);
+        
         // Upload file to Supabase Storage
         const { data, error } = await supabase.storage
           .from('startup-attachments')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error uploading file to Supabase:', error);
+          throw error;
+        }
+        
+        console.log('File uploaded successfully:', data);
         
         // Get public URL for the uploaded file
         const { data: urlData } = supabase.storage
           .from('startup-attachments')
           .getPublicUrl(filePath);
+
+        console.log('Generated public URL:', urlData.publicUrl);
 
         return {
           name: file.name,
@@ -54,13 +71,14 @@ export const AttachmentSection = () => {
       });
       
       const fileItems = await Promise.all(fileItemsPromises);
+      console.log('Setting new attachments in form:', [...attachments, ...fileItems]);
       setValue('attachments', [...attachments, ...fileItems]);
-      toast.success('Files uploaded successfully');
+      toast.success('Arquivos enviados com sucesso');
     } catch (error: any) {
-      toast.error('Error uploading files', {
+      console.error('Error uploading files:', error);
+      toast.error('Erro ao enviar arquivos', {
         description: error.message
       });
-      console.error('Error uploading files:', error);
     } finally {
       setIsUploading(false);
       // Clear the input
@@ -79,7 +97,7 @@ export const AttachmentSection = () => {
   return (
     <div className="space-y-4">
       <FormItem>
-        <FormLabel>Attachments</FormLabel>
+        <FormLabel>Anexos</FormLabel>
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -93,7 +111,7 @@ export const AttachmentSection = () => {
             ) : (
               <PaperclipIcon className="h-4 w-4" />
             )}
-            {isUploading ? 'Uploading...' : 'Attach Files'}
+            {isUploading ? 'Enviando...' : 'Anexar Arquivos'}
           </Button>
           <Input
             id="file-upload"
@@ -108,7 +126,7 @@ export const AttachmentSection = () => {
 
       {attachments.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Attached files</h4>
+          <h4 className="text-sm font-medium">Arquivos anexados</h4>
           <ul className="space-y-2">
             {attachments.map((file: FileItem, index: number) => (
               <li key={index} className="flex items-center justify-between rounded-md border p-2 text-sm">
@@ -118,16 +136,27 @@ export const AttachmentSection = () => {
                     ({Math.round(file.size / 1024)} KB)
                   </span>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeAttachment(index)}
-                  className="h-6 w-6 p-0"
-                >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Remove</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.open(file.url, '_blank')}
+                    className="h-6 px-2"
+                  >
+                    Visualizar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeAttachment(index)}
+                    className="h-6 w-6 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Remover</span>
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

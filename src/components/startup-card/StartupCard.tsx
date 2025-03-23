@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Startup, Status } from '@/types';
 import { 
   Card, 
@@ -41,6 +41,12 @@ const StartupCard: React.FC<StartupCardProps> = ({
   
   // Check if the startup has a pitchdeck
   const hasPitchDeck = Boolean(startup.pitchDeck?.url);
+  
+  // Log pitchDeck info for debugging
+  useEffect(() => {
+    console.log(`StartupCard ${startup.id} - hasPitchDeck:`, hasPitchDeck);
+    console.log(`StartupCard ${startup.id} - pitchDeck:`, startup.pitchDeck);
+  }, [startup.id, hasPitchDeck, startup.pitchDeck]);
   
   // Get tasks from localStorage
   const getOpenTasksCount = () => {
@@ -89,8 +95,11 @@ const StartupCard: React.FC<StartupCardProps> = ({
 
   const handlePitchDeckClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click event
-    if (hasPitchDeck) {
-      window.open(startup.pitchDeck!.url, '_blank');
+    if (hasPitchDeck && startup.pitchDeck?.url) {
+      console.log('Opening pitch deck URL:', startup.pitchDeck.url);
+      window.open(startup.pitchDeck.url, '_blank');
+    } else {
+      console.warn('Cannot open pitch deck - no URL available');
     }
   };
 

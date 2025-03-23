@@ -13,6 +13,13 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ startup, onPitchDeckLi
   const hasLocation = startup.values['Cidade'] || startup.values['Estado'];
   const hasWebsite = startup.values['Site da Startup'];
   
+  // Log pitch deck info for debugging
+  if (hasPitchDeck) {
+    console.log('ContactInfo component - Pitch deck URL exists:', startup.pitchDeck?.url);
+  } else {
+    console.log('ContactInfo component - No pitch deck URL for this startup');
+  }
+  
   if (!hasLocation && !hasWebsite && !hasPitchDeck) return null;
   
   return (
@@ -53,8 +60,6 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ startup, onPitchDeckLi
             href={startup.pitchDeck?.url} 
             className="truncate hover:text-primary"
             onClick={onPitchDeckLinkClick}
-            target="_blank" 
-            rel="noopener noreferrer"
           >
             {startup.pitchDeck?.name || 'Visualizar Pitch Deck'}
           </a>

@@ -14,19 +14,31 @@ export const useStartupData = () => {
   // Format Supabase startups data to match the Startup type
   useEffect(() => {
     if (startupsData && Array.isArray(startupsData)) {
+      console.log('Formatting startup data with attachments:', startupsData);
+      
       const formatted = startupsData.map(startup => {
         // Find pitch deck in attachments if available
-        // The attachments might be a separate field coming from a join query or a nested field
-        // Make sure we safely check if it exists
         let pitchDeck;
         
         // Check if there are any attachments associated with this startup
         if ('attachments' in startup && Array.isArray(startup.attachments)) {
+          console.log(`Startup ${startup.id} has ${startup.attachments.length} attachments`);
+          
+          // Find an attachment that seems to be a pitch deck (by name or flagged as isPitchDeck)
           pitchDeck = startup.attachments.find(
             (attachment: any) => 
-              attachment.name.toLowerCase().includes('pitch') || 
-              attachment.name.toLowerCase().includes('deck')
+              (attachment.isPitchDeck === true) ||
+              (attachment.name && (
+                attachment.name.toLowerCase().includes('pitch') || 
+                attachment.name.toLowerCase().includes('deck')
+              ))
           );
+          
+          if (pitchDeck) {
+            console.log('Found pitch deck for startup:', startup.id, pitchDeck);
+          }
+        } else {
+          console.log(`Startup ${startup.id} has no attachments property or it's not an array`);
         }
 
         return {
@@ -87,8 +99,9 @@ export const useStartupData = () => {
           pitchDeck: pitchDeck ? {
             name: pitchDeck.name || 'Pitch Deck',
             url: pitchDeck.url || '',
-            size: pitchDeck.size,
-            type: pitchDeck.type
+            size: pitchDeck.size || 0,
+            type: pitchDeck.type || 'application/pdf',
+            isPitchDeck: true
           } : undefined
         };
       });

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormItem, FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,11 @@ export const PitchDeckSection = () => {
   const { setValue, watch } = useFormContext();
   const [isUploading, setIsUploading] = useState(false);
   const pitchDeck = watch('pitchDeck');
+
+  // Log the pitchDeck value for debugging
+  useEffect(() => {
+    console.log('Current pitchDeck value in form:', pitchDeck);
+  }, [pitchDeck]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
