@@ -21,7 +21,7 @@ export const getStartupAttachments = async (startupId: string): Promise<Attachme
       size: item.size || 0,
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
-      related_id: item.related_id || undefined,
+      related_id: item.related_id,
       related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     })) || [];
   } catch (error: any) {
@@ -57,7 +57,7 @@ export const addAttachment = async (attachment: {
       size: data.size || 0,
       uploadedAt: data.uploaded_at,
       startup_id: data.startup_id,
-      related_id: data.related_id || undefined,
+      related_id: data.related_id,
       related_type: data.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     } : null;
   } catch (error: any) {
@@ -102,7 +102,7 @@ export const getKPIAttachments = async (kpiId: string): Promise<Attachment[]> =>
       size: item.size || 0,
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
-      related_id: item.related_id || undefined,
+      related_id: item.related_id,
       related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     })) || [];
   } catch (error: any) {
@@ -131,7 +131,7 @@ export const getBoardMeetingAttachments = async (meetingId: string): Promise<Att
       size: item.size || 0,
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
-      related_id: item.related_id || undefined,
+      related_id: item.related_id,
       related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
     })) || [];
   } catch (error: any) {

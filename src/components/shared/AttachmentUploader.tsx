@@ -2,41 +2,36 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FormDescription, FormItem, FormLabel } from '@/components/ui/form';
 import { PaperclipIcon, X, Loader2 } from 'lucide-react';
-import { FormItem, FormLabel } from '@/components/ui/form';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export interface FileItem {
+interface FileItem {
   name: string;
   size: number;
   type: string;
   url: string;
 }
 
-export interface AttachmentUploaderProps {
+interface AttachmentUploaderProps {
   attachments: FileItem[];
   onChange: (attachments: FileItem[]) => void;
-  label?: string;
-  bucketName?: string;
-  folderPath?: string;
-  startup_id?: string;
-  relatedType?: string;
-  existingAttachments?: FileItem[];
+  label: string;
+  description?: string;
+  folderPath: string;
+  relatedType?: 'kpi' | 'board_meeting' | 'startup';
 }
 
 export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
   attachments = [],
   onChange,
-  label = "Anexos",
-  bucketName = "startup-attachments",
-  folderPath = "",
-  startup_id,
-  relatedType,
-  existingAttachments = []
+  label,
+  description,
+  folderPath,
+  relatedType
 }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const actualAttachments = existingAttachments.length > 0 ? existingAttachments : attachments;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -49,18 +44,18 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
         // Generate a unique file name to avoid collisions
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-        const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+        const filePath = `${folderPath}/${fileName}`;
         
         // Upload file to Supabase Storage
         const { data, error } = await supabase.storage
-          .from(bucketName)
+          .from('startup-attachments')
           .upload(filePath, file);
         
         if (error) throw error;
         
         // Get public URL for the uploaded file
         const { data: urlData } = supabase.storage
-          .from(bucketName)
+          .from('startup-attachments')
           .getPublicUrl(filePath);
 
         return {
@@ -72,7 +67,7 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
       });
       
       const fileItems = await Promise.all(fileItemsPromises);
-      onChange([...actualAttachments, ...fileItems]);
+      onChange([...attachments, ...fileItems]);
       toast.success('Arquivos enviados com sucesso');
     } catch (error: any) {
       toast.error('Erro ao enviar arquivos', {
@@ -89,46 +84,46 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
   };
 
   const removeAttachment = (index: number) => {
-    const updatedAttachments = [...actualAttachments];
+    const updatedAttachments = [...attachments];
     updatedAttachments.splice(index, 1);
     onChange(updatedAttachments);
   };
 
   return (
-    <div className="space-y-4">
-      <FormItem>
-        <FormLabel>{label}</FormLabel>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => document.getElementById(`file-upload-${label.replace(/\s+/g, '-').toLowerCase()}`)?.click()}
-            disabled={isUploading}
-            className="flex items-center gap-2"
-          >
-            {isUploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <PaperclipIcon className="h-4 w-4" />
-            )}
-            {isUploading ? 'Enviando...' : 'Anexar Arquivos'}
-          </Button>
-          <Input
-            id={`file-upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
-            type="file"
-            onChange={handleFileChange}
-            multiple
-            className="hidden"
-            disabled={isUploading}
-          />
-        </div>
-      </FormItem>
+    <FormItem>
+      <FormLabel>{label}</FormLabel>
+      {description && <FormDescription>{description}</FormDescription>}
+      
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => document.getElementById('file-upload')?.click()}
+          disabled={isUploading}
+          className="flex items-center gap-2"
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <PaperclipIcon className="h-4 w-4" />
+          )}
+          {isUploading ? 'Enviando...' : 'Anexar Arquivos'}
+        </Button>
+        <Input
+          id="file-upload"
+          type="file"
+          onChange={handleFileChange}
+          multiple
+          className="hidden"
+          disabled={isUploading}
+        />
+      </div>
 
-      {actualAttachments.length > 0 && (
-        <div className="space-y-2">
+      {attachments.length > 0 && (
+        <div className="space-y-2 mt-3">
           <h4 className="text-sm font-medium">Arquivos anexados</h4>
           <ul className="space-y-2">
-            {actualAttachments.map((file: FileItem, index: number) => (
+            {attachments.map((file, index) => (
               <li key={index} className="flex items-center justify-between rounded-md border p-2 text-sm">
                 <div className="truncate">
                   <span className="font-medium">{file.name}</span>
@@ -151,6 +146,6 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
           </ul>
         </div>
       )}
-    </div>
+    </FormItem>
   );
 };

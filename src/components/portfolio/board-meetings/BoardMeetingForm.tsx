@@ -236,8 +236,22 @@ const BoardMeetingForm: React.FC<BoardMeetingFormProps> = ({
           name="attachments"
           render={({ field }) => (
             <AttachmentUploader
-              attachments={field.value as FileItem[] || []}
-              onChange={(attachments) => field.onChange(attachments)}
+              attachments={(field.value || []).map(item => ({
+                name: item.name || '',
+                size: item.size || 0,
+                type: item.type || '',
+                url: item.url || ''
+              }))}
+              onChange={(attachments) => {
+                // Ensure all properties are required when setting them
+                const validAttachments = attachments.map(item => ({
+                  name: item.name || '',
+                  size: item.size || 0,
+                  type: item.type || '',
+                  url: item.url || ''
+                }));
+                field.onChange(validAttachments as FileItem[]);
+              }}
               label="Documentos da Reunião"
               folderPath={`board-meetings/${startupId}`}
               relatedType="board_meeting"
