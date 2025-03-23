@@ -47,7 +47,25 @@ export const addAttachment = async (attachment: {
   related_type?: string;
 }): Promise<Attachment | null> => {
   try {
-    console.log('Adding attachment:', attachment);
+    console.log('Adding attachment with data:', attachment);
+    
+    // Validate required fields
+    if (!attachment.url) {
+      console.error('Missing required field: url');
+      throw new Error('URL is required for attachments');
+    }
+    
+    if (!attachment.name) {
+      console.error('Missing required field: name');
+      throw new Error('Name is required for attachments');
+    }
+    
+    if (!attachment.type) {
+      console.error('Missing required field: type');
+      throw new Error('Type is required for attachments');
+    }
+    
+    // Create the attachment in the database
     const { data, error } = await supabase
       .from('attachments')
       .insert(attachment)
@@ -55,11 +73,11 @@ export const addAttachment = async (attachment: {
       .single();
     
     if (error) {
-      console.error('Error adding attachment:', error);
+      console.error('Error adding attachment to database:', error);
       throw error;
     }
     
-    console.log('Attachment added successfully:', data);
+    console.log('Attachment added successfully to database:', data);
     
     // Transform to match Attachment interface
     return data ? {

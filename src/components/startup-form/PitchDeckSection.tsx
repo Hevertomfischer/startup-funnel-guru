@@ -34,23 +34,30 @@ export const PitchDeckSection = () => {
       // Generate a unique file name to avoid collisions
       const fileExt = file.name.split('.').pop();
       const fileName = `pitch_deck_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
       
-      console.log('Uploading pitch deck:', file.name, 'as', filePath);
+      console.log('Uploading pitch deck:', file.name, 'as', fileName);
       
       // Upload file to Supabase Storage
       const { data, error } = await supabase.storage
         .from('startup-attachments')
-        .upload(filePath, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error uploading pitch deck to storage:', error);
+        throw error;
+      }
       
-      console.log('Pitch deck uploaded successfully:', data);
+      console.log('Pitch deck uploaded successfully to storage:', data);
       
       // Get public URL for the uploaded file
       const { data: urlData } = supabase.storage
         .from('startup-attachments')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
+
+      console.log('Generated public URL for pitch deck:', urlData.publicUrl);
 
       // Set the pitch deck data
       const pitchDeckData = {
@@ -64,10 +71,10 @@ export const PitchDeckSection = () => {
       console.log('Setting pitch deck data in form:', pitchDeckData);
       setValue('pitchDeck', pitchDeckData);
       
-      toast.success('Pitch deck uploaded successfully');
+      toast.success('Pitch deck carregado com sucesso');
     } catch (error: any) {
       console.error('Error uploading pitch deck:', error);
-      toast.error('Error uploading pitch deck', {
+      toast.error('Erro ao carregar pitch deck', {
         description: error.message
       });
     } finally {
@@ -101,7 +108,7 @@ export const PitchDeckSection = () => {
             ) : (
               <Upload className="h-4 w-4" />
             )}
-            {isUploading ? 'Uploading...' : 'Upload Pitch Deck'}
+            {isUploading ? 'Carregando...' : 'Carregar Pitch Deck'}
           </Button>
           <Input
             id="pitch-deck-upload"
@@ -116,7 +123,7 @@ export const PitchDeckSection = () => {
 
       {pitchDeck && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Uploaded Pitch Deck</h4>
+          <h4 className="text-sm font-medium">Pitch Deck Carregado</h4>
           <div className="flex items-center justify-between rounded-md border p-2 text-sm">
             <div className="truncate">
               <span className="font-medium">{pitchDeck.name}</span>
@@ -132,7 +139,7 @@ export const PitchDeckSection = () => {
                 onClick={() => window.open(pitchDeck.url, '_blank')}
                 className="h-8 px-2"
               >
-                View
+                Visualizar
               </Button>
               <Button
                 type="button"
@@ -141,7 +148,7 @@ export const PitchDeckSection = () => {
                 onClick={removePitchDeck}
                 className="h-8 px-2 text-destructive hover:text-destructive"
               >
-                Remove
+                Remover
               </Button>
             </div>
           </div>

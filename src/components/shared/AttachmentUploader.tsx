@@ -42,23 +42,37 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
     setIsUploading(true);
     
     try {
+      console.log('Starting upload of', files.length, 'files to storage bucket: startup-attachments');
+      
       const fileItemsPromises = Array.from(files).map(async (file) => {
         // Generate a unique file name to avoid collisions
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-        const filePath = `${folderPath}/${fileName}`;
+        const filePath = `${folderPath ? folderPath + '/' : ''}${fileName}`;
+        
+        console.log(`Uploading file: ${file.name} as ${filePath}`);
         
         // Upload file to Supabase Storage
         const { data, error } = await supabase.storage
           .from('startup-attachments')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error uploading file to storage:', error);
+          throw error;
+        }
+        
+        console.log('File uploaded successfully:', data);
         
         // Get public URL for the uploaded file
         const { data: urlData } = supabase.storage
           .from('startup-attachments')
           .getPublicUrl(filePath);
+
+        console.log('Generated public URL:', urlData.publicUrl);
 
         return {
           name: file.name,
@@ -69,13 +83,14 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
       });
       
       const fileItems = await Promise.all(fileItemsPromises);
+      console.log('All files uploaded, updating state with new attachments:', fileItems);
       onChange([...attachments, ...fileItems]);
       toast.success('Arquivos enviados com sucesso');
     } catch (error: any) {
+      console.error('Error in file upload process:', error);
       toast.error('Erro ao enviar arquivos', {
         description: error.message
       });
-      console.error('Error uploading files:', error);
     } finally {
       setIsUploading(false);
       // Clear the input
