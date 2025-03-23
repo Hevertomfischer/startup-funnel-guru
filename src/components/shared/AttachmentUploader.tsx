@@ -7,7 +7,7 @@ import { PaperclipIcon, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface FileItem {
+export interface FileItem {
   name: string;
   size: number;
   type: string;
@@ -21,6 +21,7 @@ interface AttachmentUploaderProps {
   description?: string;
   folderPath: string;
   relatedType?: 'kpi' | 'board_meeting' | 'startup';
+  startup_id?: string;
 }
 
 export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
@@ -29,7 +30,8 @@ export const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
   label,
   description,
   folderPath,
-  relatedType
+  relatedType,
+  startup_id
 }) => {
   const [isUploading, setIsUploading] = useState(false);
 
