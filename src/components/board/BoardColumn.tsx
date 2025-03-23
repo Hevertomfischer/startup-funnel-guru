@@ -3,7 +3,7 @@ import React from 'react';
 import { Loader2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Startup } from '@/types';
-import StartupCard from '@/components/StartupCard';
+import StartupCard from '@/components/startup-card';
 import { cn } from '@/lib/utils';
 
 interface BoardColumnProps {

@@ -70,10 +70,10 @@ export const useStartupData = () => {
         timeTracking: startup.time_tracking || 0,
         attachments: [],
         pitchDeck: startup.pitch_deck ? {
-          name: startup.pitch_deck.name || 'Pitch Deck',
-          url: startup.pitch_deck.url,
-          size: startup.pitch_deck.size,
-          type: startup.pitch_deck.type
+          name: startup.pitch_deck?.name || 'Pitch Deck',
+          url: startup.pitch_deck?.url || '',
+          size: startup.pitch_deck?.size,
+          type: startup.pitch_deck?.type
         } : undefined
       }));
       setFormattedStartups(formatted);
