@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -235,7 +236,7 @@ const BoardMeetingForm: React.FC<BoardMeetingFormProps> = ({
           name="attachments"
           render={({ field }) => (
             <AttachmentUploader
-              attachments={field.value || []}
+              attachments={field.value as FileItem[] || []}
               onChange={(attachments) => field.onChange(attachments)}
               label="Documentos da Reunião"
               folderPath={`board-meetings/${startupId}`}
