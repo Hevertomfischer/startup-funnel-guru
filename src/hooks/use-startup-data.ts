@@ -16,10 +16,18 @@ export const useStartupData = () => {
     if (startupsData && Array.isArray(startupsData)) {
       const formatted = startupsData.map(startup => {
         // Find pitch deck in attachments if available
-        const pitchDeck = startup.attachments?.find(
-          (attachment: any) => attachment.name.toLowerCase().includes('pitch') || 
-          attachment.name.toLowerCase().includes('deck')
-        );
+        // The attachments might be a separate field coming from a join query or a nested field
+        // Make sure we safely check if it exists
+        let pitchDeck;
+        
+        // Check if there are any attachments associated with this startup
+        if ('attachments' in startup && Array.isArray(startup.attachments)) {
+          pitchDeck = startup.attachments.find(
+            (attachment: any) => 
+              attachment.name.toLowerCase().includes('pitch') || 
+              attachment.name.toLowerCase().includes('deck')
+          );
+        }
 
         return {
           id: startup.id,
