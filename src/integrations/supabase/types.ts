@@ -13,6 +13,8 @@ export type Database = {
         Row: {
           id: string
           name: string
+          related_id: string | null
+          related_type: string | null
           size: number | null
           startup_id: string | null
           type: string
@@ -22,6 +24,8 @@ export type Database = {
         Insert: {
           id?: string
           name: string
+          related_id?: string | null
+          related_type?: string | null
           size?: number | null
           startup_id?: string | null
           type: string
@@ -31,6 +35,8 @@ export type Database = {
         Update: {
           id?: string
           name?: string
+          related_id?: string | null
+          related_type?: string | null
           size?: number | null
           startup_id?: string | null
           type?: string
