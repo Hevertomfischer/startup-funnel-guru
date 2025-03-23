@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Clock, Link2, User, Trash2, Clipboard, ListTodo, MapPin, Users, DollarSign } from 'lucide-react';
+import { Calendar, Clock, Link2, User, Trash2, Clipboard, ListTodo, MapPin, Users, DollarSign, FileText } from 'lucide-react';
 import { Startup, Status } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -43,6 +43,9 @@ const StartupCard: React.FC<StartupCardProps> = ({
   const status = statuses.find(s => s.id === startup.statusId);
   const dueDate = startup.dueDate ? new Date(startup.dueDate) : undefined;
   const assignedUser = startup.assignedTo && users[startup.assignedTo];
+  
+  // Check if the startup has a pitchdeck
+  const hasPitchDeck = startup.pitchDeck?.url;
   
   // Get tasks from localStorage
   const getOpenTasksCount = () => {
@@ -89,6 +92,13 @@ const StartupCard: React.FC<StartupCardProps> = ({
     }
   };
 
+  const handlePitchDeckClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    if (hasPitchDeck) {
+      window.open(startup.pitchDeck!.url, '_blank');
+    }
+  };
+
   return (
     <Card 
       className="glass-card cursor-pointer overflow-hidden group" 
@@ -123,6 +133,18 @@ const StartupCard: React.FC<StartupCardProps> = ({
                 0
               </Badge>
             )}
+            
+            {hasPitchDeck && (
+              <Badge 
+                className="bg-amber-500/80 text-white cursor-pointer" 
+                title="View Pitch Deck"
+                onClick={handlePitchDeckClick}
+              >
+                <FileText className="h-3 w-3 mr-1" />
+                Deck
+              </Badge>
+            )}
+            
             <Badge 
               variant="outline" 
               className={`${priorityColors[startup.priority]} text-xs`}
@@ -204,6 +226,22 @@ const StartupCard: React.FC<StartupCardProps> = ({
                   rel="noopener noreferrer"
                 >
                   {startup.values['Site da Startup'].replace(/^https?:\/\//, '')}
+                </a>
+              </div>
+            )}
+            
+            {/* PitchDeck */}
+            {hasPitchDeck && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                <FileText className="h-3 w-3" />
+                <a 
+                  href={startup.pitchDeck?.url} 
+                  className="truncate hover:text-primary"
+                  onClick={(e) => e.stopPropagation()}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  {startup.pitchDeck?.name || 'Visualizar Pitch Deck'}
                 </a>
               </div>
             )}

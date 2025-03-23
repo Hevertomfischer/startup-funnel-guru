@@ -68,7 +68,13 @@ export const useStartupData = () => {
         assignedTo: startup.assigned_to,
         dueDate: startup.due_date,
         timeTracking: startup.time_tracking || 0,
-        attachments: []
+        attachments: [],
+        pitchDeck: startup.pitch_deck ? {
+          name: startup.pitch_deck.name || 'Pitch Deck',
+          url: startup.pitch_deck.url,
+          size: startup.pitch_deck.size,
+          type: startup.pitch_deck.type
+        } : undefined
       }));
       setFormattedStartups(formatted);
     }

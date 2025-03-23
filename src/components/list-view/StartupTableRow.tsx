@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, User, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Calendar, User, MoreHorizontal, Trash2, FileText } from 'lucide-react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -25,6 +25,7 @@ interface StartupTableRowProps {
 const StartupTableRow = ({ startup, status, onRowClick, onDelete }: StartupTableRowProps) => {
   const assignedUser = startup.assignedTo && USERS[startup.assignedTo];
   const dueDate = startup.dueDate ? new Date(startup.dueDate) : undefined;
+  const hasPitchDeck = startup.pitchDeck?.url;
   
   // Priority colors
   const priorityColors = {
@@ -59,6 +60,13 @@ const StartupTableRow = ({ startup, status, onRowClick, onDelete }: StartupTable
     }
   };
   
+  const handlePitchDeckClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click event
+    if (hasPitchDeck) {
+      window.open(startup.pitchDeck!.url, '_blank');
+    }
+  };
+  
   return (
     <TableRow 
       key={startup.id} 
@@ -67,7 +75,20 @@ const StartupTableRow = ({ startup, status, onRowClick, onDelete }: StartupTable
     >
       <TableCell className="font-medium">
         <div className="flex items-center justify-between">
-          <span>{startup.values.Startup || 'Unnamed Startup'}</span>
+          <div className="flex items-center gap-2">
+            <span>{startup.values.Startup || 'Unnamed Startup'}</span>
+            {hasPitchDeck && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0 text-amber-500 hover:text-amber-600"
+                title="View Pitch Deck"
+                onClick={handlePitchDeckClick}
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           {onDelete && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

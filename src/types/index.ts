@@ -60,17 +60,32 @@ export interface StartupFieldValues {
 
 export interface Startup {
   id: string;
-  statusId: string;
-  values: StartupValues;
   createdAt: string;
   updatedAt: string;
+  statusId: string;
+  values: {
+    Startup?: string;
+    'Problema que Resolve'?: string;
+    'Problema Resolvido'?: string; // Alias for backward compatibility
+    Setor?: string;
+    'Modelo de Negócio'?: string;
+    'Site da Startup'?: string;
+    MRR?: number;
+    'Quantidade de Clientes'?: number;
+    [key: string]: any;
+  };
+  labels: string[];
+  priority: 'low' | 'medium' | 'high';
   assignedTo?: string;
   dueDate?: string;
   timeTracking?: number;
-  priority: 'low' | 'medium' | 'high';
-  labels?: string[];
-  tags?: string[];
-  attachments?: any[];
+  attachments: any[];
+  pitchDeck?: {
+    name: string;
+    url: string;
+    size?: number;
+    type?: string;
+  };
 }
 
 export interface StartupValues {
