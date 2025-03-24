@@ -8,9 +8,13 @@ import type { Startup } from '@/integrations/supabase/client';
  */
 export const getStartups = async (): Promise<Startup[]> => {
   try {
+    // Include attachments in the query
     const { data, error } = await supabase
       .from('startups')
-      .select('*')
+      .select(`
+        *,
+        attachments(*)
+      `)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -29,9 +33,13 @@ export const getStartups = async (): Promise<Startup[]> => {
 export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> => {
   try {
     console.log(`Fetching startups for status: ${statusId}`);
+    // Include attachments in the query
     const { data, error } = await supabase
       .from('startups')
-      .select('*')
+      .select(`
+        *,
+        attachments(*)
+      `)
       .eq('status_id', statusId)
       .order('created_at', { ascending: false });
     
@@ -51,9 +59,13 @@ export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> 
  */
 export const getStartup = async (id: string): Promise<Startup | null> => {
   try {
+    // Include attachments in the query
     const { data, error } = await supabase
       .from('startups')
-      .select('*')
+      .select(`
+        *,
+        attachments(*)
+      `)
       .eq('id', id)
       .single();
     

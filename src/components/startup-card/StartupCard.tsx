@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Startup, Status } from '@/types';
 import { 
@@ -39,10 +38,10 @@ const StartupCard: React.FC<StartupCardProps> = ({
   const dueDate = startup.dueDate ? new Date(startup.dueDate) : undefined;
   const assignedUser = startup.assignedTo && users[startup.assignedTo];
   
-  // Check if the startup has a pitchdeck
+  // Check if the startup has a pitchdeck with a valid URL
   const hasPitchDeck = Boolean(startup.pitchDeck?.url);
   
-  // Log pitchDeck info for debugging
+  // Log pitch deck info for debugging
   useEffect(() => {
     console.log(`StartupCard ${startup.id} - hasPitchDeck:`, hasPitchDeck);
     console.log(`StartupCard ${startup.id} - pitchDeck:`, startup.pitchDeck);

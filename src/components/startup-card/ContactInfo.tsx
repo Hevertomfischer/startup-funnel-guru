@@ -9,18 +9,18 @@ interface ContactInfoProps {
 }
 
 export const ContactInfo: React.FC<ContactInfoProps> = ({ startup, onPitchDeckLinkClick }) => {
-  const hasPitchDeck = startup.pitchDeck?.url;
+  const pitchDeckUrl = startup.pitchDeck?.url;
   const hasLocation = startup.values['Cidade'] || startup.values['Estado'];
   const hasWebsite = startup.values['Site da Startup'];
   
-  // Log pitch deck info for debugging
-  if (hasPitchDeck) {
-    console.log('ContactInfo component - Pitch deck URL exists:', startup.pitchDeck?.url);
+  // Enhanced logging for debugging
+  if (pitchDeckUrl) {
+    console.log('ContactInfo component - Pitch deck URL exists:', pitchDeckUrl);
   } else {
     console.log('ContactInfo component - No pitch deck URL for this startup');
   }
   
-  if (!hasLocation && !hasWebsite && !hasPitchDeck) return null;
+  if (!hasLocation && !hasWebsite && !pitchDeckUrl) return null;
   
   return (
     <>
@@ -53,11 +53,11 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ startup, onPitchDeckLi
       )}
       
       {/* PitchDeck */}
-      {hasPitchDeck && (
+      {pitchDeckUrl && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
           <FileText className="h-3 w-3" />
           <a 
-            href={startup.pitchDeck?.url} 
+            href={pitchDeckUrl} 
             className="truncate hover:text-primary"
             onClick={onPitchDeckLinkClick}
           >

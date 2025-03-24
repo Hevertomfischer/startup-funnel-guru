@@ -21,8 +21,12 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
   onTaskIconClick,
   onPitchDeckClick
 }) => {
+  // Enhanced logging for debugging
   console.log('CardBadges - hasPitchDeck:', hasPitchDeck);
   console.log('CardBadges - startup pitchDeck:', startup.pitchDeck);
+  
+  // Get actual pitch deck status based on object presence and url
+  const pitchDeckAvailable = Boolean(startup.pitchDeck?.url);
   
   return (
     <div className="flex items-center gap-1">
@@ -46,7 +50,7 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
         </Badge>
       )}
       
-      {hasPitchDeck && (
+      {pitchDeckAvailable && (
         <Badge 
           className="bg-amber-500/80 text-white cursor-pointer" 
           title="View Pitch Deck"
