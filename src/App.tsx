@@ -93,12 +93,11 @@ const router = createBrowserRouter([
   },
 ]);
 
+// App component serves as the entry point of the application
 function App() {
   return (
     <React.StrictMode>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <RouterProvider router={router} />
     </React.StrictMode>
   );
 }

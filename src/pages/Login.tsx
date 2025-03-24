@@ -9,8 +9,9 @@ import { InfoIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AuthProvider } from '@/contexts/auth-context';
 
-export default function Login() {
+const LoginContent = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResending, setIsResending] = useState(false);
@@ -174,5 +175,13 @@ export default function Login() {
         </div>
       </div>
     </div>
+  );
+};
+
+export default function Login() {
+  return (
+    <AuthProvider>
+      <LoginContent />
+    </AuthProvider>
   );
 };

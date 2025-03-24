@@ -1,11 +1,9 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { signIn, signUp, signOut, fetchProfile } from '@/services/auth-service';
-import { useProfile } from '@/hooks/use-profile';
 
 // Define the auth context type
 type AuthContextType = {
@@ -26,14 +24,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
-  const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
-  // Use the profile hook
-  const { profile, isLoading: profileLoading, isAdmin } = useProfile(user);
-  
-  const isLoading = authLoading || profileLoading;
+  const isLoading = authLoading || !initialLoadComplete;
+
+  // Load profile data when user is available
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user?.id) {
+        try {
+          const profileData = await fetchProfile(user.id);
+          setProfile(profileData);
+          setIsAdmin(profileData?.role === 'admin' || false);
+        } catch (error) {
+          console.error('Error loading profile:', error);
+        }
+      } else {
+        setProfile(null);
+        setIsAdmin(false);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   useEffect(() => {
     // Get initial session
@@ -77,9 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthLoading(true);
       const { data, error } = await signIn(email, password);
       if (error) throw error;
-      if (data?.user) {
-        navigate('/dashboard');
-      }
+      return data;
     } catch (error: any) {
       console.error('Sign in error:', error);
       throw error;
@@ -105,7 +119,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthLoading(true);
       const { error } = await signOut();
       if (error) throw error;
-      navigate('/login');
     } catch (error: any) {
       console.error('Sign out error:', error);
     } finally {
