@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   createBrowserRouter,
@@ -20,6 +21,7 @@ import Reports from './pages/Reports';
 import Portfolio from './pages/Portfolio';
 import Investors from './pages/Investors';
 import WorkflowEditor from './pages/WorkflowEditor';
+import { AuthProvider } from '@/hooks/use-auth';
 
 const router = createBrowserRouter([
   {
@@ -94,7 +96,9 @@ const router = createBrowserRouter([
 function App() {
   return (
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </React.StrictMode>
   );
 }
