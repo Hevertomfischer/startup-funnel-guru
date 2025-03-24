@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/header/SearchBar';
@@ -20,6 +21,7 @@ const ListViewHeader: React.FC<ListViewHeaderProps> = ({ searchTerm, setSearchTe
         <SearchBar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          onSearch={setSearchTerm}
           placeholder="Buscar startups..."
         />
       </div>

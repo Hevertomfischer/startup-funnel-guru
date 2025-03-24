@@ -1,8 +1,9 @@
+
 import React from 'react';
+import { Plus, MoreVertical, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/header/SearchBar';
-import { CreateStartupDialog } from '@/components/board/BoardDialogs';
-import { Plus, MoreVertical, Upload } from 'lucide-react';
+import StartupDialog from '@/components/StartupDialog';
 import { useNavigate } from 'react-router-dom';
 
 interface BoardHeaderProps {
@@ -21,6 +22,7 @@ const BoardHeader = ({ searchTerm, setSearchTerm, showCreateDialog, setShowCreat
       <SearchBar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        onSearch={setSearchTerm}
         placeholder="Buscar startups..."
       />
 
@@ -49,11 +51,16 @@ const BoardHeader = ({ searchTerm, setSearchTerm, showCreateDialog, setShowCreat
         </Button>
       </div>
 
-      <CreateStartupDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        statuses={statuses}
-      />
+      {statuses && (
+        <StartupDialog
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          title="Nova Startup"
+          statuses={statuses}
+          onSubmit={() => {}}
+          isSubmitting={false}
+        />
+      )}
     </div>
   );
 };
