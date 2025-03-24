@@ -22,6 +22,7 @@ import Portfolio from './pages/Portfolio';
 import Investors from './pages/Investors';
 import WorkflowEditor from './pages/WorkflowEditor';
 import { AuthProvider } from '@/hooks/use-auth';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const router = createBrowserRouter([
   {
@@ -93,13 +94,25 @@ const router = createBrowserRouter([
   },
 ]);
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
 // App component serves as the entry point of the application
 function App() {
   return (
     <React.StrictMode>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </QueryClientProvider>
     </React.StrictMode>
   );
 }
