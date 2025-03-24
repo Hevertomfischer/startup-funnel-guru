@@ -16,6 +16,7 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [separator, setSeparator] = useState<string>(';'); // Default separator is now semicolon
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -34,6 +35,7 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
 
   const parseCSV = (text: string): CSVData | null => {
     try {
+      // Split by newlines and filter out empty lines
       const lines = text.split('\n').filter(line => line.trim() !== '');
       
       if (lines.length < 2) {
@@ -41,12 +43,14 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
         return null;
       }
       
-      const headers = lines[0].split(',').map(header => header.trim());
+      // Use the selected separator (now semicolon by default)
+      const headers = lines[0].split(separator).map(header => header.trim());
       const headerCount = headers.length;
       
       let inconsistentRowsCount = 0;
       const records = lines.slice(1).map(line => {
-        const row = line.split(',').map(cell => cell.trim());
+        // Use the same separator for data rows
+        const row = line.split(separator).map(cell => cell.trim());
         
         if (row.length !== headerCount) {
           inconsistentRowsCount++;
@@ -120,6 +124,10 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
     reader.readAsText(file);
   };
 
+  const handleSeparatorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSeparator(e.target.value);
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -145,35 +153,53 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
         </Alert>
       )}
       
-      <div 
-        className="border-2 border-dashed rounded-lg p-12 text-center hover:bg-muted/50 transition cursor-pointer"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept=".csv"
-        />
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <label htmlFor="separator" className="text-sm font-medium">
+            Separador CSV:
+          </label>
+          <select
+            id="separator"
+            value={separator}
+            onChange={handleSeparatorChange}
+            className="rounded-md border border-input bg-background px-3 py-1 text-sm"
+          >
+            <option value=";">Ponto e vírgula (;)</option>
+            <option value=",">Vírgula (,)</option>
+            <option value="\t">Tab</option>
+          </select>
+        </div>
         
-        {file ? (
-          <div className="space-y-2">
-            <File className="mx-auto h-12 w-12 text-primary" />
-            <p className="font-medium">{file.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {(file.size / 1024).toFixed(2)} KB
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-            <p className="font-medium">Clique para selecionar um arquivo</p>
-            <p className="text-sm text-muted-foreground">
-              ou arraste e solte um arquivo CSV aqui
-            </p>
-          </div>
-        )}
+        <div 
+          className="border-2 border-dashed rounded-lg p-12 text-center hover:bg-muted/50 transition cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept=".csv"
+          />
+          
+          {file ? (
+            <div className="space-y-2">
+              <File className="mx-auto h-12 w-12 text-primary" />
+              <p className="font-medium">{file.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {(file.size / 1024).toFixed(2)} KB
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+              <p className="font-medium">Clique para selecionar um arquivo</p>
+              <p className="text-sm text-muted-foreground">
+                ou arraste e solte um arquivo CSV aqui
+              </p>
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="flex justify-end mt-6">
