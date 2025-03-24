@@ -1,64 +1,102 @@
+import React from 'react';
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
+import Index from './pages/Index';
+import Board from './pages/Board';
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import ListView from './pages/ListView';
+import Tasks from './pages/Tasks';
+import StartupImport from './pages/StartupImport';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
+import Team from './pages/Team';
+import Emails from './pages/Emails';
+import Analytics from './pages/Analytics';
+import Reports from './pages/Reports';
+import Portfolio from './pages/Portfolio';
+import Investors from './pages/Investors';
+import WorkflowEditor from './pages/WorkflowEditor';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/use-auth";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Board from "./pages/Board";
-import ListView from "./pages/ListView";
-import NotFound from "./pages/NotFound";
-import WorkflowEditor from "./pages/WorkflowEditor";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
-import Team from "./pages/Team";
-import Emails from "./pages/Emails";
-import Reports from "./pages/Reports";
-import Dashboard from "./pages/Dashboard";
-import Tasks from "./pages/Tasks";
-import Investors from "./pages/Investors";
-import Profile from "./pages/Profile";
-import Portfolio from "./pages/Portfolio";
-import { initializeWorkflowRules } from "./utils/workflow-utils";
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Index />,
+    errorElement: <NotFound />,
+    children: [
+      {
+        path: '/',
+        element: <Dashboard />,
+      },
+      {
+        path: '/board',
+        element: <Board />,
+      },
+      {
+        path: '/list',
+        element: <ListView />,
+      },
+      {
+        path: '/tasks',
+        element: <Tasks />,
+      },
+      {
+        path: '/import',
+        element: <StartupImport />,
+      },
+      {
+        path: '/team',
+        element: <Team />,
+      },
+      {
+        path: '/emails',
+        element: <Emails />,
+      },
+      {
+        path: '/analytics',
+        element: <Analytics />,
+      },
+      {
+        path: '/reports',
+        element: <Reports />,
+      },
+      {
+        path: '/portfolio',
+        element: <Portfolio />,
+      },
+      {
+        path: '/investors',
+        element: <Investors />,
+      },
+      {
+        path: '/workflow',
+        element: <WorkflowEditor />,
+      },
+      {
+        path: '/profile',
+        element: <Profile />,
+      },
+      {
+        path: '/settings',
+        element: <Settings />,
+      },
+    ],
+  },
+  {
+    path: '/login',
+    element: <Login />,
+  },
+]);
 
-// Initialize workflow rules with mock data if none exist
-initializeWorkflowRules();
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Index />}>
-              <Route index element={<Navigate to="/dashboard" />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="board" element={<Board />} />
-              <Route path="list" element={<ListView />} />
-              <Route path="workflow" element={<WorkflowEditor />} />
-              <Route path="tasks" element={<Tasks />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="team" element={<Team />} />
-              <Route path="emails" element={<Emails />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="investors" element={<Investors />} />
-              <Route path="portfolio" element={<Portfolio />} />
-              <Route path="profile" element={<Profile />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </BrowserRouter>
-);
+function App() {
+  return (
+    <React.StrictMode>
+      <RouterProvider router={router} />
+    </React.StrictMode>
+  );
+}
 
 export default App;
