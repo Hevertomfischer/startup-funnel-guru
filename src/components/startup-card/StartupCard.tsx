@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Startup } from '@/types/startup';
 import { Status } from '@/types/status';
@@ -90,6 +89,7 @@ const StartupCard: React.FC<StartupCardProps> = ({
 
   const handlePitchDeckClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click event
+    console.log("Pitch deck clicked, URL:", startup.pitchDeck?.url);
     if (hasPitchDeck && startup.pitchDeck?.url) {
       window.open(startup.pitchDeck.url, '_blank', 'noopener,noreferrer');
     }
@@ -97,10 +97,8 @@ const StartupCard: React.FC<StartupCardProps> = ({
 
   // Log what deck we found for debugging
   useEffect(() => {
-    if (hasPitchDeck) {
-      console.log('Card has pitchDeck:', startup.pitchDeck);
-    }
-  }, [hasPitchDeck, startup.pitchDeck]);
+    console.log('Card for startup:', startup.id, 'Has pitchDeck:', hasPitchDeck, startup.pitchDeck);
+  }, [hasPitchDeck, startup.pitchDeck, startup.id]);
 
   return (
     <Card 

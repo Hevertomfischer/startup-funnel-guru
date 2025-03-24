@@ -21,20 +21,28 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
   onTaskIconClick,
   onPitchDeckClick
 }) => {
-  // Get actual pitch deck status based on object presence and url
+  // Check if pitch deck exists and has a URL (most reliable check)
   const pitchDeckAvailable = Boolean(startup.pitchDeck?.url);
   
   // Check if the startup has any attachments that are pitch decks
   const hasPitchDeckAttachment = startup.attachments?.some(attachment => 
     attachment.isPitchDeck === true || 
+    attachment.is_pitch_deck === true ||
     (attachment.name && (
       attachment.name.toLowerCase().includes('pitch') || 
       attachment.name.toLowerCase().includes('deck')
     ))
   );
   
-  // Determine if we should show the pitch deck badge
+  // Determine if we should show the pitch deck badge - any of these conditions should trigger it
   const showPitchDeckBadge = pitchDeckAvailable || hasPitchDeckAttachment || hasPitchDeck;
+  
+  console.log("Card badges for startup:", startup.id, {
+    pitchDeckAvailable, 
+    hasPitchDeckAttachment,
+    hasPitchDeck,
+    showPitchDeckBadge
+  });
   
   return (
     <div className="flex items-center gap-1">

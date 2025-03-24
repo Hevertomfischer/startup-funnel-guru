@@ -11,21 +11,30 @@ export const mapStartupToCardFormat = (startup: any): Startup => {
     pitchDeck = attachments.find(
       (att: any) => 
         att.isPitchDeck === true || 
+        att.is_pitch_deck === true ||  // Added this for database-stored property
         (att.name && (
           att.name.toLowerCase().includes('pitch') || 
           att.name.toLowerCase().includes('deck')
         ))
     );
+    
+    // If we found a pitch deck, ensure the isPitchDeck flag is set to true
+    if (pitchDeck) {
+      pitchDeck.isPitchDeck = true;
+    }
   }
   
   // If the startup already has a pitch_deck property, use that
   if (startup.pitch_deck && startup.pitch_deck.url) {
     pitchDeck = startup.pitch_deck;
+    pitchDeck.isPitchDeck = true;
   }
   
   // Log what we found for debugging
   if (pitchDeck) {
     console.log(`Found pitch deck for startup ${startup.id}:`, pitchDeck);
+  } else {
+    console.log(`No pitch deck found for startup ${startup.id}`);
   }
   
   return {

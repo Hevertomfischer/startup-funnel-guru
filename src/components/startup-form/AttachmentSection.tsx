@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { FormItem, FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PaperclipIcon, X, Loader2 } from 'lucide-react';
+import { PaperclipIcon, X, Loader2, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { addAttachment } from '@/services/attachment-service';
@@ -65,11 +65,11 @@ export const AttachmentSection = () => {
 
         console.log('Generated public URL:', urlData.publicUrl);
 
-        // Check if it looks like a pitch deck based on file type
-        const isPitchDeck = file.type.includes('presentation') || 
-                           file.type.includes('pdf') && 
-                           (file.name.toLowerCase().includes('pitch') || 
-                            file.name.toLowerCase().includes('deck'));
+        // Check if it looks like a pitch deck based on file type and name
+        const isPitchDeck = (
+          (file.type.includes('presentation') || file.type.includes('pdf')) && 
+          (file.name.toLowerCase().includes('pitch') || file.name.toLowerCase().includes('deck'))
+        );
 
         const fileItem = {
           name: file.name,
@@ -161,11 +161,19 @@ export const AttachmentSection = () => {
           <ul className="space-y-2">
             {attachments.map((file: FileItem, index: number) => (
               <li key={index} className="flex items-center justify-between rounded-md border p-2 text-sm">
-                <div className="truncate">
+                <div className="truncate flex items-center">
+                  {file.isPitchDeck ? (
+                    <FileText className="h-4 w-4 text-amber-500 mr-2" />
+                  ) : null}
                   <span className="font-medium">{file.name}</span>
                   <span className="ml-2 text-xs text-muted-foreground">
                     ({Math.round(file.size / 1024)} KB)
                   </span>
+                  {file.isPitchDeck && (
+                    <span className="ml-2 text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">
+                      Pitch Deck
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button

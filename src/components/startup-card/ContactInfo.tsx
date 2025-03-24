@@ -48,11 +48,15 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ startup, onPitchDeckLi
       {/* PitchDeck */}
       {pitchDeckUrl && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-          <FileText className="h-3 w-3" />
+          <FileText className="h-3 w-3 text-amber-500" />
           <a 
             href="#" 
-            className="truncate hover:text-primary"
-            onClick={onPitchDeckLinkClick}
+            className="truncate hover:text-amber-500"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onPitchDeckLinkClick(e);
+            }}
           >
             {startup.pitchDeck?.name || 'Visualizar Pitch Deck'}
           </a>
