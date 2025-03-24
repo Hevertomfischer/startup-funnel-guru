@@ -8,9 +8,8 @@ import ViewToggle from '@/components/ViewToggle';
 import { ViewMode } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AuthProvider } from '@/contexts/auth-context';
 
-const IndexContent = () => {
+const Index = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [searchTerm, setSearchTerm] = useState('');
   const { user, isLoading } = useAuth();
@@ -72,14 +71,6 @@ const IndexContent = () => {
         </main>
       </div>
     </div>
-  );
-};
-
-const Index = () => {
-  return (
-    <AuthProvider>
-      <IndexContent />
-    </AuthProvider>
   );
 };
 

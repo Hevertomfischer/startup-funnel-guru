@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,9 +8,8 @@ import { InfoIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AuthProvider } from '@/contexts/auth-context';
 
-const LoginContent = () => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResending, setIsResending] = useState(false);
@@ -183,10 +181,4 @@ const LoginContent = () => {
   );
 };
 
-export default function Login() {
-  return (
-    <AuthProvider>
-      <LoginContent />
-    </AuthProvider>
-  );
-};
+export default Login;
