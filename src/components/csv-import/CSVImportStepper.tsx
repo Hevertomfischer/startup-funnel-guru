@@ -21,7 +21,7 @@ export interface ColumnMapping {
 export interface ImportResult {
   success: number;
   failed: number;
-  errors: Array<{ row: number; error: string }>;
+  errors: Array<{ row: number; error: string; startup?: string }>;
   successfulStartups: Startup[];
 }
 
