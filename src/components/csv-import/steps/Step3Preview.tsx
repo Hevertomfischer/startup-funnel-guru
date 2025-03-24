@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { CSVData, ColumnMapping, ImportResult } from '../CSVImportStepper';
 import { UseMutationResult } from '@tanstack/react-query';
 import { Startup } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   StartupPreviewTable, 
   ActionButtons, 
@@ -31,6 +32,7 @@ export const Step3Preview: React.FC<Step3PreviewProps> = ({
   createStartupMutation
 }) => {
   const [isProcessing, setIsProcessing] = useState(true);
+  const [importInProgress, setImportInProgress] = useState(false);
   const { 
     startupsPreview, 
     setStartupsPreview, 
@@ -48,8 +50,11 @@ export const Step3Preview: React.FC<Step3PreviewProps> = ({
     // Set processing state to false after data is transformed
     if (startupsPreview.length > 0) {
       setIsProcessing(false);
+    } else if (csvData.records.length > 0 && startupsPreview.length === 0) {
+      toast.error('Não foi possível processar os dados. Verifique o formato do CSV.');
+      setIsProcessing(false);
     }
-  }, [startupsPreview]);
+  }, [startupsPreview, csvData.records.length]);
 
   const handleSelectAll = (checked: boolean) => {
     const updatedStartups = handleSelectAllChange(checked);
@@ -62,52 +67,80 @@ export const Step3Preview: React.FC<Step3PreviewProps> = ({
   };
 
   const handleImport = async () => {
-    // Get selected startups
-    const selectedStartups = startupsPreview
-      .filter(startup => startup.selected)
-      .map(startup => startup.data);
-    
-    if (selectedStartups.length === 0) {
-      return;
-    }
-    
-    setIsImporting(true);
-    
-    // Import results
-    const results: ImportResult = {
-      success: 0,
-      failed: 0,
-      errors: [],
-      successfulStartups: []
-    };
-    
-    // Import startups one by one
-    for (let i = 0; i < selectedStartups.length; i++) {
-      try {
-        const startupData = prepareStartupData(selectedStartups[i]);
-        const result = await createStartupMutation.mutateAsync(startupData);
-        
-        if (result) {
-          results.success++;
-          results.successfulStartups.push(result);
-        } else {
+    try {
+      // Get selected startups
+      const selectedStartups = startupsPreview
+        .filter(startup => startup.selected)
+        .map(startup => startup.data);
+      
+      if (selectedStartups.length === 0) {
+        toast.warning('Selecione pelo menos uma startup para importar');
+        return;
+      }
+      
+      // Prevent double submission
+      if (importInProgress) {
+        console.log('Import already in progress, ignoring request');
+        return;
+      }
+      
+      setImportInProgress(true);
+      setIsImporting(true);
+      
+      // Import results
+      const results: ImportResult = {
+        success: 0,
+        failed: 0,
+        errors: [],
+        successfulStartups: []
+      };
+      
+      console.log(`Importing ${selectedStartups.length} startups...`);
+      
+      // Import startups one by one
+      for (let i = 0; i < selectedStartups.length; i++) {
+        try {
+          const startupName = selectedStartups[i].name || `Row ${i + 1}`;
+          console.log(`Processing startup ${i + 1}/${selectedStartups.length}: ${startupName}`);
+          
+          const startupData = prepareStartupData(selectedStartups[i]);
+          const result = await createStartupMutation.mutateAsync(startupData);
+          
+          if (result) {
+            console.log(`Successfully imported: ${startupName}`);
+            results.success++;
+            results.successfulStartups.push(result);
+          } else {
+            console.error(`Failed to create startup: ${startupName}`);
+            results.failed++;
+            results.errors.push({
+              row: i + 1,
+              error: 'Falha ao criar startup',
+              startup: startupName
+            });
+          }
+        } catch (error: any) {
+          const errorMessage = error.message || 'Erro desconhecido';
+          console.error(`Error importing startup at row ${i + 1}:`, error);
+          
           results.failed++;
           results.errors.push({
             row: i + 1,
-            error: 'Falha ao criar startup'
+            error: errorMessage,
+            startup: selectedStartups[i].name || `Row ${i + 1}`
           });
         }
-      } catch (error: any) {
-        results.failed++;
-        results.errors.push({
-          row: i + 1,
-          error: error.message || 'Erro desconhecido'
-        });
       }
+      
+      // Call onImport with results
+      onImport(results);
+    } catch (error: any) {
+      console.error('Unexpected error during import process:', error);
+      toast.error('Erro durante o processo de importação');
+    } finally {
+      setImportInProgress(false);
+      setIsImporting(false);
     }
-    
-    // Call onImport with results
-    onImport(results);
   };
   
   return (
@@ -132,6 +165,7 @@ export const Step3Preview: React.FC<Step3PreviewProps> = ({
             onPrevious={onPrevious}
             onImport={handleImport}
             selectedCount={selectedCount}
+            isImporting={importInProgress}
           />
         </>
       )}
