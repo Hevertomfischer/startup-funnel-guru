@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { FileText, ListTodo } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Startup } from '@/types';
+import { Startup } from '@/types/startup';
 
 interface CardBadgesProps {
   openTasksCount: number;

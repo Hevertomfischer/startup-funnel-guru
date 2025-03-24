@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { MapPin, Link2, FileText } from 'lucide-react';
-import { Startup } from '@/types';
+import { Startup } from '@/types/startup';
 
 interface ContactInfoProps {
   startup: Startup;

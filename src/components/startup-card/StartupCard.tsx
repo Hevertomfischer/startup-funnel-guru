@@ -1,5 +1,7 @@
+
 import React, { useEffect } from 'react';
-import { Startup, Status } from '@/types';
+import { Startup } from '@/types/startup';
+import { Status } from '@/types/status';
 import { 
   Card, 
   CardContent, 

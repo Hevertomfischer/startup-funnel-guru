@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Startup } from '@/types';
+import { Startup } from '@/types/startup';
 
 interface BusinessInfoProps {
   startup: Startup;

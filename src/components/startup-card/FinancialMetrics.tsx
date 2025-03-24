@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { DollarSign, Users } from 'lucide-react';
-import { Startup } from '@/types';
+import { Startup } from '@/types/startup';
 
 interface FinancialMetricsProps {
   startup: Startup;

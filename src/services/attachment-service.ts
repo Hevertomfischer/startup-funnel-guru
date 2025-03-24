@@ -1,7 +1,6 @@
-
 import { supabase, handleError } from './base-service';
 import { toast } from 'sonner';
-import type { Attachment } from '@/types/index';
+import type { Attachment } from '@/types/attachment';
 
 export const getStartupAttachments = async (startupId: string): Promise<Attachment[]> => {
   try {
