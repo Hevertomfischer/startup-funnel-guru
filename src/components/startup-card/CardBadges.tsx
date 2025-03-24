@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FileText, ListTodo } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -20,13 +21,8 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
   onTaskIconClick,
   onPitchDeckClick
 }) => {
-  // Enhanced logging for debugging
-  console.log('CardBadges - hasPitchDeck parameter:', hasPitchDeck);
-  console.log('CardBadges - startup pitchDeck object:', startup.pitchDeck);
-  
   // Get actual pitch deck status based on object presence and url
   const pitchDeckAvailable = Boolean(startup.pitchDeck?.url);
-  console.log('CardBadges - pitchDeckAvailable:', pitchDeckAvailable);
   
   // Check if the startup has any attachments that are pitch decks
   const hasPitchDeckAttachment = startup.attachments?.some(attachment => 
@@ -36,7 +32,6 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
       attachment.name.toLowerCase().includes('deck')
     ))
   );
-  console.log('CardBadges - hasPitchDeckAttachment:', hasPitchDeckAttachment);
   
   // Determine if we should show the pitch deck badge
   const showPitchDeckBadge = pitchDeckAvailable || hasPitchDeckAttachment;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MapPin, Link2, FileText } from 'lucide-react';
 import { Startup } from '@/types/startup';
@@ -11,13 +12,6 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ startup, onPitchDeckLi
   const pitchDeckUrl = startup.pitchDeck?.url;
   const hasLocation = startup.values['Cidade'] || startup.values['Estado'];
   const hasWebsite = startup.values['Site da Startup'];
-  
-  // Enhanced logging for debugging
-  if (pitchDeckUrl) {
-    console.log('ContactInfo component - Pitch deck URL exists:', pitchDeckUrl);
-  } else {
-    console.log('ContactInfo component - No pitch deck URL for this startup');
-  }
   
   if (!hasLocation && !hasWebsite && !pitchDeckUrl) return null;
   
@@ -56,7 +50,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ startup, onPitchDeckLi
         <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
           <FileText className="h-3 w-3" />
           <a 
-            href={pitchDeckUrl} 
+            href="#" 
             className="truncate hover:text-primary"
             onClick={onPitchDeckLinkClick}
           >

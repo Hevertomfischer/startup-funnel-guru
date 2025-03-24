@@ -43,12 +43,6 @@ const StartupCard: React.FC<StartupCardProps> = ({
   // Check if the startup has a pitchdeck with a valid URL
   const hasPitchDeck = Boolean(startup.pitchDeck?.url);
   
-  // Log pitch deck info for debugging
-  useEffect(() => {
-    console.log(`StartupCard ${startup.id} - hasPitchDeck:`, hasPitchDeck);
-    console.log(`StartupCard ${startup.id} - pitchDeck:`, startup.pitchDeck);
-  }, [startup.id, hasPitchDeck, startup.pitchDeck]);
-  
   // Get tasks from localStorage
   const getOpenTasksCount = () => {
     try {
@@ -97,10 +91,7 @@ const StartupCard: React.FC<StartupCardProps> = ({
   const handlePitchDeckClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click event
     if (hasPitchDeck && startup.pitchDeck?.url) {
-      console.log('Opening pitch deck URL:', startup.pitchDeck.url);
-      window.open(startup.pitchDeck.url, '_blank');
-    } else {
-      console.warn('Cannot open pitch deck - no URL available');
+      window.open(startup.pitchDeck.url, '_blank', 'noopener,noreferrer');
     }
   };
 
