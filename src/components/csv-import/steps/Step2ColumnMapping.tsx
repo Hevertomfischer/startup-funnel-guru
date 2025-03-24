@@ -51,11 +51,17 @@ export const Step2ColumnMapping: React.FC<Step2ColumnMappingProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [autoMappedCount, setAutoMappedCount] = useState(0);
 
+  console.log('Step2ColumnMapping rendered with csvData:', csvData);
+
   // Auto-map columns on first render
   useEffect(() => {
     // Skip if mapping already exists
-    if (Object.keys(columnMapping).length > 0) return;
+    if (Object.keys(columnMapping).length > 0) {
+      console.log('Using existing column mapping:', columnMapping);
+      return;
+    }
 
+    console.log('Auto-mapping columns from headers:', csvData.headers);
     const initialMapping: ColumnMapping = {};
     let mappedCount = 0;
 
@@ -77,16 +83,20 @@ export const Step2ColumnMapping: React.FC<Step2ColumnMappingProps> = ({
       if (matchedField) {
         initialMapping[header] = matchedField.value;
         mappedCount++;
+        console.log(`Mapped "${header}" to "${matchedField.label}"`);
       } else {
         initialMapping[header] = null;
+        console.log(`Could not map "${header}" automatically`);
       }
     });
     
     setColumnMapping(initialMapping);
     setAutoMappedCount(mappedCount);
+    console.log(`Auto-mapped ${mappedCount} of ${csvData.headers.length} columns`);
   }, [csvData.headers, setColumnMapping]);
 
   const handleMappingChange = (csvHeader: string, startupField: string | null) => {
+    console.log(`Changing mapping for "${csvHeader}" to "${startupField}"`);
     setColumnMapping(prev => ({
       ...prev,
       [csvHeader]: startupField
@@ -105,6 +115,7 @@ export const Step2ColumnMapping: React.FC<Step2ColumnMappingProps> = ({
     if (missingRequiredFields.length > 0) {
       const missingFieldNames = missingRequiredFields.map(f => f.label).join(', ');
       setError(`Campos obrigatórios não mapeados: ${missingFieldNames}`);
+      console.error('Missing required fields:', missingFieldNames);
       return false;
     }
     
@@ -122,6 +133,7 @@ export const Step2ColumnMapping: React.FC<Step2ColumnMappingProps> = ({
     
     if (duplicateFields.length > 0) {
       setError(`Mapeamento duplicado para os campos: ${duplicateFields.join(', ')}`);
+      console.error('Duplicate field mappings:', duplicateFields);
       return false;
     }
     
@@ -130,8 +142,12 @@ export const Step2ColumnMapping: React.FC<Step2ColumnMappingProps> = ({
   };
 
   const handleNext = () => {
+    console.log('Attempting to proceed to next step...');
     if (validateMapping()) {
+      console.log('Validation successful, moving to next step');
       onNext();
+    } else {
+      console.log('Validation failed, staying on current step');
     }
   };
 
@@ -180,7 +196,7 @@ export const Step2ColumnMapping: React.FC<Step2ColumnMappingProps> = ({
                         <SelectValue placeholder="Selecione o campo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Ignorar esta coluna</SelectItem>
+                        <SelectItem value="ignore">Ignorar esta coluna</SelectItem>
                         {startupFields.map((field) => (
                           <SelectItem key={field.value} value={field.value}>
                             {field.label} 

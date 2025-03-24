@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, File, AlertCircle, AlertTriangle } from 'lucide-react';
@@ -85,6 +86,7 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
     }
     
     setIsProcessing(true);
+    console.log('Starting CSV processing...');
     
     const reader = new FileReader();
     
@@ -93,18 +95,28 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
       const parsedData = parseCSV(text);
       
       if (parsedData) {
+        console.log('CSV parsed successfully:', parsedData.headers.length, 'columns,', parsedData.records.length, 'records');
         onFileUploaded(parsedData);
-        onNext();
+        
+        // Ensure we're using React's state batching by using a timeout
+        setTimeout(() => {
+          console.log('Advancing to next step...');
+          onNext();
+        }, 0);
+      } else {
+        console.error('Failed to parse CSV data');
       }
       
       setIsProcessing(false);
     };
     
     reader.onerror = () => {
+      console.error('Error reading file');
       setError('Erro ao ler o arquivo. Tente novamente com outro arquivo.');
       setIsProcessing(false);
     };
     
+    console.log('Reading CSV file...');
     reader.readAsText(file);
   };
 
