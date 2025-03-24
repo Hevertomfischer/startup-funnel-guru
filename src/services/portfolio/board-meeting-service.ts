@@ -78,7 +78,8 @@ export const createBoardMeeting = async (meetingData: any) => {
             type: attachment.type,
             size: attachment.size,
             related_id: data.id,
-            related_type: 'board_meeting'
+            related_type: 'board_meeting',
+            is_pitch_deck: attachment.isPitchDeck || false
           });
       });
       
@@ -166,7 +167,8 @@ export const updateBoardMeeting = async (id: string, meetingData: any) => {
               type: attachment.type,
               size: attachment.size,
               related_id: id,
-              related_type: 'board_meeting'
+              related_type: 'board_meeting',
+              is_pitch_deck: attachment.isPitchDeck || false
             });
         });
         

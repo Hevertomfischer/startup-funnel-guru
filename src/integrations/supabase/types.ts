@@ -12,6 +12,7 @@ export type Database = {
       attachments: {
         Row: {
           id: string
+          is_pitch_deck: boolean | null
           name: string
           related_id: string | null
           related_type: string | null
@@ -23,6 +24,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_pitch_deck?: boolean | null
           name: string
           related_id?: string | null
           related_type?: string | null
@@ -34,6 +36,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_pitch_deck?: boolean | null
           name?: string
           related_id?: string | null
           related_type?: string | null

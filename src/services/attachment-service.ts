@@ -30,7 +30,7 @@ export const getStartupAttachments = async (startupId: string): Promise<Attachme
       startup_id: item.startup_id,
       related_id: item.related_id,
       related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined,
-      isPitchDeck: item.isPitchDeck
+      isPitchDeck: item.is_pitch_deck || false
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching startup attachments');
@@ -67,10 +67,22 @@ export const addAttachment = async (attachment: {
       throw new Error('Type is required for attachments');
     }
     
+    // Convert from our frontend model to the database model
+    const dbAttachment = {
+      startup_id: attachment.startup_id,
+      type: attachment.type,
+      name: attachment.name,
+      url: attachment.url,
+      size: attachment.size,
+      related_id: attachment.related_id,
+      related_type: attachment.related_type,
+      is_pitch_deck: attachment.isPitchDeck || false
+    };
+    
     // Create the attachment in the database
     const { data, error } = await supabase
       .from('attachments')
-      .insert(attachment)
+      .insert(dbAttachment)
       .select()
       .single();
     
@@ -92,7 +104,7 @@ export const addAttachment = async (attachment: {
       startup_id: data.startup_id,
       related_id: data.related_id,
       related_type: data.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined,
-      isPitchDeck: data.isPitchDeck
+      isPitchDeck: data.is_pitch_deck || false
     } : null;
   } catch (error: any) {
     console.error('Error in addAttachment:', error);
@@ -139,7 +151,7 @@ export const getKPIAttachments = async (kpiId: string): Promise<Attachment[]> =>
       startup_id: item.startup_id,
       related_id: item.related_id,
       related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined,
-      isPitchDeck: item.isPitchDeck
+      isPitchDeck: item.is_pitch_deck || false
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching KPI attachments');
@@ -169,7 +181,7 @@ export const getBoardMeetingAttachments = async (meetingId: string): Promise<Att
       startup_id: item.startup_id,
       related_id: item.related_id,
       related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined,
-      isPitchDeck: item.isPitchDeck
+      isPitchDeck: item.is_pitch_deck || false
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching board meeting attachments');
