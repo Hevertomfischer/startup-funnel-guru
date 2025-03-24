@@ -85,6 +85,7 @@ export interface Startup {
     url: string;
     size?: number;
     type?: string;
+    isPitchDeck?: boolean;
   };
 }
 
