@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Loader2, Plus, Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Startup } from '@/types';
-import StartupCard from '@/components/startup-card';
-import { cn } from '@/lib/utils';
+import { 
+  ColumnHeader, 
+  ColumnContent
+} from '@/components/board/column';
 
 interface BoardColumnProps {
   id: string;
@@ -55,71 +55,8 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   onEditColumn,
   onCreateTask
 }) => {
-  // Ensure startups is an array and not null
-  const safeStartups = Array.isArray(startups) ? startups : [];
-  
   // Ensure startupIds is an array and not null
   const safeStartupIds = Array.isArray(startupIds) ? startupIds : [];
-  
-  // Map startup data to the format expected by StartupCard
-  const mapStartupToCardFormat = (startup: any): Startup => {
-    // Check if the startup has a pitchdeck in attachments
-    let pitchDeck;
-    const attachments = startup.attachments || [];
-    
-    if (Array.isArray(attachments) && attachments.length > 0) {
-      // Look for a pitch deck in the attachments
-      pitchDeck = attachments.find(
-        (att: any) => 
-          att.isPitchDeck === true || 
-          (att.name && (
-            att.name.toLowerCase().includes('pitch') || 
-            att.name.toLowerCase().includes('deck')
-          ))
-      );
-    }
-    
-    // If the startup already has a pitch_deck property, use that
-    if (startup.pitch_deck && startup.pitch_deck.url) {
-      pitchDeck = startup.pitch_deck;
-    }
-    
-    // Log what we found for debugging
-    if (pitchDeck) {
-      console.log(`Found pitch deck for startup ${startup.id}:`, pitchDeck);
-    }
-    
-    return {
-      id: startup.id,
-      createdAt: startup.created_at ? startup.created_at : new Date().toISOString(),
-      updatedAt: startup.updated_at ? startup.updated_at : new Date().toISOString(),
-      statusId: startup.status_id || '',
-      values: {
-        Startup: startup.name,
-        'Problema que Resolve': startup.problem_solved,
-        Setor: startup.sector,
-        'Modelo de Negócio': startup.business_model,
-        'Site da Startup': startup.website,
-        MRR: startup.mrr,
-        'Quantidade de Clientes': startup.client_count,
-        'Cidade': startup.city,
-        'Estado': startup.state
-      },
-      labels: [],
-      priority: startup.priority as 'low' | 'medium' | 'high',
-      assignedTo: startup.assigned_to,
-      dueDate: startup.due_date,
-      timeTracking: startup.time_tracking,
-      attachments: startup.attachments || [],
-      pitchDeck: pitchDeck ? {
-        name: pitchDeck.name || 'Pitch Deck',
-        url: pitchDeck.url,
-        size: pitchDeck.size || 0,
-        type: pitchDeck.type || 'application/pdf',
-        isPitchDeck: true
-      } : undefined
-    };
-  };
 
   return (
     <div 
@@ -128,103 +65,31 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
       onDrop={(e) => onDrop(e, id)}
       data-column-id={id} // Add data attribute for column ID
     >
-      <div 
-        className="p-3 flex items-center justify-between"
-        style={{ 
-          borderBottom: `1px solid ${color}40` 
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <div 
-            className="h-3 w-3 rounded-full" 
-            style={{ backgroundColor: color || '#e2e8f0' }}
-          />
-          <h3 className="font-medium">{title}</h3>
-          <div className="flex items-center justify-center rounded-full bg-muted w-6 h-6 text-xs font-medium">
-            {safeStartupIds?.length || 0}
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          {onEditColumn && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-7 w-7 p-0" 
-              onClick={onEditColumn}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-7 w-7 p-0" 
-            onClick={() => onAddStartup(id)}
-            disabled={isPendingAdd}
-          >
-            {isPendingAdd && id === pendingAddStatusId ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
+      <ColumnHeader 
+        title={title}
+        color={color}
+        count={safeStartupIds.length || 0}
+        onEditColumn={onEditColumn}
+        onAddStartup={onAddStartup}
+        id={id}
+        isPendingAdd={isPendingAdd}
+        pendingAddStatusId={pendingAddStatusId}
+      />
       
-      <div 
-        className="flex-1 p-2 overflow-y-auto space-y-3"
-        style={{ 
-          scrollbarWidth: 'thin',
-          scrollbarColor: `${color}20 transparent`
-        }}
-      >
-        {isLoading && (
-          <div className="h-20 flex items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        )}
-        
-        {isError && (
-          <div className="h-20 flex items-center justify-center text-destructive text-sm">
-            Failed to load startups
-          </div>
-        )}
-        
-        {!isLoading && !isError && safeStartups.length > 0 && safeStartups.map(startup => {
-          if (!startup) return null;
-          
-          const cardStartup = mapStartupToCardFormat(startup);
-          
-          return (
-            <div
-              key={startup.id}
-              draggable
-              onDragStart={(e) => onDragStart(e, startup.id)}
-              onDragEnd={onDragEnd}
-              className={cn(
-                "transition-opacity duration-200",
-                draggingStartupId === startup.id ? "opacity-50" : "opacity-100"
-              )}
-            >
-              <StartupCard 
-                startup={cardStartup} 
-                statuses={statuses} 
-                users={users}
-                onClick={() => onCardClick(startup)}
-                onDelete={onDeleteStartup}
-                compact={showCompactCards}
-                onCreateTask={() => onCreateTask(startup)}
-              />
-            </div>
-          );
-        })}
-        
-        {!isLoading && !isError && safeStartups.length === 0 && (
-          <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
-            Drop startups here
-          </div>
-        )}
-      </div>
+      <ColumnContent 
+        startups={startups}
+        isLoading={isLoading}
+        isError={isError}
+        draggingStartupId={draggingStartupId}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onCardClick={onCardClick}
+        onDeleteStartup={onDeleteStartup}
+        showCompactCards={showCompactCards}
+        statuses={statuses}
+        users={users}
+        onCreateTask={onCreateTask}
+      />
     </div>
   );
 };
