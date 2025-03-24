@@ -58,4 +58,7 @@ export const startupFields: StartupField[] = [
   { value: 'priority', label: 'Prioridade', required: false, description: 'Prioridade da startup (baixa, média, alta)' },
   { value: 'due_date', label: 'Data Limite', required: false, description: 'Data limite para alguma ação' },
   { value: 'description', label: 'Descrição', required: false, description: 'Descrição geral da startup' },
+  
+  // Metadados
+  { value: 'created_at', label: 'Data de Criação', required: false, description: 'Data de criação no sistema (pode ser importada do CSV)' },
 ];

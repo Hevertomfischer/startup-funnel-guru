@@ -76,6 +76,18 @@ const validators: FieldValidator[] = [
       }
       return null;
     }
+  },
+  {
+    field: 'created_at',
+    validate: (value) => {
+      if (value && isNaN(Date.parse(value))) {
+        return {
+          field: 'created_at',
+          message: 'Data de criação deve ser uma data válida'
+        };
+      }
+      return null;
+    }
   }
 ];
 
@@ -89,7 +101,7 @@ const mapAndValidate = (record: string[], headers: string[], columnMapping: Colu
   
   // Map CSV values to startup fields
   Object.entries(columnMapping).forEach(([csvHeader, startupField]) => {
-    if (!startupField) return; // Skip unmapped columns
+    if (!startupField || startupField === 'ignore') return; // Skip unmapped or ignored columns
     
     const headerIndex = headers.indexOf(csvHeader);
     if (headerIndex !== -1) {
@@ -138,6 +150,8 @@ export const prepareStartupDataForAPI = (data: Record<string, any>) => {
     market: data.market || null,
     competitors: data.competitors || null,
     description: data.description || null,
+    // Handle custom created_at if provided
+    created_at: data.created_at ? new Date(data.created_at).toISOString() : undefined,
     // Default values
     priority: 'medium'
   };

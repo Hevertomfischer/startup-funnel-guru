@@ -10,7 +10,8 @@ import { prepareStartupData } from './utils/prepare-data';
  */
 export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' | 'updated_at'> & { 
   attachments?: any[],
-  pitchDeck?: any
+  pitchDeck?: any,
+  created_at?: string
 }): Promise<Startup | null> => {
   try {
     console.log('Creating startup in Supabase with data:', startup);
@@ -21,9 +22,27 @@ export const createStartup = async (startup: Omit<Startup, 'id' | 'created_at' |
     
     console.log('Prepared data for Supabase insert:', preparedData);
     
+    // If there's a custom created_at, use it directly with the insert
+    let insertData = preparedData;
+    if (startup.created_at) {
+      try {
+        const customDate = new Date(startup.created_at);
+        // Ensure it's a valid date
+        if (!isNaN(customDate.getTime())) {
+          console.log('Using custom created_at date from CSV:', customDate.toISOString());
+          insertData = {
+            ...preparedData,
+            created_at: customDate.toISOString()
+          };
+        }
+      } catch (dateError) {
+        console.error('Error parsing custom created_at date:', dateError);
+      }
+    }
+    
     const { data, error } = await supabase
       .from('startups')
-      .insert(preparedData)
+      .insert(insertData)
       .select()
       .single();
     

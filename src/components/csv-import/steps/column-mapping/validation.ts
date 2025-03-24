@@ -22,10 +22,11 @@ export const validateMapping = (
     };
   }
   
-  // Check for duplicate mappings
+  // Check for duplicate mappings (excluding the 'ignore' value)
   const fieldCounts: Record<string, number> = {};
   Object.values(columnMapping).forEach(field => {
-    if (field) {
+    // Skip 'ignore' value and null values when checking for duplicates
+    if (field && field !== 'ignore') {
       fieldCounts[field] = (fieldCounts[field] || 0) + 1;
     }
   });
