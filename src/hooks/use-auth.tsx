@@ -1,6 +1,7 @@
 
 import { useAuthContext } from '@/contexts/auth-context';
 import { Profile } from '@/types/auth';
+import { AuthProvider as ContextAuthProvider } from '@/contexts/auth-context';
 
 // Re-export the Profile type
 export type { Profile };
@@ -12,9 +13,8 @@ export const useAuth = () => {
 
 // Create a component that wraps the children with the AuthProvider
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // We'll add the AuthProvider from the context here, but we need to 
-  // make sure it doesn't use useNavigate directly
-  return children;
+  // Use the AuthProvider from the context
+  return <ContextAuthProvider>{children}</ContextAuthProvider>;
 };
 
 // Re-export the useRoleGuard functionality

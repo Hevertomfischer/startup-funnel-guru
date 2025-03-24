@@ -37,7 +37,12 @@ const LoginContent = () => {
       setLoginError(null);
       setEmailNotConfirmed(false);
       console.log('Attempting login with:', email);
-      await signIn(email, password);
+      const data = await signIn(email, password);
+      
+      // If successfully logged in and there's a user, navigate to dashboard
+      if (data?.user) {
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       
