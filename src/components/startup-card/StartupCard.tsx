@@ -95,6 +95,13 @@ const StartupCard: React.FC<StartupCardProps> = ({
     }
   };
 
+  // Log what deck we found for debugging
+  useEffect(() => {
+    if (hasPitchDeck) {
+      console.log('Card has pitchDeck:', startup.pitchDeck);
+    }
+  }, [hasPitchDeck, startup.pitchDeck]);
+
   return (
     <Card 
       className="glass-card cursor-pointer overflow-hidden group" 

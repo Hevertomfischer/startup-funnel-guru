@@ -34,7 +34,7 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
   );
   
   // Determine if we should show the pitch deck badge
-  const showPitchDeckBadge = pitchDeckAvailable || hasPitchDeckAttachment;
+  const showPitchDeckBadge = pitchDeckAvailable || hasPitchDeckAttachment || hasPitchDeck;
   
   return (
     <div className="flex items-center gap-1">

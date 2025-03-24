@@ -62,6 +62,7 @@ const ColumnContent: React.FC<ColumnContentProps> = ({
         if (!startup) return null;
         
         const cardStartup = mapStartupToCardFormat(startup);
+        console.log("Mapped startup for card:", cardStartup.id, "Has pitchDeck:", Boolean(cardStartup.pitchDeck?.url));
         
         return (
           <div

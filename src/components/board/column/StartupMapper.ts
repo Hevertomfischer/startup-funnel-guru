@@ -23,6 +23,11 @@ export const mapStartupToCardFormat = (startup: any): Startup => {
     pitchDeck = startup.pitch_deck;
   }
   
+  // Log what we found for debugging
+  if (pitchDeck) {
+    console.log(`Found pitch deck for startup ${startup.id}:`, pitchDeck);
+  }
+  
   return {
     id: startup.id,
     createdAt: startup.created_at ? startup.created_at : new Date().toISOString(),
