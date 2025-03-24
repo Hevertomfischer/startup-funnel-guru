@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, File, AlertCircle, AlertTriangle } from 'lucide-react';
@@ -24,7 +23,6 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
     setError(null);
     setWarning(null);
     
-    // Validate file type
     if (!selectedFile.name.endsWith('.csv')) {
       setError('Por favor, selecione um arquivo CSV válido.');
       return;
@@ -35,7 +33,6 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
 
   const parseCSV = (text: string): CSVData | null => {
     try {
-      // Split into lines and filter out empty lines
       const lines = text.split('\n').filter(line => line.trim() !== '');
       
       if (lines.length < 2) {
@@ -43,24 +40,19 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
         return null;
       }
       
-      // Parse headers
       const headers = lines[0].split(',').map(header => header.trim());
       const headerCount = headers.length;
       
-      // Parse records with handling for inconsistent column counts
       let inconsistentRowsCount = 0;
       const records = lines.slice(1).map(line => {
         const row = line.split(',').map(cell => cell.trim());
         
-        // Handle inconsistent column counts
         if (row.length !== headerCount) {
           inconsistentRowsCount++;
           
-          // If row has fewer columns than header, pad with empty strings
           if (row.length < headerCount) {
             return [...row, ...Array(headerCount - row.length).fill('')];
           } 
-          // If row has more columns than header, truncate
           else {
             return row.slice(0, headerCount);
           }
@@ -69,7 +61,6 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
         return row;
       });
       
-      // Set warning if we had to fix inconsistent rows
       if (inconsistentRowsCount > 0) {
         setWarning(`${inconsistentRowsCount} linha(s) tinham um número inconsistente de colunas e foram ajustadas automaticamente.`);
       }
@@ -135,10 +126,10 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
       )}
       
       {warning && (
-        <Alert variant="warning" className="bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertTitle className="text-amber-700">Aviso</AlertTitle>
-          <AlertDescription className="text-amber-600">{warning}</AlertDescription>
+        <Alert variant="warning">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Aviso</AlertTitle>
+          <AlertDescription>{warning}</AlertDescription>
         </Alert>
       )}
       
