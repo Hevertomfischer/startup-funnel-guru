@@ -7,18 +7,21 @@ import { Input } from '@/components/ui/input';
 import { PaperclipIcon, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { addAttachment } from '@/services/attachment-service';
 
 interface FileItem {
   name: string;
   size: number;
   type: string;
   url: string;
+  isPitchDeck?: boolean;
 }
 
 export const AttachmentSection = () => {
-  const { setValue, watch } = useFormContext();
+  const { setValue, watch, getValues } = useFormContext();
   const [isUploading, setIsUploading] = useState(false);
   const attachments = watch('attachments') || [];
+  const startup = watch();
 
   // Debug log to check attachments
   useEffect(() => {
@@ -62,12 +65,40 @@ export const AttachmentSection = () => {
 
         console.log('Generated public URL:', urlData.publicUrl);
 
-        return {
+        // Check if it looks like a pitch deck based on file type
+        const isPitchDeck = file.type.includes('presentation') || 
+                           file.type.includes('pdf') && 
+                           (file.name.toLowerCase().includes('pitch') || 
+                            file.name.toLowerCase().includes('deck'));
+
+        const fileItem = {
           name: file.name,
           size: file.size,
           type: file.type,
-          url: urlData.publicUrl
+          url: urlData.publicUrl,
+          isPitchDeck: isPitchDeck
         };
+        
+        // If editing an existing startup, also save to the attachments table
+        if (startup.id) {
+          const attachmentData = {
+            startup_id: startup.id,
+            name: file.name,
+            url: urlData.publicUrl,
+            type: file.type,
+            size: file.size,
+            isPitchDeck: isPitchDeck
+          };
+          
+          console.log('Adding attachment to database:', attachmentData);
+          
+          const result = await addAttachment(attachmentData);
+          if (result) {
+            console.log('Attachment added to database:', result);
+          }
+        }
+        
+        return fileItem;
       });
       
       const fileItems = await Promise.all(fileItemsPromises);

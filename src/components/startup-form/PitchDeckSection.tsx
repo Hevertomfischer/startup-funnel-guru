@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { PaperclipIcon, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { addAttachment } from '@/services/attachment-service';
 
 interface FileItem {
   name: string;
@@ -17,9 +18,10 @@ interface FileItem {
 }
 
 export const PitchDeckSection = () => {
-  const { setValue, watch } = useFormContext();
+  const { setValue, watch, getValues } = useFormContext();
   const [isUploading, setIsUploading] = useState(false);
   const pitchDeck = watch('pitchDeck');
+  const startup = watch();
 
   // Log the pitchDeck value for debugging
   useEffect(() => {
@@ -75,6 +77,25 @@ export const PitchDeckSection = () => {
       
       console.log('Setting pitch deck data in form:', pitchDeckData);
       setValue('pitchDeck', pitchDeckData);
+      
+      // If editing an existing startup, also save to the attachments table
+      if (startup.id) {
+        const attachmentData = {
+          startup_id: startup.id,
+          name: file.name,
+          url: urlData.publicUrl,
+          type: file.type,
+          size: file.size,
+          isPitchDeck: true
+        };
+        
+        console.log('Adding pitch deck as attachment to database:', attachmentData);
+        
+        const result = await addAttachment(attachmentData);
+        if (result) {
+          console.log('Pitch deck added to attachments table:', result);
+        }
+      }
       
       toast.success('Pitch deck carregado com sucesso');
     } catch (error: any) {

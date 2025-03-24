@@ -8,7 +8,7 @@ import type { Startup } from '@/integrations/supabase/client';
  */
 export const getStartups = async (): Promise<Startup[]> => {
   try {
-    // Include attachments in the query
+    // Include attachments in the query with explicit join
     const { data, error } = await supabase
       .from('startups')
       .select(`
@@ -18,6 +18,12 @@ export const getStartups = async (): Promise<Startup[]> => {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
+    
+    console.log('Retrieved startups with attachments:', data?.length || 0);
+    if (data && data.length > 0) {
+      console.log('First startup attachments:', data[0].attachments);
+    }
+    
     return data || [];
   } catch (error: any) {
     handleError(error, 'Failed to fetch startups');
@@ -33,7 +39,7 @@ export const getStartups = async (): Promise<Startup[]> => {
 export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> => {
   try {
     console.log(`Fetching startups for status: ${statusId}`);
-    // Include attachments in the query
+    // Include attachments in the query with explicit join
     const { data, error } = await supabase
       .from('startups')
       .select(`
@@ -44,7 +50,12 @@ export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> 
       .order('created_at', { ascending: false });
     
     if (error) throw error;
+    
     console.log(`Retrieved ${data?.length || 0} startups for status ${statusId}`);
+    if (data && data.length > 0) {
+      console.log(`First startup in status ${statusId} has attachments:`, data[0].attachments);
+    }
+    
     return data || [];
   } catch (error: any) {
     handleError(error, 'Failed to fetch startups by status');
@@ -59,7 +70,7 @@ export const getStartupsByStatus = async (statusId: string): Promise<Startup[]> 
  */
 export const getStartup = async (id: string): Promise<Startup | null> => {
   try {
-    // Include attachments in the query
+    // Include attachments in the query with explicit join
     const { data, error } = await supabase
       .from('startups')
       .select(`
@@ -70,6 +81,9 @@ export const getStartup = async (id: string): Promise<Startup | null> => {
       .single();
     
     if (error) throw error;
+    
+    console.log(`Retrieved startup ${id} with attachments:`, data?.attachments);
+    
     return data;
   } catch (error: any) {
     handleError(error, 'Failed to fetch startup');

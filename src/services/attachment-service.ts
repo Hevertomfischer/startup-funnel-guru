@@ -29,7 +29,8 @@ export const getStartupAttachments = async (startupId: string): Promise<Attachme
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
       related_id: item.related_id,
-      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
+      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined,
+      isPitchDeck: item.isPitchDeck
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching startup attachments');
@@ -45,6 +46,7 @@ export const addAttachment = async (attachment: {
   size?: number;
   related_id?: string;
   related_type?: string;
+  isPitchDeck?: boolean;
 }): Promise<Attachment | null> => {
   try {
     console.log('Adding attachment with data:', attachment);
@@ -89,7 +91,8 @@ export const addAttachment = async (attachment: {
       uploadedAt: data.uploaded_at,
       startup_id: data.startup_id,
       related_id: data.related_id,
-      related_type: data.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
+      related_type: data.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined,
+      isPitchDeck: data.isPitchDeck
     } : null;
   } catch (error: any) {
     console.error('Error in addAttachment:', error);
@@ -135,7 +138,8 @@ export const getKPIAttachments = async (kpiId: string): Promise<Attachment[]> =>
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
       related_id: item.related_id,
-      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
+      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined,
+      isPitchDeck: item.isPitchDeck
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching KPI attachments');
@@ -164,7 +168,8 @@ export const getBoardMeetingAttachments = async (meetingId: string): Promise<Att
       uploadedAt: item.uploaded_at,
       startup_id: item.startup_id,
       related_id: item.related_id,
-      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined
+      related_type: item.related_type as 'kpi' | 'board_meeting' | 'startup' | undefined,
+      isPitchDeck: item.isPitchDeck
     })) || [];
   } catch (error: any) {
     handleError(error, 'Error fetching board meeting attachments');

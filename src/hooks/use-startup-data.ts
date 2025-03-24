@@ -21,7 +21,7 @@ export const useStartupData = () => {
         let pitchDeck;
         
         // Check if there are any attachments associated with this startup
-        if ('attachments' in startup && Array.isArray(startup.attachments)) {
+        if ('attachments' in startup && Array.isArray(startup.attachments) && startup.attachments.length > 0) {
           console.log(`Startup ${startup.id} has ${startup.attachments.length} attachments`);
           
           // Find an attachment that seems to be a pitch deck (by name or flagged as isPitchDeck)
@@ -30,7 +30,11 @@ export const useStartupData = () => {
               (attachment.isPitchDeck === true) ||
               (attachment.name && (
                 attachment.name.toLowerCase().includes('pitch') || 
-                attachment.name.toLowerCase().includes('deck')
+                attachment.name.toLowerCase().includes('deck') ||
+                (attachment.type && (
+                  attachment.type.includes('presentation') ||
+                  attachment.type.includes('pdf')
+                ))
               ))
           );
           
@@ -38,7 +42,7 @@ export const useStartupData = () => {
             console.log('Found pitch deck for startup:', startup.id, pitchDeck);
           }
         } else {
-          console.log(`Startup ${startup.id} has no attachments property or it's not an array`);
+          console.log(`Startup ${startup.id} has no attachments or empty array`);
         }
 
         return {

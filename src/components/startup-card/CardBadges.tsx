@@ -22,11 +22,25 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
   onPitchDeckClick
 }) => {
   // Enhanced logging for debugging
-  console.log('CardBadges - hasPitchDeck:', hasPitchDeck);
-  console.log('CardBadges - startup pitchDeck:', startup.pitchDeck);
+  console.log('CardBadges - hasPitchDeck parameter:', hasPitchDeck);
+  console.log('CardBadges - startup pitchDeck object:', startup.pitchDeck);
   
   // Get actual pitch deck status based on object presence and url
   const pitchDeckAvailable = Boolean(startup.pitchDeck?.url);
+  console.log('CardBadges - pitchDeckAvailable:', pitchDeckAvailable);
+  
+  // Check if the startup has any attachments that are pitch decks
+  const hasPitchDeckAttachment = startup.attachments?.some(attachment => 
+    attachment.isPitchDeck === true || 
+    (attachment.name && (
+      attachment.name.toLowerCase().includes('pitch') || 
+      attachment.name.toLowerCase().includes('deck')
+    ))
+  );
+  console.log('CardBadges - hasPitchDeckAttachment:', hasPitchDeckAttachment);
+  
+  // Determine if we should show the pitch deck badge
+  const showPitchDeckBadge = pitchDeckAvailable || hasPitchDeckAttachment;
   
   return (
     <div className="flex items-center gap-1">
@@ -50,7 +64,7 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
         </Badge>
       )}
       
-      {pitchDeckAvailable && (
+      {showPitchDeckBadge && (
         <Badge 
           className="bg-amber-500/80 text-white cursor-pointer" 
           title="View Pitch Deck"
