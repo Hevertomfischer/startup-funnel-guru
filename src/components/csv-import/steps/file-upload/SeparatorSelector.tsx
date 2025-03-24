@@ -3,13 +3,17 @@ import React from 'react';
 
 interface SeparatorSelectorProps {
   separator: string;
-  onSeparatorChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onSeparatorChange: (separator: string) => void;
 }
 
 export const SeparatorSelector: React.FC<SeparatorSelectorProps> = ({ 
   separator, 
   onSeparatorChange 
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onSeparatorChange(e.target.value);
+  };
+
   return (
     <div className="flex items-center space-x-2">
       <label htmlFor="separator" className="text-sm font-medium">
@@ -18,7 +22,7 @@ export const SeparatorSelector: React.FC<SeparatorSelectorProps> = ({
       <select
         id="separator"
         value={separator}
-        onChange={onSeparatorChange}
+        onChange={handleChange}
         className="rounded-md border border-input bg-background px-3 py-1 text-sm"
       >
         <option value=";">Ponto e vírgula (;)</option>

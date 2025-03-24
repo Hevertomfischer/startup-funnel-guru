@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -13,33 +13,21 @@ interface Step1FileUploadProps {
 
 export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded, onNext }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [separator, setSeparator] = useState<string>(';'); // Default separator is semicolon
   
   const { 
+    file,
+    separator,
     error, 
     warning, 
-    isProcessing, 
-    resetMessages, 
+    isProcessing,
+    handleFileChange,
+    handleSeparatorChange,
     processFile 
-  } = useCSVParser(file, separator);
+  } = useCSVParser();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-    
-    resetMessages();
-    
-    if (!selectedFile.name.endsWith('.csv')) {
-      setFile(null);
-      return;
-    }
-    
-    setFile(selectedFile);
-  };
-
-  const handleSeparatorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSeparator(e.target.value);
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
+    handleFileChange(selectedFile);
   };
 
   const handleUpload = () => {
@@ -87,7 +75,7 @@ export const Step1FileUpload: React.FC<Step1FileUploadProps> = ({ onFileUploaded
         <input
           type="file"
           ref={fileInputRef}
-          onChange={handleFileChange}
+          onChange={onFileChange}
           className="hidden"
           accept=".csv"
         />

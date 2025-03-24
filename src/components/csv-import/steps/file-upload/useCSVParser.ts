@@ -2,10 +2,47 @@
 import { useState } from 'react';
 import { CSVData } from '../../CSVImportStepper';
 
-export const useCSVParser = (file: File | null, separator: string) => {
+export const useCSVParser = (initialFile: File | null = null, initialSeparator: string = ';') => {
+  const [file, setFile] = useState<File | null>(initialFile);
+  const [separator, setSeparator] = useState<string>(initialSeparator);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const validateFile = (selectedFile: File | null): boolean => {
+    resetMessages();
+
+    if (!selectedFile) {
+      setError('Selecione um arquivo CSV para continuar.');
+      return false;
+    }
+    
+    if (!selectedFile.name.endsWith('.csv')) {
+      setError('Por favor, selecione um arquivo com a extensão .csv');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleFileChange = (selectedFile: File | null) => {
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
+    
+    if (validateFile(selectedFile)) {
+      setFile(selectedFile);
+      return true;
+    }
+    
+    setFile(null);
+    return false;
+  };
+
+  const handleSeparatorChange = (newSeparator: string) => {
+    setSeparator(newSeparator);
+  };
 
   const parseCSV = (text: string): CSVData | null => {
     try {
@@ -98,11 +135,16 @@ export const useCSVParser = (file: File | null, separator: string) => {
   };
 
   return {
+    file,
+    separator,
+    error,
+    warning,
+    isProcessing,
+    handleFileChange,
+    handleSeparatorChange,
     parseCSV,
     resetMessages,
     processFile,
-    error,
-    warning,
-    isProcessing
+    validateFile
   };
 };
