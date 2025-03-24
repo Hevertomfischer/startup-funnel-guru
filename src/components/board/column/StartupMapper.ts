@@ -30,6 +30,12 @@ export const mapStartupToCardFormat = (startup: any): Startup => {
     pitchDeck.isPitchDeck = true;
   }
   
+  // If no pitch deck was found but the startup has a dedicated pitchDeck property, use that
+  if (!pitchDeck && startup.pitchDeck && startup.pitchDeck.url) {
+    pitchDeck = startup.pitchDeck;
+    pitchDeck.isPitchDeck = true;
+  }
+  
   // Log what we found for debugging
   if (pitchDeck) {
     console.log(`Found pitch deck for startup ${startup.id}:`, pitchDeck);

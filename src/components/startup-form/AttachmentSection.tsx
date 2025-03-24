@@ -163,8 +163,12 @@ export const AttachmentSection = () => {
               <li key={index} className="flex items-center justify-between rounded-md border p-2 text-sm">
                 <div className="truncate flex items-center">
                   {file.isPitchDeck ? (
-                    <FileText className="h-4 w-4 text-amber-500 mr-2" />
-                  ) : null}
+                    <span className="h-4 w-4 inline-flex items-center justify-center bg-amber-500 text-white rounded-sm mr-2">
+                      <FileText className="h-2.5 w-2.5" />
+                    </span>
+                  ) : (
+                    <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                  )}
                   <span className="font-medium">{file.name}</span>
                   <span className="ml-2 text-xs text-muted-foreground">
                     ({Math.round(file.size / 1024)} KB)

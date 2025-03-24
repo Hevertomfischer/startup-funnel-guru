@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { FormItem, FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PaperclipIcon, Upload, Loader2 } from 'lucide-react';
+import { PaperclipIcon, Upload, Loader2, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { addAttachment } from '@/services/attachment-service';
@@ -151,7 +151,10 @@ export const PitchDeckSection = () => {
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Pitch Deck Carregado</h4>
           <div className="flex items-center justify-between rounded-md border p-2 text-sm">
-            <div className="truncate">
+            <div className="truncate flex items-center">
+              <span className="h-4 w-4 inline-flex items-center justify-center bg-amber-500 text-white rounded-sm mr-2">
+                <FileText className="h-2.5 w-2.5" />
+              </span>
               <span className="font-medium">{pitchDeck.name}</span>
               <span className="ml-2 text-xs text-muted-foreground">
                 ({Math.round(pitchDeck.size / 1024)} KB)

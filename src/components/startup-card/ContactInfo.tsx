@@ -51,14 +51,17 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ startup, onPitchDeckLi
           <FileText className="h-3 w-3 text-amber-500" />
           <a 
             href="#" 
-            className="truncate hover:text-amber-500"
+            className="truncate hover:text-amber-500 flex items-center"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               onPitchDeckLinkClick(e);
             }}
           >
-            {startup.pitchDeck?.name || 'Visualizar Pitch Deck'}
+            <span className="mr-1.5">{startup.pitchDeck?.name || 'Visualizar Pitch Deck'}</span>
+            <span className="h-4 w-4 inline-flex items-center justify-center bg-amber-500 text-white rounded-sm">
+              <FileText className="h-2.5 w-2.5" />
+            </span>
           </a>
         </div>
       )}
