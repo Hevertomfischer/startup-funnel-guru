@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
@@ -17,7 +16,7 @@ import {
   DollarSign,
   GitBranch,
   Code,
-  EmbedIcon
+  ExternalLink
 } from "lucide-react";
 
 const SidebarNav = () => {
@@ -88,7 +87,7 @@ const SidebarNav = () => {
     {
       title: "Formulário Embed",
       href: "/embed-form",
-      icon: <EmbedIcon className="mr-2 h-4 w-4" />,
+      icon: <ExternalLink className="mr-2 h-4 w-4" />,
     },
     {
       title: "Submissões de Formulário",
