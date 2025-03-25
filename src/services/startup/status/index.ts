@@ -3,3 +3,5 @@
 export * from './update-service';
 export * from './validators';
 export * from './logs';
+export * from './update-methods';
+export * from './batch-update';

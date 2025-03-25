@@ -1,56 +1,70 @@
 
 /**
- * Centralized logging for status updates
+ * Logs the start of a status update operation with detailed information
  */
 export const logStatusUpdateStart = (
   id: string, 
   newStatusId: string, 
   oldStatusId?: string
 ): void => {
-  console.log(`updateStartupStatus called with id: ${id}, newStatusId: ${newStatusId}, oldStatusId: ${oldStatusId || 'unknown'}`);
-  
-  // Log initial values before any modifications
-  console.log('INITIAL VALUES BEFORE MODIFICATION:');
-  console.log('- id:', id, typeof id);
-  console.log('- newStatusId:', newStatusId, typeof newStatusId);
-  console.log('- oldStatusId:', oldStatusId, typeof oldStatusId);
+  console.log('==== STATUS UPDATE OPERATION STARTED ====');
+  console.log(`Startup ID: ${id}`);
+  console.log(`New Status ID: ${newStatusId}`);
+  console.log(`Old Status ID: ${oldStatusId || 'unknown/null'}`);
+  console.log('========================================');
 };
 
 /**
- * Log status verification
+ * Logs a specific update attempt with detailed information
  */
-export const logStatusVerification = (statusName: string, statusId: string): void => {
-  console.log(`Status verificado e existe: ${statusName} (${statusId})`);
-};
-
-/**
- * Log startup verification
- */
-export const logStartupVerification = (
-  startupName: string, 
-  startupId: string, 
-  currentStatusId?: string
+export const logUpdateAttempt = (
+  method: string,
+  params: any
 ): void => {
-  console.log(`Startup verificada: ${startupName} (${startupId}), status atual: ${currentStatusId || 'nenhum'}`);
+  console.log(`Attempting update via ${method}`);
+  console.log('Parameters:', params);
 };
 
 /**
- * Log update attempt
+ * Logs a successful update with detailed information
  */
-export const logUpdateAttempt = (method: string, params: any): void => {
-  console.log(`Tentando update via ${method} com parâmetros:`, params);
+export const logUpdateSuccess = (
+  method: string,
+  result: any
+): void => {
+  console.log(`Update successful via ${method}`);
+  console.log('Result:', result);
 };
 
 /**
- * Log successful update
+ * Logs a failed update with detailed information
  */
-export const logUpdateSuccess = (method: string, result: any): void => {
-  console.log(`Status da startup atualizado com sucesso via ${method}:`, result);
+export const logUpdateFailure = (
+  method: string,
+  error: any
+): void => {
+  console.error(`Update failed via ${method}`);
+  console.error('Error:', error);
 };
 
 /**
- * Log update failure
+ * Logs the result of a batch update operation
  */
-export const logUpdateFailure = (method: string, error: any): void => {
-  console.error(`Falha ao atualizar status via ${method}:`, error);
+export const logBatchUpdateResult = (
+  updated: number,
+  total: number,
+  errors: any[]
+): void => {
+  console.log('==== BATCH STATUS UPDATE COMPLETED ====');
+  console.log(`Updated ${updated} out of ${total} startups`);
+  
+  if (errors.length > 0) {
+    console.error(`Encountered ${errors.length} errors:`);
+    errors.forEach((error, index) => {
+      console.error(`Error ${index + 1}:`, error);
+    });
+  } else {
+    console.log('No errors encountered');
+  }
+  console.log('========================================');
 };
