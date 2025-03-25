@@ -3,26 +3,31 @@ import React from 'react';
 import { Plus, MoreVertical, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/header/SearchBar';
-import StartupDialog from '@/components/StartupDialog';
 import { useNavigate } from 'react-router-dom';
 
 interface BoardHeaderProps {
+  showCompactCards: boolean;
+  setShowCompactCards: (show: boolean) => void;
+  addNewStartup: () => void;
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  showCreateDialog: boolean;
-  setShowCreateDialog: (show: boolean) => void;
-  statuses: any[];
+  onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const BoardHeader = ({ searchTerm, setSearchTerm, showCreateDialog, setShowCreateDialog, statuses }) => {
+const BoardHeader: React.FC<BoardHeaderProps> = ({ 
+  showCompactCards, 
+  setShowCompactCards, 
+  addNewStartup, 
+  searchTerm, 
+  onSearchChange 
+}) => {
   const navigate = useNavigate();
   
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center mb-4">
       <SearchBar
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        onSearch={setSearchTerm}
+        setSearchTerm={(value) => onSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
+        onSearch={(value) => onSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
         placeholder="Buscar startups..."
       />
 
@@ -38,7 +43,7 @@ const BoardHeader = ({ searchTerm, setSearchTerm, showCreateDialog, setShowCreat
         </Button>
         
         <Button
-          onClick={() => setShowCreateDialog(true)}
+          onClick={addNewStartup}
           size="sm"
           className="flex items-center gap-2"
         >
@@ -50,17 +55,6 @@ const BoardHeader = ({ searchTerm, setSearchTerm, showCreateDialog, setShowCreat
           <MoreVertical className="h-4 w-4" />
         </Button>
       </div>
-
-      {statuses && (
-        <StartupDialog
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-          title="Nova Startup"
-          statuses={statuses}
-          onSubmit={() => {}}
-          isSubmitting={false}
-        />
-      )}
     </div>
   );
 };
