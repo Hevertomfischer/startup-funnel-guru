@@ -21,6 +21,8 @@ import Reports from './pages/Reports';
 import Portfolio from './pages/Portfolio';
 import Investors from './pages/Investors';
 import WorkflowEditor from './pages/WorkflowEditor';
+import EmbedForm from './pages/EmbedForm';
+import FormSubmissions from './pages/FormSubmissions';
 import { AuthProvider } from '@/hooks/use-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
@@ -86,6 +88,14 @@ const router = createBrowserRouter([
       {
         path: '/settings',
         element: <Settings />,
+      },
+      {
+        path: '/embed-form',
+        element: <EmbedForm />,
+      },
+      {
+        path: '/form-submissions',
+        element: <FormSubmissions />,
       },
     ],
   },

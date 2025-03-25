@@ -168,6 +168,77 @@ export type Database = {
         }
         Relationships: []
       }
+      form_submissions: {
+        Row: {
+          business_model: string | null
+          ceo_email: string
+          ceo_name: string
+          ceo_whatsapp: string
+          city: string | null
+          created_at: string
+          differentials: string
+          founding_year: string
+          id: string
+          mrr: number | null
+          name: string
+          problem_solution: string
+          problem_solved: string
+          processed: boolean | null
+          sector: string | null
+          state: string | null
+          status_id: string | null
+          website: string | null
+        }
+        Insert: {
+          business_model?: string | null
+          ceo_email: string
+          ceo_name: string
+          ceo_whatsapp: string
+          city?: string | null
+          created_at?: string
+          differentials: string
+          founding_year: string
+          id?: string
+          mrr?: number | null
+          name: string
+          problem_solution: string
+          problem_solved: string
+          processed?: boolean | null
+          sector?: string | null
+          state?: string | null
+          status_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_model?: string | null
+          ceo_email?: string
+          ceo_name?: string
+          ceo_whatsapp?: string
+          city?: string | null
+          created_at?: string
+          differentials?: string
+          founding_year?: string
+          id?: string
+          mrr?: number | null
+          name?: string
+          problem_solution?: string
+          problem_solved?: string
+          processed?: boolean | null
+          sector?: string | null
+          state?: string | null
+          status_id?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       labels: {
         Row: {
           color: string
@@ -780,6 +851,12 @@ export type Database = {
           user_id: string
         }
         Returns: boolean
+      }
+      process_form_submission: {
+        Args: {
+          submission_id: string
+        }
+        Returns: string
       }
       send_email: {
         Args: {

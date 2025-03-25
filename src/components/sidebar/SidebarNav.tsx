@@ -1,63 +1,119 @@
 
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Kanban, 
-  List, 
-  TrendingUp, 
-  Workflow, 
-  Users, 
-  Mail, 
-  Settings,
-  FileBarChart,
-  ClipboardList,
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  LayoutGrid,
+  Kanban,
+  ListTodo,
+  CheckSquare,
+  Upload,
+  Users,
+  Mail,
+  BarChart2,
+  FileText,
+  Briefcase,
   DollarSign,
-  Briefcase
-} from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
-import { ProtectedContent } from '@/hooks/use-role-guard';
+  GitBranch,
+  Code,
+  EmbedIcon
+} from "lucide-react";
 
 const SidebarNav = () => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const { isAdmin } = useAuth();
 
-  // Define all navigation items
-  const allNavItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" />, adminOnly: false },
-    { name: 'Board', path: '/board', icon: <Kanban className="h-5 w-5" />, adminOnly: true },
-    { name: 'List View', path: '/list', icon: <List className="h-5 w-5" />, adminOnly: true },
-    { name: 'Tasks', path: '/tasks', icon: <ClipboardList className="h-5 w-5" />, adminOnly: true },
-    { name: 'Workflow', path: '/workflow', icon: <Workflow className="h-5 w-5" />, adminOnly: true },
-    { name: 'Portfolio', path: '/portfolio', icon: <Briefcase className="h-5 w-5" />, adminOnly: true },
-    { name: 'Analytics', path: '/analytics', icon: <TrendingUp className="h-5 w-5" />, adminOnly: true },
-    { name: 'Team', path: '/team', icon: <Users className="h-5 w-5" />, adminOnly: true },
-    { name: 'Email Templates', path: '/emails', icon: <Mail className="h-5 w-5" />, adminOnly: true },
-    { name: 'Reports', path: '/reports', icon: <FileBarChart className="h-5 w-5" />, adminOnly: true },
-    { name: 'Área do Investidor', path: '/investors', icon: <DollarSign className="h-5 w-5" />, adminOnly: false },
-    { name: 'Settings', path: '/settings', icon: <Settings className="h-5 w-5" />, adminOnly: false },
+  const navItems = [
+    {
+      title: "Dashboard",
+      href: "/",
+      icon: <LayoutGrid className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Quadro",
+      href: "/board",
+      icon: <Kanban className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Lista",
+      href: "/list",
+      icon: <ListTodo className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Tarefas",
+      href: "/tasks",
+      icon: <CheckSquare className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Importar",
+      href: "/import",
+      icon: <Upload className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Equipe",
+      href: "/team",
+      icon: <Users className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "E-mails",
+      href: "/emails",
+      icon: <Mail className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Analytics",
+      href: "/analytics",
+      icon: <BarChart2 className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Relatórios",
+      href: "/reports",
+      icon: <FileText className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Portfólio",
+      href: "/portfolio",
+      icon: <Briefcase className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Investidores",
+      href: "/investors",
+      icon: <DollarSign className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Workflow",
+      href: "/workflow",
+      icon: <GitBranch className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Formulário Embed",
+      href: "/embed-form",
+      icon: <EmbedIcon className="mr-2 h-4 w-4" />,
+    },
+    {
+      title: "Submissões de Formulário",
+      href: "/form-submissions",
+      icon: <Code className="mr-2 h-4 w-4" />,
+    },
   ];
 
-  // Filter items based on user role
-  const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
-
   return (
-    <nav className="space-y-1 px-2">
-      {navItems.map((item, index) => (
-        <Link
-          key={index}
-          to={item.path}
-          className={`
-            flex items-center px-3 py-2 text-sm rounded-md transition-colors
-            ${currentPath === item.path || (item.path !== '/dashboard' && currentPath.includes(item.path))
-              ? 'bg-accent text-accent-foreground'
-              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-            }
-          `}
+    <nav className="flex flex-col space-y-1">
+      {navItems.map((item) => (
+        <Button
+          key={item.href}
+          variant="ghost"
+          className={cn(
+            "justify-start",
+            currentPath === item.href && "bg-accent"
+          )}
+          asChild
         >
-          {item.icon}
-          <span className="ml-3">{item.name}</span>
-        </Link>
+          <Link to={item.href}>
+            {item.icon}
+            {item.title}
+          </Link>
+        </Button>
       ))}
     </nav>
   );
