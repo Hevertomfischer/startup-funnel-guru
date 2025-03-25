@@ -266,39 +266,53 @@
   const successMessage = document.getElementById('sfg-form-success');
   const errorMessage = document.getElementById('sfg-form-error');
   
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    errorMessage.style.display = 'none';
-    
-    try {
-      const formData = new FormData(form);
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
       
-      // Submit form to Supabase edge function
-      const response = await fetch(`${supabaseUrl}/functions/v1/form-submission`, {
-        method: 'POST',
-        body: formData
-      });
+      errorMessage.style.display = 'none';
       
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Ocorreu um erro ao enviar o formulário.');
+      try {
+        const formData = new FormData(form);
+        
+        // Log the form data for debugging
+        console.log('Form data being submitted:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}: ${value}`);
+        }
+        
+        // Submit form to Supabase edge function
+        const response = await fetch(`${supabaseUrl}/functions/v1/form-submission`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Ocorreu um erro ao enviar o formulário.');
+        }
+        
+        const result = await response.json();
+        console.log('Form submission result:', result);
+        
+        // Show success message
+        successMessage.style.display = 'block';
+        
+        // Reset form
+        form.reset();
+        
+        // Scroll to top of form
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+        
+      } catch (error) {
+        console.error('Form submission error:', error);
+        
+        // Show error message
+        errorMessage.textContent = error.message || 'Ocorreu um erro ao enviar o formulário.';
+        errorMessage.style.display = 'block';
       }
-      
-      // Show success message
-      successMessage.style.display = 'block';
-      
-      // Reset form
-      form.reset();
-      
-      // Scroll to top of form
-      formContainer.scrollIntoView({ behavior: 'smooth' });
-      
-    } catch (error) {
-      // Show error message
-      errorMessage.textContent = error.message;
-      errorMessage.style.display = 'block';
-    }
-  });
+    });
+  } else {
+    console.error('Form element not found');
+  }
 })();

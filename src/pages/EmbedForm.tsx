@@ -85,6 +85,11 @@ const EmbedForm = () => {
               <TabsContent value="preview">
                 <div className="border rounded-md p-4">
                   <div dangerouslySetInnerHTML={{ __html: generatedCode }} />
+                  <iframe 
+                    src={`data:text/html;charset=utf-8,<html><body>${encodeURIComponent(generatedCode)}<div id="form-container"></div></body></html>`}
+                    style={{width: '100%', height: '500px', border: 'none'}} 
+                    title="Formulário de cadastro"
+                  />
                 </div>
               </TabsContent>
             </Tabs>
@@ -108,7 +113,7 @@ const EmbedForm = () => {
               Quando alguém preenche o formulário em seu site, os dados serão automaticamente enviados para o seu sistema.
               Você pode visualizar e gerenciar todos os formulários recebidos no painel administrativo.
             </p>
-            <Button variant="outline" onClick={() => window.location.href = "/import"}>
+            <Button variant="outline" onClick={() => window.location.href = "/form-submissions"}>
               Ver Formulários Recebidos
             </Button>
           </CardContent>
