@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { StartupCard } from '@/components/startup-card';
-import { EmptyColumnPlaceholder } from './EmptyColumnPlaceholder';
-import { ErrorPlaceholder } from './ErrorPlaceholder';
-import { LoadingPlaceholder } from './LoadingPlaceholder';
-import { mapStartups } from './StartupMapper';
+import StartupCard from '@/components/startup-card';
+import EmptyColumnPlaceholder from './EmptyColumnPlaceholder';
+import ErrorPlaceholder from './ErrorPlaceholder';
+import LoadingPlaceholder from './LoadingPlaceholder';
+import { mapStartupToCardFormat } from './StartupMapper';
 
 interface ColumnContentProps {
   startups: any[];
@@ -19,10 +19,10 @@ interface ColumnContentProps {
   statuses: any[];
   users: any;
   onCreateTask: (startup: any) => void;
-  searchTerm?: string; // Add searchTerm prop
+  searchTerm?: string;
 }
 
-export const ColumnContent: React.FC<ColumnContentProps> = ({
+const ColumnContent: React.FC<ColumnContentProps> = ({
   startups,
   isLoading,
   isError,
@@ -35,7 +35,7 @@ export const ColumnContent: React.FC<ColumnContentProps> = ({
   statuses,
   users,
   onCreateTask,
-  searchTerm = '' // Set default value
+  searchTerm = ''
 }) => {
   if (isLoading) {
     return <LoadingPlaceholder />;
@@ -66,19 +66,33 @@ export const ColumnContent: React.FC<ColumnContentProps> = ({
           Nenhum resultado encontrado
         </div>
       ) : (
-        mapStartups(
-          filteredStartups,
-          draggingStartupId,
-          onDragStart,
-          onDragEnd,
-          onCardClick,
-          onDeleteStartup,
-          showCompactCards,
-          statuses,
-          users,
-          onCreateTask
-        )
+        filteredStartups.map(startup => {
+          const mappedStartup = mapStartupToCardFormat(startup);
+          const isDragging = draggingStartupId === startup.id;
+          
+          return (
+            <div
+              key={startup.id}
+              draggable
+              onDragStart={(e) => onDragStart(e, startup.id)}
+              onDragEnd={onDragEnd}
+              className={`transition-opacity ${isDragging ? 'opacity-50' : 'opacity-100'}`}
+            >
+              <StartupCard
+                startup={mappedStartup}
+                statuses={statuses}
+                users={users}
+                onClick={() => onCardClick(startup)}
+                onDelete={onDeleteStartup}
+                compact={showCompactCards}
+                onCreateTask={() => onCreateTask(startup)}
+              />
+            </div>
+          );
+        })
       )}
     </div>
   );
 };
+
+export default ColumnContent;
