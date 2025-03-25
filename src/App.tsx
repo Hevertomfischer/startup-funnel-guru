@@ -1,120 +1,101 @@
+import { useEffect, useState } from "react";
+import { useRoutes, useLocation } from "react-router-dom";
 
-import React from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import Index from './pages/Index';
-import Board from './pages/Board';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import ListView from './pages/ListView';
-import Tasks from './pages/Tasks';
-import StartupImport from './pages/StartupImport';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import NotFound from './pages/NotFound';
-import Team from './pages/Team';
-import Emails from './pages/Emails';
-import Analytics from './pages/Analytics';
-import Reports from './pages/Reports';
-import Portfolio from './pages/Portfolio';
-import Investors from './pages/Investors';
-import WorkflowEditor from './pages/WorkflowEditor';
-import { AuthProvider } from '@/hooks/use-auth';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MainLayout } from "@/layouts/MainLayout";
+import { routes } from "@/routes";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
+import { useSupabase } from "@/providers/SupabaseProvider";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { useNavigate } from "react-router-dom";
+import { DEFAULT_THEME } from "@/lib/constants";
+import { useTheme } from "@/hooks/use-theme";
+import { Settings } from "@/pages/Settings";
+import { BoardView } from "@/components/board/BoardView";
+import { CSVImport } from "@/pages/CSVImport";
+import { Analytics } from "@/pages/Analytics";
+import EmbedForm from '@/pages/EmbedForm';
+import ExternalFormAdmin from '@/pages/ExternalFormAdmin';
+import ExternalFormController from '@/components/external-form/ExternalFormController';
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Index />,
-    errorElement: <NotFound />,
-    children: [
-      {
-        path: '/',
-        element: <Dashboard />,
-      },
-      {
-        path: '/board',
-        element: <Board />,
-      },
-      {
-        path: '/list',
-        element: <ListView />,
-      },
-      {
-        path: '/tasks',
-        element: <Tasks />,
-      },
-      {
-        path: '/import',
-        element: <StartupImport />,
-      },
-      {
-        path: '/team',
-        element: <Team />,
-      },
-      {
-        path: '/emails',
-        element: <Emails />,
-      },
-      {
-        path: '/analytics',
-        element: <Analytics />,
-      },
-      {
-        path: '/reports',
-        element: <Reports />,
-      },
-      {
-        path: '/portfolio',
-        element: <Portfolio />,
-      },
-      {
-        path: '/investors',
-        element: <Investors />,
-      },
-      {
-        path: '/workflow',
-        element: <WorkflowEditor />,
-      },
-      {
-        path: '/profile',
-        element: <Profile />,
-      },
-      {
-        path: '/settings',
-        element: <Settings />,
-      },
-    ],
-  },
-  {
-    path: '/login',
-    element: <Login />,
-  },
-]);
+export function App() {
+  const { toast } = useToast();
+  const { supabase, session } = useSupabase();
+  const { theme } = useTheme();
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && !session && location.pathname !== "/login") {
+      toast({
+        title: "Acesso negado",
+        description: "Você precisa estar logado para acessar essa página.",
+      });
+      navigate("/login");
+    }
+  }, [session, navigate, isLoading, toast, location.pathname]);
+
+  const routeElements = useRoutes([
+    {
+      path: "/login",
+      element: !session ? (
+        <div className="grid h-screen place-items-center">
+          <Auth
+            supabaseClient={supabase}
+            appearance={{ theme: ThemeSupa }}
+            theme={theme === "dark" ? ThemeSupa : DEFAULT_THEME}
+            providers={["google", "github"]}
+          />
+        </div>
+      ) : (
+        <MainLayout />
+      ),
     },
-  },
-});
+    {
+      path: "/",
+      element: session ? <MainLayout /> : <Auth />,
+      children: routes,
+    },
+    {
+      path: "/settings",
+      element: <Settings />,
+    },
+    {
+      path: "/board",
+      element: <BoardView />,
+    },
+    {
+      path: "/csv-import",
+      element: <CSVImport />,
+    },
+    {
+      path: "/analytics",
+      element: <Analytics />,
+    },
+    {
+      path: "/embed-form",
+      element: <EmbedForm />,
+    },
+    {
+      path: "/external-form-admin",
+      element: <ExternalFormAdmin />,
+    },
+    {
+      path: "/external-form",
+      element: <ExternalFormController />,
+    },
+  ]);
 
-// App component serves as the entry point of the application
-function App() {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <>
+      {routeElements}
+      <Toaster />
+    </>
   );
 }
-
-export default App;
