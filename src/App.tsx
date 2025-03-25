@@ -23,6 +23,7 @@ import Investors from './pages/Investors';
 import WorkflowEditor from './pages/WorkflowEditor';
 import { AuthProvider } from '@/hooks/use-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 
 const router = createBrowserRouter([
   {
@@ -111,6 +112,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <RouterProvider router={router} />
+          <Toaster position="top-right" />
         </AuthProvider>
       </QueryClientProvider>
     </React.StrictMode>

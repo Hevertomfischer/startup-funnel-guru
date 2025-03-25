@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
-import { Startup } from '@/types';
-import StartupCard from '@/components/startup-card';
-import { cn } from '@/lib/utils';
-import { mapStartupToCardFormat } from './StartupMapper';
+import { StartupCard } from '@/components/startup-card';
+import { EmptyColumnPlaceholder } from './EmptyColumnPlaceholder';
+import { ErrorPlaceholder } from './ErrorPlaceholder';
+import { LoadingPlaceholder } from './LoadingPlaceholder';
+import { mapStartups } from './StartupMapper';
 
 interface ColumnContentProps {
   startups: any[];
@@ -19,10 +19,10 @@ interface ColumnContentProps {
   statuses: any[];
   users: any;
   onCreateTask: (startup: any) => void;
-  searchTerm?: string;
+  searchTerm?: string; // Add searchTerm prop
 }
 
-const ColumnContent: React.FC<ColumnContentProps> = ({
+export const ColumnContent: React.FC<ColumnContentProps> = ({
   startups,
   isLoading,
   isError,
@@ -35,90 +35,50 @@ const ColumnContent: React.FC<ColumnContentProps> = ({
   statuses,
   users,
   onCreateTask,
-  searchTerm = ''
+  searchTerm = '' // Set default value
 }) => {
-  // Ensure startups is an array and not null
-  const safeStartups = Array.isArray(startups) ? startups : [];
-  
-  // Filter startups based on search term
-  const filteredStartups = safeStartups.filter(startup => {
-    if (!searchTerm || searchTerm.trim() === '') return true;
-    
-    const searchTermLower = searchTerm.toLowerCase().trim();
-    
-    // Search in all relevant startup fields
-    const nameMatch = startup.name?.toLowerCase().includes(searchTermLower);
-    const descriptionMatch = startup.description?.toLowerCase().includes(searchTermLower);
-    const sectorMatch = startup.sector?.toLowerCase().includes(searchTermLower);
-    const businessModelMatch = startup.business_model?.toLowerCase().includes(searchTermLower);
-    const problemMatch = startup.problem_solved?.toLowerCase().includes(searchTermLower);
-    
-    return nameMatch || descriptionMatch || sectorMatch || businessModelMatch || problemMatch;
-  });
+  if (isLoading) {
+    return <LoadingPlaceholder />;
+  }
+
+  if (isError) {
+    return <ErrorPlaceholder />;
+  }
+
+  if (!startups || startups.length === 0) {
+    return <EmptyColumnPlaceholder />;
+  }
+
+  // Filter startups by search term if provided
+  const filteredStartups = searchTerm
+    ? startups.filter(startup => 
+        startup.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        startup.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        startup.ceo_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        startup.sector?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : startups;
 
   return (
-    <div 
-      className="flex-1 p-2 overflow-y-auto space-y-3"
-      style={{ 
-        scrollbarWidth: 'thin',
-        scrollbarColor: `#e2e8f020 transparent`
-      }}
-    >
-      {isLoading && (
-        <div className="h-20 flex items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+    <div className="flex-1 overflow-y-auto p-2 space-y-3 min-h-[50px]">
+      {filteredStartups.length === 0 ? (
+        <div className="text-center py-4 text-sm text-muted-foreground">
+          Nenhum resultado encontrado
         </div>
-      )}
-      
-      {isError && (
-        <div className="h-20 flex items-center justify-center text-destructive text-sm">
-          Failed to load startups
-        </div>
-      )}
-      
-      {!isLoading && !isError && filteredStartups.length > 0 && filteredStartups.map(startup => {
-        if (!startup) return null;
-        
-        const cardStartup = mapStartupToCardFormat(startup);
-        console.log("Mapped startup for card:", cardStartup.id, "Has pitchDeck:", Boolean(cardStartup.pitchDeck?.url));
-        
-        return (
-          <div
-            key={startup.id}
-            draggable
-            onDragStart={(e) => onDragStart(e, startup.id)}
-            onDragEnd={onDragEnd}
-            className={cn(
-              "transition-opacity duration-200",
-              draggingStartupId === startup.id ? "opacity-50" : "opacity-100"
-            )}
-          >
-            <StartupCard 
-              startup={cardStartup} 
-              statuses={statuses} 
-              users={users}
-              onClick={() => onCardClick(startup)}
-              onDelete={onDeleteStartup}
-              compact={showCompactCards}
-              onCreateTask={() => onCreateTask(startup)}
-            />
-          </div>
-        );
-      })}
-      
-      {!isLoading && !isError && safeStartups.length > 0 && filteredStartups.length === 0 && (
-        <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
-          No startups match your search
-        </div>
-      )}
-      
-      {!isLoading && !isError && safeStartups.length === 0 && (
-        <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
-          Drop startups here
-        </div>
+      ) : (
+        mapStartups(
+          filteredStartups,
+          draggingStartupId,
+          onDragStart,
+          onDragEnd,
+          onCardClick,
+          onDeleteStartup,
+          showCompactCards,
+          statuses,
+          users,
+          onCreateTask
+        )
       )}
     </div>
   );
 };
-
-export default ColumnContent;
