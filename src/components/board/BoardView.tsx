@@ -6,10 +6,14 @@ import BoardHeader from '@/components/BoardHeader';
 import BoardContainer from '@/components/board/BoardContainer';
 import BoardDialogs from '@/components/board/BoardDialogs';
 import { useBoardState } from '@/hooks/board/use-board-state';
+import { useBoardSearch } from '@/hooks/board/use-board-search';
 
 const BoardView = () => {
   // Component state
   const [showCompactCards, setShowCompactCards] = useState(false);
+  
+  // Use the board search hook to get search functionality
+  const { searchTerm, setSearchTerm, handleSearch } = useBoardSearch();
   
   // Use the board state hook to get all the data and handlers
   const boardState = useBoardState();
@@ -21,8 +25,6 @@ const BoardView = () => {
     isLoadingStatuses,
     isErrorStatuses,
     mappedQueries,
-    searchTerm,
-    setSearchTerm,
     
     // Handlers
     getStartupById,
@@ -73,10 +75,6 @@ const BoardView = () => {
     }
   };
   
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-  
   if (isLoadingStatuses) {
     return (
       <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
@@ -105,7 +103,7 @@ const BoardView = () => {
           setShowCompactCards={setShowCompactCards}
           addNewStartup={openAddStartupDialog}
           searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
+          onSearchChange={(e) => handleSearch(e.target.value)}
         />
         
         {columns.length === 0 ? (
@@ -144,6 +142,7 @@ const BoardView = () => {
             onColumnDragOver={handleColumnDragOver}
             onColumnDrop={handleColumnDrop}
             onCreateTask={handleCreateTask}
+            searchTerm={searchTerm}
           />
         )}
       </div>

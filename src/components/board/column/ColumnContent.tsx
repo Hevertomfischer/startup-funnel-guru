@@ -19,6 +19,7 @@ interface ColumnContentProps {
   statuses: any[];
   users: any;
   onCreateTask: (startup: any) => void;
+  searchTerm?: string;
 }
 
 const ColumnContent: React.FC<ColumnContentProps> = ({
@@ -33,10 +34,27 @@ const ColumnContent: React.FC<ColumnContentProps> = ({
   showCompactCards,
   statuses,
   users,
-  onCreateTask
+  onCreateTask,
+  searchTerm = ''
 }) => {
   // Ensure startups is an array and not null
   const safeStartups = Array.isArray(startups) ? startups : [];
+  
+  // Filter startups based on search term
+  const filteredStartups = safeStartups.filter(startup => {
+    if (!searchTerm || searchTerm.trim() === '') return true;
+    
+    const searchTermLower = searchTerm.toLowerCase().trim();
+    
+    // Search in all relevant startup fields
+    const nameMatch = startup.name?.toLowerCase().includes(searchTermLower);
+    const descriptionMatch = startup.description?.toLowerCase().includes(searchTermLower);
+    const sectorMatch = startup.sector?.toLowerCase().includes(searchTermLower);
+    const businessModelMatch = startup.business_model?.toLowerCase().includes(searchTermLower);
+    const problemMatch = startup.problem_solved?.toLowerCase().includes(searchTermLower);
+    
+    return nameMatch || descriptionMatch || sectorMatch || businessModelMatch || problemMatch;
+  });
 
   return (
     <div 
@@ -58,7 +76,7 @@ const ColumnContent: React.FC<ColumnContentProps> = ({
         </div>
       )}
       
-      {!isLoading && !isError && safeStartups.length > 0 && safeStartups.map(startup => {
+      {!isLoading && !isError && filteredStartups.length > 0 && filteredStartups.map(startup => {
         if (!startup) return null;
         
         const cardStartup = mapStartupToCardFormat(startup);
@@ -87,6 +105,12 @@ const ColumnContent: React.FC<ColumnContentProps> = ({
           </div>
         );
       })}
+      
+      {!isLoading && !isError && safeStartups.length > 0 && filteredStartups.length === 0 && (
+        <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
+          No startups match your search
+        </div>
+      )}
       
       {!isLoading && !isError && safeStartups.length === 0 && (
         <div className="h-20 flex items-center justify-center border border-dashed rounded-md text-muted-foreground text-sm">
