@@ -29,6 +29,7 @@ interface BoardColumnProps {
   users: any;
   onEditColumn?: () => void;
   onCreateTask: (startup: any) => void;
+  searchTerm?: string; // Add the searchTerm prop
 }
 
 const BoardColumn: React.FC<BoardColumnProps> = ({
@@ -53,7 +54,8 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   statuses,
   users,
   onEditColumn,
-  onCreateTask
+  onCreateTask,
+  searchTerm = '' // Add default value
 }) => {
   // Ensure startupIds is an array and not null
   const safeStartupIds = Array.isArray(startupIds) ? startupIds : [];
@@ -89,6 +91,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
         statuses={statuses}
         users={users}
         onCreateTask={onCreateTask}
+        searchTerm={searchTerm} // Pass the searchTerm prop to ColumnContent
       />
     </div>
   );

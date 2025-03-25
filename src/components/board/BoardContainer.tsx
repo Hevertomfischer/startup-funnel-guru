@@ -27,6 +27,7 @@ interface BoardContainerProps {
   onColumnDragOver: (e: React.DragEvent) => void;
   onColumnDrop: (e: React.DragEvent, columnId: string) => void;
   onCreateTask: (startup: any) => void;
+  searchTerm?: string; // Add the searchTerm prop with optional type
 }
 
 const BoardContainer: React.FC<BoardContainerProps> = ({
@@ -49,7 +50,8 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
   onColumnDragStart,
   onColumnDragOver,
   onColumnDrop,
-  onCreateTask
+  onCreateTask,
+  searchTerm = '' // Add the searchTerm prop with default empty string
 }) => {
   // Log para depuração
   console.log('BoardContainer props:', { 
@@ -57,7 +59,8 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
     statusCount: statuses.length,
     columnQueriesKeys: Object.keys(columnQueries),
     columnIds: columns.map(c => c.id),
-    statusIds: statuses.map(s => s.id)
+    statusIds: statuses.map(s => s.id),
+    searchTerm // Log the searchTerm to debug
   });
 
   const scrollContainer = (direction: 'left' | 'right') => {
@@ -160,6 +163,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                   users={USERS}
                   onEditColumn={status ? () => onEditColumn(status) : undefined}
                   onCreateTask={onCreateTask}
+                  searchTerm={searchTerm} // Pass the searchTerm prop to the BoardColumn component
                 />
               </div>
             );
