@@ -61,27 +61,30 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   const safeStartupIds = Array.isArray(startupIds) ? startupIds : [];
   
   // Filtered startups based on search term
-  const filteredStartups = searchTerm
-    ? startups.filter(startup => 
+  const [filteredStartups, setFilteredStartups] = useState(startups);
+  const [displayCount, setDisplayCount] = useState(safeStartupIds.length);
+  
+  // Update filtered startups when the search term or startups change
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = startups.filter(startup => 
         startup.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         startup.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         startup.ceo_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         startup.sector?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : startups;
-    
-  // Count of displayed startups based on filter or total
-  const displayCount = searchTerm ? filteredStartups.length : safeStartupIds.length;
+      );
+      setFilteredStartups(filtered);
+      setDisplayCount(filtered.length);
+    } else {
+      setFilteredStartups(startups);
+      setDisplayCount(safeStartupIds.length);
+    }
+  }, [searchTerm, startups, safeStartupIds]);
   
   // Log columns info for debugging
   useEffect(() => {
     console.log(`Column ${id} (${title}) - startupIds: ${safeStartupIds.length}, startups: ${startups.length}, filteredStartups: ${filteredStartups.length}, displayCount: ${displayCount}`);
-  }, [id, title, safeStartupIds, startups, filteredStartups, displayCount]);
-
-  // Update the ColumnHeader when displayCount changes
-  useEffect(() => {
-    console.log(`Column ${id} updating display count to ${displayCount}`);
-  }, [id, displayCount]);
+  }, [id, title, safeStartupIds.length, startups.length, filteredStartups.length, displayCount]);
 
   return (
     <div 

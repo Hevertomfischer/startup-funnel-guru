@@ -1,50 +1,56 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { updateAllNullStatusToDeclined } from '@/services/scripts/update-null-status-startups';
-import { useQueryClient } from '@tanstack/react-query';
 
 const FixNullStatusButton = () => {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const queryClient = useQueryClient();
-  
-  const handleUpdate = async () => {
-    setIsUpdating(true);
+  const [isFixing, setIsFixing] = useState(false);
+  const { toast } = useToast();
+
+  const handleFix = async () => {
     try {
+      setIsFixing(true);
       const result = await updateAllNullStatusToDeclined();
-      console.log('Update completed:', result);
       
-      // Invalidate queries to refresh the board
-      queryClient.invalidateQueries({ queryKey: ['startups'] });
-      
-      // Also invalidate any specific status queries
-      queryClient.invalidateQueries({ 
-        queryKey: ['startups', 'status']
-      });
+      if (result && result.updated > 0) {
+        toast({
+          title: "Startups atualizadas",
+          description: `${result.updated} startups sem status foram atualizadas.`,
+        });
+      } else {
+        toast({
+          title: "Nenhuma atualização necessária",
+          description: "Não foram encontradas startups sem status.",
+        });
+      }
     } catch (error) {
-      console.error('Failed to update startups:', error);
+      console.error('Error fixing null statuses:', error);
+      toast({
+        title: "Erro ao corrigir statuses",
+        description: "Ocorreu um erro ao tentar corrigir startups sem status.",
+        variant: "destructive",
+      });
     } finally {
-      setIsUpdating(false);
+      setIsFixing(false);
     }
   };
-  
+
   return (
-    <Button 
-      onClick={handleUpdate} 
-      disabled={isUpdating}
-      variant="outline"
+    <Button
       size="sm"
-      className="ml-2"
+      variant="secondary"
+      className="flex items-center gap-1"
+      onClick={handleFix}
+      disabled={isFixing}
     >
-      {isUpdating ? (
-        <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Atualizando...
-        </>
+      {isFixing ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
       ) : (
-        'Corrigir Startups Sem Status'
+        <AlertCircle className="h-3.5 w-3.5 mr-1" />
       )}
+      {isFixing ? "Corrigindo status..." : "Corrigir startups sem status"}
     </Button>
   );
 };
