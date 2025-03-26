@@ -81,6 +81,8 @@ Deno.serve(async (req) => {
       const fileExtension = pitchDeckFile.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExtension}`;
       
+      console.log('Uploading pitch deck file:', pitchDeckFile.name, 'size:', pitchDeckFile.size);
+      
       // Upload the file to Supabase Storage
       const { data: storageData, error: storageError } = await supabase
         .storage
@@ -100,6 +102,10 @@ Deno.serve(async (req) => {
           .getPublicUrl(fileName);
         
         pitchDeckUrl = publicUrlData.publicUrl;
+        console.log('Pitch deck uploaded, URL:', pitchDeckUrl);
+        
+        // Add the URL to submission data
+        submissionData.pitch_deck_url = pitchDeckUrl;
       }
     }
     
@@ -120,6 +126,8 @@ Deno.serve(async (req) => {
       console.log('No status found, will use null');
     }
     
+    console.log('Inserting submission with data:', submissionData);
+    
     // Insert into form_submissions table
     const { data, error } = await supabase
       .from('form_submissions')
@@ -138,24 +146,46 @@ Deno.serve(async (req) => {
       });
     }
     
-    // If pitch deck was uploaded, create an attachment
-    if (pitchDeckUrl && data.id) {
-      // Create a startup record now
-      const { data: startupData, error: startupError } = await supabase
-        .rpc('process_form_submission', { submission_id: data.id });
-      
-      if (!startupError && startupData) {
-        // Insert attachment record
-        await supabase
-          .from('attachments')
-          .insert({
-            startup_id: startupData,
-            name: pitchDeckFile.name,
-            url: pitchDeckUrl,
-            type: pitchDeckFile.type,
-            size: pitchDeckFile.size,
-            is_pitch_deck: true
-          });
+    console.log('Submission created successfully with ID:', data.id);
+    
+    // If the submission was created successfully, process it to create a startup
+    if (data.id) {
+      try {
+        // Create a startup record now
+        const { data: startupData, error: startupError } = await supabase
+          .rpc('process_form_submission', { submission_id: data.id });
+        
+        if (startupError) {
+          console.error('Error processing form submission:', startupError);
+        } else if (startupData) {
+          console.log('Created startup record with ID:', startupData);
+          
+          // If pitch deck was uploaded, create an attachment
+          if (pitchDeckUrl) {
+            const attachmentData = {
+              startup_id: startupData,
+              name: pitchDeckFile.name,
+              url: pitchDeckUrl,
+              type: pitchDeckFile.type,
+              size: pitchDeckFile.size,
+              is_pitch_deck: true
+            };
+            
+            console.log('Creating attachment with data:', attachmentData);
+            
+            const { data: attachmentResult, error: attachmentError } = await supabase
+              .from('attachments')
+              .insert(attachmentData);
+              
+            if (attachmentError) {
+              console.error('Error creating attachment:', attachmentError);
+            } else {
+              console.log('Attachment created successfully');
+            }
+          }
+        }
+      } catch (processError) {
+        console.error('Error in process_form_submission:', processError);
       }
     }
 

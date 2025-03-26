@@ -124,6 +124,27 @@
       color: #dc2626;
       margin-left: 2px;
     }
+    
+    .sfg-form-loading {
+      display: none;
+      text-align: center;
+      padding: 1rem 0;
+    }
+    
+    .sfg-form-loading-spinner {
+      display: inline-block;
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 3px solid rgba(37, 99, 235, 0.2);
+      border-radius: 50%;
+      border-top-color: #2563eb;
+      animation: sfg-spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+    
+    @keyframes sfg-spin {
+      to { transform: rotate(360deg); }
+    }
   `;
   
   // Get script element - this is the current script
@@ -131,6 +152,11 @@
   
   // Get the Supabase project URL from script data attributes
   const supabaseUrl = scriptElement.getAttribute('data-supabase-url');
+  
+  if (!supabaseUrl) {
+    console.error('Error: data-supabase-url attribute is required');
+    return;
+  }
   
   // Create form container
   const formContainer = document.createElement('div');
@@ -244,11 +270,15 @@
         
         <div class="sfg-form-group sfg-form-full">
           <label class="sfg-form-label">Pitch Deck (PDF)</label>
-          <input type="file" name="pitch_deck" class="sfg-form-input" accept=".pdf">
+          <input type="file" name="pitch_deck" class="sfg-form-input" accept=".pdf,.ppt,.pptx,.key,.odp">
         </div>
         
         <div class="sfg-form-group sfg-form-full">
           <button type="submit" class="sfg-form-submit">Enviar Cadastro</button>
+          <div id="sfg-form-loading" class="sfg-form-loading">
+            <div class="sfg-form-loading-spinner"></div>
+            <span>Enviando formulário...</span>
+          </div>
           <p id="sfg-form-error" class="sfg-form-error" style="display: none;"></p>
         </div>
       </div>
@@ -265,12 +295,22 @@
   const form = document.getElementById('sfg-startup-form');
   const successMessage = document.getElementById('sfg-form-success');
   const errorMessage = document.getElementById('sfg-form-error');
+  const loadingElement = document.getElementById('sfg-form-loading');
   
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      // Hide previous messages and show loading
       errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+      loadingElement.style.display = 'block';
+      
+      // Disable submit button
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+      }
       
       try {
         const formData = new FormData(form);
@@ -281,11 +321,17 @@
           console.log(`${key}: ${value}`);
         }
         
+        const functionUrl = `${supabaseUrl}/functions/v1/form-submission`;
+        console.log('Submitting form to:', functionUrl);
+        
         // Submit form to Supabase edge function
-        const response = await fetch(`${supabaseUrl}/functions/v1/form-submission`, {
+        const response = await fetch(functionUrl, {
           method: 'POST',
           body: formData
         });
+        
+        // Hide loading
+        loadingElement.style.display = 'none';
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -307,9 +353,17 @@
       } catch (error) {
         console.error('Form submission error:', error);
         
+        // Hide loading
+        loadingElement.style.display = 'none';
+        
         // Show error message
         errorMessage.textContent = error.message || 'Ocorreu um erro ao enviar o formulário.';
         errorMessage.style.display = 'block';
+      } finally {
+        // Re-enable submit button
+        if (submitButton) {
+          submitButton.disabled = false;
+        }
       }
     });
   } else {

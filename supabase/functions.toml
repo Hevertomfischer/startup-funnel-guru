@@ -1,15 +1,3 @@
 
-[config]
-project_id = "qolgehnzmslkmotrrwwy"
-
-[[functions]]
-name = "gmail-auth"
-verify_jwt = false
-
-[[functions]]
-name = "send-email"
-verify_jwt = false
-
-[[functions]]
-name = "refresh-token"
+[functions.form-submission]
 verify_jwt = false

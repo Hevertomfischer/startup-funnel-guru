@@ -181,6 +181,7 @@ export type Database = {
           id: string
           mrr: number | null
           name: string
+          pitch_deck_url: string | null
           problem_solution: string
           problem_solved: string
           processed: boolean | null
@@ -201,6 +202,7 @@ export type Database = {
           id?: string
           mrr?: number | null
           name: string
+          pitch_deck_url?: string | null
           problem_solution: string
           problem_solved: string
           processed?: boolean | null
@@ -221,6 +223,7 @@ export type Database = {
           id?: string
           mrr?: number | null
           name?: string
+          pitch_deck_url?: string | null
           problem_solution?: string
           problem_solved?: string
           processed?: boolean | null
