@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Plus, MoreVertical, Upload, ViewCompactIcon, ViewGridIcon } from 'lucide-react';
+import { Plus, MoreVertical, Upload, Grid, GridIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/header/SearchBar';
 import { useNavigate } from 'react-router-dom';
@@ -40,8 +40,8 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
           title={showCompactCards ? "Visualização expandida" : "Visualização compacta"}
         >
           {showCompactCards ? 
-            <ViewGridIcon className="h-4 w-4" /> : 
-            <ViewCompactIcon className="h-4 w-4" />
+            <GridIcon className="h-4 w-4" /> : 
+            <Grid className="h-4 w-4" />
           }
         </Button>
         

@@ -102,7 +102,7 @@ export const useWorkflowRules = () => {
           toast({
             title: "Aviso de Workflow",
             description: "Uma tentativa de definir status nulo foi evitada",
-            variant: "warning"
+            variant: "destructive"
           });
         }
         
