@@ -38,22 +38,32 @@ export const useWorkflowRules = () => {
       return;
     }
     
+    // Create a clean update object without any null status values
     const updates: Record<string, any> = {};
     let statusChanged = false;
     let statusName = '';
 
     console.log('Executing workflow actions:', actions);
 
+    // First pass: collect all updates into a temporary object
+    const tempUpdates: Record<string, any> = {};
+    for (const action of actions) {
+      if (action.type === 'updateField' && action.config.fieldId && action.config.value !== undefined) {
+        tempUpdates[action.config.fieldId] = action.config.value;
+      }
+    }
+
+    // Process actions with the collected updates
     for (const action of actions) {
       switch (action.type) {
         case 'updateField':
           if (action.config.fieldId && action.config.value !== undefined) {
-            // CRITICAL FIX: Additional guard against null status
+            // CRITICAL FIX: Extra protection for status fields
             if ((action.config.fieldId === 'statusId' || action.config.fieldId === 'status_id')) {
-              // Validar e sanitizar o status_id
+              // Validate and sanitize the status_id
               const safeStatusId = getSafeStatusId(action.config.value);
               
-              // Se o status for nulo após validação, bloquear a ação
+              // If status is null after validation, block the action
               if (safeStatusId === null) {
                 console.error('CRITICAL: Prevented setting null status_id via workflow');
                 toast({
@@ -61,15 +71,16 @@ export const useWorkflowRules = () => {
                   description: "Tentativa de definir status nulo bloqueada",
                   variant: "destructive"
                 });
-                continue; // Pula esta ação e vai para a próxima
+                continue; // Skip this action and go to the next
               }
               
-              // Se chegou aqui, o valor é seguro para usar
+              // If we got here, the value is safe to use
               updates[action.config.fieldId] = safeStatusId;
               statusChanged = true;
               const newStatus = statuses.find(s => s.id === safeStatusId);
               statusName = newStatus?.name || '';
             } else {
+              // For non-status fields, just add to updates
               updates[action.config.fieldId] = action.config.value;
             }
           }
@@ -104,10 +115,11 @@ export const useWorkflowRules = () => {
       }
     }
 
-    // If we have field updates, apply them
+    // If we have field updates, apply them with extra safety
     if (Object.keys(updates).length > 0) {
       try {
-        // FINAL SAFETY CHECK: Ensure statusId is never null
+        // CRITICAL: Ensure we're never sending null statuses
+        // This shouldn't happen due to earlier checks, but one last verification
         if (updates.statusId === null || updates.statusId === undefined) {
           delete updates.statusId;
           console.error('CRITICAL: Removed null statusId from updates before saving');
@@ -128,9 +140,23 @@ export const useWorkflowRules = () => {
           });
         }
         
+        // CRITICAL FIX: If the update doesn't include statusId but we have one in the startup
+        // add it to ensure it's preserved during the update
+        if (!updates.statusId && !updates.status_id && startup.statusId) {
+          console.log('Adding current statusId to updates to prevent nullification:', startup.statusId);
+          updates.statusId = startup.statusId;
+        }
+        
         // Only proceed with update if we still have fields to update
         if (Object.keys(updates).length > 0) {
           console.log('Applying workflow updates to startup:', updates);
+          // For debugging, show what the startup will look like after update
+          console.log('Startup before update:', {
+            id: startup.id,
+            statusId: startup.statusId,
+            updatesContainsStatusId: 'statusId' in updates || 'status_id' in updates
+          });
+          
           await updateStartupMutation.mutate({
             id: startup.id,
             startup: updates

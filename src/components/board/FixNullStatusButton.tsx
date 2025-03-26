@@ -26,7 +26,7 @@ const FixNullStatusButton = () => {
           description: `${result.updated} startups sem status foram atualizadas.`,
         });
         
-        // Invalida todas as queries para recarregar os dados
+        // Invalidate all queries to reload data
         queryClient.invalidateQueries();
         
         console.log('Queries foram invalidadas para recarregar dados após correção');
@@ -51,7 +51,7 @@ const FixNullStatusButton = () => {
   return (
     <Button
       size="sm"
-      variant="destructive"  // Alterado para destructive para chamar mais atenção
+      variant="destructive"
       className="flex items-center gap-1"
       onClick={handleFix}
       disabled={isFixing}

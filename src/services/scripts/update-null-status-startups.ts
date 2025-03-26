@@ -1,10 +1,10 @@
 
 import { supabase } from '@/services/base-service';
 
-// Função para buscar um status de "recusado" ou similar para usar como fallback
+// Function to find a "declined" or similar status to use as fallback
 const getFallbackStatusId = async (): Promise<string | null> => {
   try {
-    // Tenta encontrar um status com "recusado", "declined" ou similar no nome
+    // Try to find a status with "recusado", "declined" or similar in the name
     const { data, error } = await supabase
       .from('statuses')
       .select('id, name')
@@ -21,7 +21,7 @@ const getFallbackStatusId = async (): Promise<string | null> => {
       return data[0].id;
     }
     
-    // Se não encontrar um status específico de recusa, pega o primeiro status disponível
+    // If no specific decline status is found, get the first available status
     const { data: allStatuses, error: allStatusesError } = await supabase
       .from('statuses')
       .select('id')
@@ -44,12 +44,12 @@ const getFallbackStatusId = async (): Promise<string | null> => {
   }
 };
 
-// Função principal para atualizar startups com status nulo
+// Main function to update startups with null status
 export const updateAllNullStatusToDeclined = async (): Promise<{updated: number}> => {
   try {
     console.log('Iniciando correção de startups com status null...');
     
-    // Primeiro, verifica se existem startups com status_id nulo
+    // First, check if there are startups with null status_id
     const { data: startupsWithNullStatus, error: checkError } = await supabase
       .from('startups')
       .select('id, name')
@@ -60,7 +60,7 @@ export const updateAllNullStatusToDeclined = async (): Promise<{updated: number}
       throw checkError;
     }
     
-    // Se não houver startups com status nulo, retorna
+    // If no startups with null status, return
     if (!startupsWithNullStatus || startupsWithNullStatus.length === 0) {
       console.log('Nenhuma startup com status nulo encontrada.');
       return { updated: 0 };
@@ -68,7 +68,7 @@ export const updateAllNullStatusToDeclined = async (): Promise<{updated: number}
     
     console.log(`Encontradas ${startupsWithNullStatus.length} startups com status nulo:`, startupsWithNullStatus);
     
-    // Busca um status para usar como fallback
+    // Get a status to use as fallback
     const fallbackStatusId = await getFallbackStatusId();
     
     if (!fallbackStatusId) {
@@ -76,8 +76,8 @@ export const updateAllNullStatusToDeclined = async (): Promise<{updated: number}
       throw new Error('Nenhum status válido disponível para corrigir startups.');
     }
     
-    // IMPORTANTE: Usando a função RPC para garantir que o histórico seja atualizado corretamente
-    // Isso aciona os triggers do banco de dados para manter os registros de histórico
+    // IMPORTANT: Using the RPC function to ensure history is updated correctly
+    // This triggers database triggers to maintain history records
     for (const startup of startupsWithNullStatus) {
       console.log(`Atualizando startup ${startup.id} (${startup.name}) para status ${fallbackStatusId}`);
       
@@ -90,13 +90,13 @@ export const updateAllNullStatusToDeclined = async (): Promise<{updated: number}
       
       if (error) {
         console.error(`Erro ao atualizar startup ${startup.id}:`, error);
-        // Continua com as outras startups em caso de erro
+        // Continue with other startups in case of error
       } else {
         console.log(`Startup ${startup.id} atualizada com sucesso:`, data);
       }
     }
     
-    // Retorna o número de startups atualizadas
+    // Return the number of startups updated
     return { updated: startupsWithNullStatus.length };
   } catch (error) {
     console.error('Erro ao atualizar startups com status nulo:', error);
