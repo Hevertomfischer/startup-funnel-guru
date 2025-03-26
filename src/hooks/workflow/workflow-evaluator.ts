@@ -45,3 +45,14 @@ export const evaluateCondition = (
       return false;
   }
 };
+
+// This is a new function to check if a workflow rule action would set a null status
+export const wouldSetNullStatus = (
+  actions: any[]
+): boolean => {
+  return actions.some(action => 
+    action.type === 'updateField' && 
+    action.config?.fieldId === 'statusId' && 
+    (action.config?.value === null || action.config?.value === undefined)
+  );
+};

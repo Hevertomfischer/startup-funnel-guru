@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateStartupStatus } from '@/services';
 import { toast } from 'sonner';
@@ -46,6 +47,12 @@ export const useUpdateStartupStatusMutation = () => {
       if (cleanNewStatusId === '') {
         console.error(`Empty status ID after trimming`);
         throw new Error(`ID do status não pode estar vazio`);
+      }
+      
+      // New validation check to prevent null status
+      if (cleanNewStatusId === 'null' || cleanNewStatusId === 'undefined') {
+        console.error(`Explicit string "null" or "undefined" detected in status ID`);
+        throw new Error(`ID do status não pode ser "null" ou "undefined"`);
       }
       
       // ENHANCED ERROR DETECTION: Log potential slug-like status IDs before validation fails
@@ -170,11 +177,16 @@ export const useUpdateStartupStatusMutation = () => {
           name: error.name,
           stack: error.stack
         });
+        
+        // Special handling for null status errors
+        if (error.message.includes('null status') || error.message.includes('cannot update startup with null')) {
+          toast.error("Erro: Não é possível definir um status nulo. Verifique as regras de workflow.");
+        } else {
+          toast.error(`Falha ao atualizar status: ${error.message}`);
+        }
+      } else {
+        toast.error('Falha ao atualizar o status da startup');
       }
-      
-      toast.error(error instanceof Error 
-        ? `Falha ao atualizar status: ${error.message}` 
-        : 'Falha ao atualizar o status da startup');
       
       // Invalidate queries to ensure UI is up-to-date
       queryClient.invalidateQueries({ queryKey: ['startups'] });

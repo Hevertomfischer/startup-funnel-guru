@@ -46,6 +46,13 @@ export const useDropHandler = ({
     
     console.log('Drop event data:', { startupId, columnId, sourceColumnId });
     
+    // CRITICAL: Additional safety check - reject the drop if target columnId is null/undefined
+    if (!columnId) {
+      console.error('CRITICAL ERROR: Target columnId is null or undefined');
+      toast.error('Erro interno: ID da coluna de destino inválido');
+      return;
+    }
+    
     // CRITICAL: Ensure columnId is a valid UUID
     if (!isValidUUID(columnId)) {
       console.error('Received invalid column ID format:', columnId);
@@ -104,6 +111,14 @@ export const useDropHandler = ({
     
     console.log('Mutation payload:', mutationPayload);
     
+    // CRITICAL: Guard against null status - final safety check
+    if (!mutationPayload.newStatusId) {
+      console.error('FATAL ERROR: newStatusId is null in mutation payload, aborting');
+      toast.error('Erro interno: status de destino inválido');
+      setColumns(columns); // Revert UI
+      return;
+    }
+    
     // Execute the mutation
     updateStartupStatusMutation.mutate(mutationPayload, {
       onSuccess: (data) => {
@@ -130,8 +145,17 @@ export const useDropHandler = ({
             attachments: []
           };
           
-          // Run any workflow rules that might apply to this status change
-          processStartup(startupForWorkflow, { statusId: oldStatusId }, statuses);
+          try {
+            // Safety check to ensure workflow rules don't reset the status to null
+            const previousValues = { statusId: oldStatusId };
+            console.log('Running workflow with previous values:', previousValues);
+            
+            // Run any workflow rules that might apply to this status change
+            processStartup(startupForWorkflow, previousValues, statuses);
+          } catch (workflowError) {
+            console.error('Error processing workflow rules:', workflowError);
+            toast.error('Erro ao processar regras de workflow');
+          }
         }
       },
       onError: (error) => {
@@ -150,7 +174,13 @@ export const useDropHandler = ({
           ? `Erro ao atualizar status: ${error.message}` 
           : "Ocorreu um erro ao mover o card. Por favor, tente novamente.";
         
-        toast.error(errorMessage);
+        // Add specific message for null status error
+        const errorMsg = error instanceof Error ? error.message.toLowerCase() : '';
+        if (errorMsg.includes('null status') || errorMsg.includes('cannot update startup with null')) {
+          toast.error("Erro: Não é possível definir um status nulo. Verifique as regras de workflow.");
+        } else {
+          toast.error(errorMessage);
+        }
         
         // Revert the optimistic update on error
         setColumns(columns);

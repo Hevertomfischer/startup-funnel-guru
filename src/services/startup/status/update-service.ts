@@ -42,6 +42,12 @@ export const updateStartupStatus = async (
     newStatusId = sanitizeId(newStatusId) || '';
     if (oldStatusId) oldStatusId = sanitizeId(oldStatusId);
     
+    // *** CRITICAL FIX: Absolute guard against null status_id ***
+    if (!newStatusId) {
+      console.error('CRITICAL SAFETY CHECK TRIGGERED: Attempt to set null status_id prevented');
+      throw new Error('Não é possível definir um status nulo. Esta operação foi bloqueada por razões de segurança.');
+    }
+    
     // Check if newStatusId might be a slug and try to convert it (3rd layer)
     if (!isValidUUID(newStatusId)) {
       console.log(`Status ID "${newStatusId}" appears to be a slug, attempting to map to UUID`);
