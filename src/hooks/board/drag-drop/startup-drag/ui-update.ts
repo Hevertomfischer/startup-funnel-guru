@@ -20,30 +20,28 @@ export const updateColumnsOptimistically = (
     console.log(`Column ${col.id}: ${col.startupIds.length} startups`);
   });
   
-  // Create a new array of columns
-  const updatedColumns = columns.map(col => {
-    if (col.id === targetColumnId) {
-      // Add the startup to the target column if it's not already there
-      if (!col.startupIds.includes(startupId)) {
-        console.log(`Adding startup ${startupId} to column ${col.id}`);
-        return {
-          ...col,
-          startupIds: [...col.startupIds, startupId]
-        };
-      }
-      return col;
-    } else {
-      // Remove the startup from any other column
-      if (col.startupIds.includes(startupId)) {
-        console.log(`Removing startup ${startupId} from column ${col.id}`);
-        return {
-          ...col,
-          startupIds: col.startupIds.filter(id => id !== startupId)
-        };
-      }
-      return col;
+  // Create a deep copy to prevent reference issues
+  const updatedColumns = JSON.parse(JSON.stringify(columns));
+  
+  // First, remove the startup from any column it might be in
+  for (let i = 0; i < updatedColumns.length; i++) {
+    const oldColumnIndex = updatedColumns[i].startupIds.indexOf(startupId);
+    if (oldColumnIndex !== -1) {
+      console.log(`Removing startup ${startupId} from column ${updatedColumns[i].id}`);
+      updatedColumns[i].startupIds.splice(oldColumnIndex, 1);
     }
-  });
+  }
+  
+  // Then add it to the target column
+  const targetColumn = updatedColumns.find(col => col.id === targetColumnId);
+  if (targetColumn) {
+    console.log(`Adding startup ${startupId} to column ${targetColumnId}`);
+    if (!targetColumn.startupIds.includes(startupId)) {
+      targetColumn.startupIds.push(startupId);
+    }
+  } else {
+    console.error(`Target column ${targetColumnId} not found`);
+  }
   
   // Log the updated columns state
   updatedColumns.forEach(col => {

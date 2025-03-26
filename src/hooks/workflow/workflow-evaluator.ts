@@ -15,9 +15,20 @@ export const evaluateCondition = (
     console.log('Evaluating status change condition:', {
       currentStatusId: startup.statusId,
       previousStatusId: previousValues.statusId,
-      result: startup.statusId !== previousValues.statusId
+      result: startup.statusId !== previousValues.statusId,
+      startup
     });
-    return startup.statusId !== previousValues.statusId;
+    
+    // Make sure both values exist and are different
+    if (startup.statusId && previousValues.statusId) {
+      return startup.statusId !== previousValues.statusId;
+    }
+    
+    // If either value is missing, check if there was an actual change
+    return Boolean(
+      (startup.statusId || previousValues.statusId) && 
+      (startup.statusId !== previousValues.statusId)
+    );
   }
 
   // For regular fields
@@ -66,4 +77,24 @@ export const wouldSetNullStatus = (
     action.config?.fieldId === 'statusId' && 
     (action.config?.value === null || action.config?.value === undefined)
   );
+};
+
+// Helper to debug workflow rules evaluation
+export const debugWorkflowCondition = (
+  rule: string,
+  condition: WorkflowCondition,
+  startup: Startup,
+  previousValues?: Record<string, any>
+): void => {
+  console.log(`[DEBUG WORKFLOW] Rule: ${rule}, Condition: ${condition.fieldId} ${condition.operator} ${condition.value}`);
+  console.log('  Startup:', { id: startup.id, statusId: startup.statusId });
+  console.log('  Previous values:', previousValues);
+  
+  if (condition.fieldId === 'statusId') {
+    console.log('  Status condition details:', {
+      currentStatusId: startup.statusId,
+      previousStatusId: previousValues?.statusId,
+      wasChanged: startup.statusId !== previousValues?.statusId
+    });
+  }
 };

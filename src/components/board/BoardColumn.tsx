@@ -29,7 +29,7 @@ interface BoardColumnProps {
   users: any;
   onEditColumn?: () => void;
   onCreateTask: (startup: any) => void;
-  searchTerm?: string; // Add the searchTerm prop
+  searchTerm?: string;
 }
 
 const BoardColumn: React.FC<BoardColumnProps> = ({
@@ -75,15 +75,23 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   
   // Log columns info for debugging
   useEffect(() => {
-    console.log(`Column ${id} (${title}) - startupIds: ${safeStartupIds.length}, startups: ${startups.length}, filteredStartups: ${filteredStartups.length}`);
-  }, [id, title, safeStartupIds, startups, filteredStartups]);
+    console.log(`Column ${id} (${title}) - startupIds: ${safeStartupIds.length}, startups: ${startups.length}, filteredStartups: ${filteredStartups.length}, displayCount: ${displayCount}`);
+  }, [id, title, safeStartupIds, startups, filteredStartups, displayCount]);
+
+  // Update the ColumnHeader when displayCount changes
+  useEffect(() => {
+    console.log(`Column ${id} updating display count to ${displayCount}`);
+  }, [id, displayCount]);
 
   return (
     <div 
       className="flex flex-col h-full bg-accent/50 backdrop-blur-sm rounded-xl min-w-[280px] w-[280px] shadow-sm border"
       onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, id)}
-      data-column-id={id} // Add data attribute for column ID
+      onDrop={(e) => {
+        console.log('BoardColumn onDrop event triggered for column:', id);
+        onDrop(e, id);
+      }}
+      data-column-id={id}
     >
       <ColumnHeader 
         title={title}
@@ -97,7 +105,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
       />
       
       <ColumnContent 
-        startups={startups}
+        startups={filteredStartups}
         isLoading={isLoading}
         isError={isError}
         draggingStartupId={draggingStartupId}

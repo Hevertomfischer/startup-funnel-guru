@@ -24,13 +24,14 @@ const ColumnHeader: React.FC<ColumnHeaderProps> = ({
   isPendingAdd,
   pendingAddStatusId
 }) => {
-  // Use local state to ensure count displays correctly
+  // Use local state to ensure count displays correctly and updates
   const [displayCount, setDisplayCount] = useState(count);
   
   // Update display count when count prop changes
   useEffect(() => {
+    console.log(`ColumnHeader ${id} (${title}) count update:`, count);
     setDisplayCount(count);
-  }, [count]);
+  }, [count, id, title]);
 
   return (
     <div 

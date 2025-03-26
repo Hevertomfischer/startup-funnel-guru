@@ -134,12 +134,16 @@ export const useDropHandler = ({
         }
         
         if (data) {
+          // Create a structured startup object for workflow processing
           const startupForWorkflow: Startup = {
             id: startup.id,
             createdAt: startup.created_at || new Date().toISOString(),
             updatedAt: startup.updated_at || new Date().toISOString(),
-            statusId: columnId,
-            values: { ...startup },
+            statusId: columnId, // Set the NEW status ID
+            values: { 
+              ...startup,
+              name: startup.name // Ensure name is properly set in values
+            },
             labels: [],
             priority: startup.priority || 'medium',
             attachments: []
@@ -154,8 +158,18 @@ export const useDropHandler = ({
             });
             
             // Include previous values for status change detection
-            const previousValues = { statusId: oldStatusId };
+            const previousValues = { 
+              statusId: oldStatusId,
+              // Add any other fields that might be needed
+            };
             console.log('Running workflow with previous values:', previousValues);
+            
+            // Debug log startup format 
+            console.log('Startup format for workflow:', {
+              id: startupForWorkflow.id,
+              statusId: startupForWorkflow.statusId,
+              nameInValues: startupForWorkflow.values?.name
+            });
             
             // Run any workflow rules that might apply to this status change
             processStartup(startupForWorkflow, previousValues, statuses);

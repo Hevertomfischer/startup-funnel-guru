@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WorkflowRule, WorkflowAction, Status, Startup } from '@/types';
 import { useUpdateStartupMutation } from '../use-supabase-query';
-import { getWorkflowRules, saveWorkflowRules } from './workflow-utils';
-import { evaluateCondition, wouldSetNullStatus } from './workflow-evaluator';
+import { getWorkflowRules, saveWorkflowRules, debugWorkflowRules } from './workflow-utils';
+import { evaluateCondition, wouldSetNullStatus, debugWorkflowCondition } from './workflow-evaluator';
 import { useWorkflowTasks } from './use-workflow-tasks';
 
 export const useWorkflowRules = () => {
@@ -15,7 +15,9 @@ export const useWorkflowRules = () => {
 
   useEffect(() => {
     // Load rules from storage on initialization
-    setRules(getWorkflowRules());
+    const loadedRules = getWorkflowRules();
+    console.log('Loading workflow rules:', loadedRules.length);
+    setRules(loadedRules);
   }, []);
 
   // Execute actions when conditions are met
@@ -147,8 +149,13 @@ export const useWorkflowRules = () => {
       startupId: startup.id,
       statusId: startup.statusId,
       previousStatusId: previousValues?.statusId,
-      activeRulesCount: activeRules.length
+      activeRulesCount: activeRules.length,
+      allRulesCount: rules.length
     });
+    
+    if (activeRules.length === 0) {
+      console.log('No active workflow rules to process');
+    }
     
     for (const rule of activeRules) {
       try {
@@ -159,9 +166,17 @@ export const useWorkflowRules = () => {
           continue;
         }
         
+        // Show full rule details for debugging
+        console.log(`Evaluating rule: "${rule.name}"`, {
+          conditions: rule.conditions,
+          actions: rule.actions.map(a => a.type)
+        });
+        
         // Check if all conditions are met
-        console.log(`Evaluating conditions for rule "${rule.name}":`);
         const conditionResults = rule.conditions.map(condition => {
+          // Add more detailed debugging for each condition
+          debugWorkflowCondition(rule.name, condition, startup, previousValues);
+          
           const result = evaluateCondition(condition, startup, previousValues);
           console.log(`- Condition "${condition.fieldId} ${condition.operator} ${condition.value}" result: ${result}`);
           return result;
@@ -209,6 +224,7 @@ export const useWorkflowRules = () => {
         return rule;
       });
       
+      console.log('Saving workflow rules:', validatedRules.length);
       setRules(validatedRules);
       saveWorkflowRules(validatedRules);
     }

@@ -5,8 +5,23 @@ import { WorkflowRule, Task } from '@/types';
 export const getWorkflowRules = (): WorkflowRule[] => {
   initializeWorkflowRules();
   try {
-    const rules = JSON.parse(localStorage.getItem('workflowRules') || '[]');
+    const rulesJson = localStorage.getItem('workflowRules');
+    
+    // Debug log the raw JSON
+    console.log('Raw workflow rules JSON:', rulesJson);
+    
+    const rules = JSON.parse(rulesJson || '[]');
     console.log('Loaded workflow rules from storage:', rules.length);
+    
+    if (rules.length > 0) {
+      // Log the first rule to check its format
+      console.log('Sample rule structure:', {
+        name: rules[0].name,
+        conditions: rules[0].conditions,
+        active: rules[0].active
+      });
+    }
+    
     return rules;
   } catch (error) {
     console.error('Error loading workflow rules:', error);
@@ -19,6 +34,10 @@ export const saveWorkflowRules = (rules: WorkflowRule[]): void => {
   try {
     console.log('Saving workflow rules to storage:', rules.length);
     localStorage.setItem('workflowRules', JSON.stringify(rules));
+    
+    // Verify the save worked
+    const savedRules = localStorage.getItem('workflowRules');
+    console.log('Verified saved rules length:', savedRules ? JSON.parse(savedRules).length : 0);
   } catch (error) {
     console.error('Error saving workflow rules:', error);
   }
@@ -65,4 +84,14 @@ export const debugWorkflowRules = (): void => {
   });
   
   console.log('================================');
+};
+
+// Function to clear workflow rules - useful for debugging
+export const clearWorkflowRules = (): void => {
+  try {
+    localStorage.setItem('workflowRules', JSON.stringify([]));
+    console.log('All workflow rules cleared');
+  } catch (error) {
+    console.error('Error clearing workflow rules:', error);
+  }
 };

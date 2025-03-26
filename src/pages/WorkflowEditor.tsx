@@ -12,7 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useStatusesQuery } from '@/hooks/use-supabase-query';
 import { useTeamMembersQuery } from '@/hooks/use-team-members';
 import WorkflowRuleForm from '@/components/workflow/WorkflowRuleForm';
+import WorkflowDebugPanel from '@/components/workflow/WorkflowDebugPanel';
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
+import { debugWorkflowRules } from '@/hooks/workflow/workflow-utils';
 
 const WorkflowEditor = () => {
   const { rules, saveRules, tasks } = useWorkflowRules();
@@ -23,6 +25,12 @@ const WorkflowEditor = () => {
   const [editingRule, setEditingRule] = useState<WorkflowRule | undefined>(undefined);
   const [isCreating, setIsCreating] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+  
+  // Debug rules on initial load
+  useEffect(() => {
+    console.log('WorkflowEditor loaded, printing rule debug info:');
+    debugWorkflowRules();
+  }, []);
   
   const toggleRuleActive = (ruleId: string) => {
     const updatedRules = rules.map(rule => 
@@ -97,6 +105,11 @@ const WorkflowEditor = () => {
       });
     }
     setFormOpen(false);
+    
+    // Debug rules after save
+    setTimeout(() => {
+      debugWorkflowRules();
+    }, 500);
   };
 
   const getOperatorLabel = (operator: string): string => {
@@ -159,88 +172,98 @@ const WorkflowEditor = () => {
         </CardContent>
       </Card>
       
+      {/* Add the debug panel */}
+      <WorkflowDebugPanel />
+      
       <div className="space-y-4">
-        {rules.map(rule => (
-          <Card key={rule.id} className="overflow-hidden">
-            <div className="flex border-b">
-              <div className="py-4 px-6 flex-1">
-                <div className="flex items-center gap-3">
-                  <h3 className="font-medium text-lg">{rule.name}</h3>
-                  <Badge variant={rule.active ? "default" : "outline"}>
-                    {rule.active ? "Active" : "Inactive"}
-                  </Badge>
-                  {rule.actions.some(action => action.type === 'createTask') && (
-                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
-                      Creates Tasks
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <div className="border-l flex items-center px-4">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`activate-${rule.id}`} className="text-sm">Active</Label>
-                  <Switch 
-                    id={`activate-${rule.id}`}
-                    checked={rule.active}
-                    onCheckedChange={() => toggleRuleActive(rule.id)}
-                  />
-                </div>
-              </div>
-            </div>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">When these conditions are met:</h4>
-                  <ul className="space-y-2 ml-5 list-disc text-sm">
-                    {rule.conditions.map((condition, index) => (
-                      <li key={index}>
-                        Field <span className="font-medium">{condition.fieldId}</span> {getOperatorLabel(condition.operator)} {condition.value !== null ? <span className="font-medium">{condition.value}</span> : ''}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Perform these actions:</h4>
-                  <ul className="space-y-2 ml-5 list-disc text-sm">
-                    {rule.actions.map((action, index) => (
-                      <li key={index}>
-                        {getActionLabel(action)}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="flex gap-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleEditRule(rule)}
-                  >
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex items-center gap-1"
-                    onClick={() => duplicateRule(rule.id)}
-                  >
-                    <Copy className="h-3 w-3" />
-                    Duplicate
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-destructive ml-auto"
-                    onClick={() => deleteRule(rule.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
+        {rules.length === 0 ? (
+          <Card className="p-8 flex flex-col items-center justify-center">
+            <p className="text-muted-foreground mb-4">No workflow rules have been created yet</p>
+            <Button onClick={handleCreateRule}>Create your first rule</Button>
           </Card>
-        ))}
+        ) : (
+          rules.map(rule => (
+            <Card key={rule.id} className="overflow-hidden">
+              <div className="flex border-b">
+                <div className="py-4 px-6 flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-medium text-lg">{rule.name}</h3>
+                    <Badge variant={rule.active ? "default" : "outline"}>
+                      {rule.active ? "Active" : "Inactive"}
+                    </Badge>
+                    {rule.actions.some(action => action.type === 'createTask') && (
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
+                        Creates Tasks
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="border-l flex items-center px-4">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor={`activate-${rule.id}`} className="text-sm">Active</Label>
+                    <Switch 
+                      id={`activate-${rule.id}`}
+                      checked={rule.active}
+                      onCheckedChange={() => toggleRuleActive(rule.id)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">When these conditions are met:</h4>
+                    <ul className="space-y-2 ml-5 list-disc text-sm">
+                      {rule.conditions.map((condition, index) => (
+                        <li key={index}>
+                          Field <span className="font-medium">{condition.fieldId}</span> {getOperatorLabel(condition.operator)} {condition.value !== null ? <span className="font-medium">{condition.value}</span> : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Perform these actions:</h4>
+                    <ul className="space-y-2 ml-5 list-disc text-sm">
+                      {rule.actions.map((action, index) => (
+                        <li key={index}>
+                          {getActionLabel(action)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditRule(rule)}
+                    >
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-1"
+                      onClick={() => duplicateRule(rule.id)}
+                    >
+                      <Copy className="h-3 w-3" />
+                      Duplicate
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive ml-auto"
+                      onClick={() => deleteRule(rule.id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
