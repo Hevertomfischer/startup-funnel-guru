@@ -2,7 +2,6 @@
 import React, { Suspense, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import BoardView from '@/components/board/BoardView';
-import FixNullStatusButton from '@/components/board/FixNullStatusButton';
 import { updateAllNullStatusToDeclined } from '@/services/scripts/update-null-status-startups';
 import { useToast } from '@/hooks/use-toast';
 
@@ -43,12 +42,7 @@ const Board = () => {
         <span className="ml-2 text-lg">Loading board...</span>
       </div>
     }>
-      <div className="relative">
-        <div className="absolute top-4 right-4 z-10">
-          <FixNullStatusButton />
-        </div>
-        <BoardView />
-      </div>
+      <BoardView />
     </Suspense>
   );
 };
