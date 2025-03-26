@@ -12,6 +12,11 @@ export const evaluateCondition = (
 
   // Special case for status changes
   if (fieldId === 'statusId' && condition.operator === 'changed' && previousValues) {
+    console.log('Evaluating status change condition:', {
+      currentStatusId: startup.statusId,
+      previousStatusId: previousValues.statusId,
+      result: startup.statusId !== previousValues.statusId
+    });
     return startup.statusId !== previousValues.statusId;
   }
 
@@ -23,8 +28,14 @@ export const evaluateCondition = (
   } else if (startup.values && fieldId in startup.values) {
     currentValue = startup.values[fieldId];
   } else {
+    console.log(`Field "${fieldId}" not found in startup or its values`);
     return false;
   }
+
+  console.log(`Evaluating condition: ${fieldId} ${condition.operator} ${value}`, {
+    currentValue,
+    conditionValue: value
+  });
 
   switch (condition.operator) {
     case 'equals':

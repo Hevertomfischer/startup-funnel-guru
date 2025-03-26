@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Loader2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -24,6 +24,14 @@ const ColumnHeader: React.FC<ColumnHeaderProps> = ({
   isPendingAdd,
   pendingAddStatusId
 }) => {
+  // Use local state to ensure count displays correctly
+  const [displayCount, setDisplayCount] = useState(count);
+  
+  // Update display count when count prop changes
+  useEffect(() => {
+    setDisplayCount(count);
+  }, [count]);
+
   return (
     <div 
       className="p-3 flex items-center justify-between"
@@ -38,7 +46,7 @@ const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         />
         <h3 className="font-medium">{title}</h3>
         <div className="flex items-center justify-center rounded-full bg-muted w-6 h-6 text-xs font-medium">
-          {count}
+          {displayCount}
         </div>
       </div>
       <div className="flex items-center gap-1">

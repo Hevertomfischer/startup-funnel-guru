@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Startup } from '@/types';
 import { 
   ColumnHeader, 
@@ -55,10 +55,28 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   users,
   onEditColumn,
   onCreateTask,
-  searchTerm = '' // Add default value
+  searchTerm = ''
 }) => {
   // Ensure startupIds is an array and not null
   const safeStartupIds = Array.isArray(startupIds) ? startupIds : [];
+  
+  // Filtered startups based on search term
+  const filteredStartups = searchTerm
+    ? startups.filter(startup => 
+        startup.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        startup.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        startup.ceo_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        startup.sector?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : startups;
+    
+  // Count of displayed startups based on filter or total
+  const displayCount = searchTerm ? filteredStartups.length : safeStartupIds.length;
+  
+  // Log columns info for debugging
+  useEffect(() => {
+    console.log(`Column ${id} (${title}) - startupIds: ${safeStartupIds.length}, startups: ${startups.length}, filteredStartups: ${filteredStartups.length}`);
+  }, [id, title, safeStartupIds, startups, filteredStartups]);
 
   return (
     <div 
@@ -70,7 +88,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
       <ColumnHeader 
         title={title}
         color={color}
-        count={safeStartupIds.length || 0}
+        count={displayCount}
         onEditColumn={onEditColumn}
         onAddStartup={onAddStartup}
         id={id}
@@ -91,7 +109,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
         statuses={statuses}
         users={users}
         onCreateTask={onCreateTask}
-        searchTerm={searchTerm} // Pass the searchTerm prop to ColumnContent
+        searchTerm={searchTerm}
       />
     </div>
   );

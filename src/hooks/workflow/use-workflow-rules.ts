@@ -40,6 +40,8 @@ export const useWorkflowRules = () => {
     let statusChanged = false;
     let statusName = '';
 
+    console.log('Executing workflow actions:', actions);
+
     for (const action of actions) {
       switch (action.type) {
         case 'updateField':
@@ -108,6 +110,7 @@ export const useWorkflowRules = () => {
         
         // Only proceed with update if we still have fields to update
         if (Object.keys(updates).length > 0) {
+          console.log('Applying workflow updates to startup:', updates);
           await updateStartupMutation.mutate({
             id: startup.id,
             startup: updates
@@ -140,6 +143,13 @@ export const useWorkflowRules = () => {
     // Only process active rules
     const activeRules = rules.filter(rule => rule.active);
     
+    console.log('Processing startup through workflow rules:', {
+      startupId: startup.id,
+      statusId: startup.statusId,
+      previousStatusId: previousValues?.statusId,
+      activeRulesCount: activeRules.length
+    });
+    
     for (const rule of activeRules) {
       try {
         // CRITICAL FIX: Skip rules that would set null status
@@ -150,9 +160,15 @@ export const useWorkflowRules = () => {
         }
         
         // Check if all conditions are met
-        const conditionsMet = rule.conditions.every(condition => 
-          evaluateCondition(condition, startup, previousValues)
-        );
+        console.log(`Evaluating conditions for rule "${rule.name}":`);
+        const conditionResults = rule.conditions.map(condition => {
+          const result = evaluateCondition(condition, startup, previousValues);
+          console.log(`- Condition "${condition.fieldId} ${condition.operator} ${condition.value}" result: ${result}`);
+          return result;
+        });
+        
+        const conditionsMet = conditionResults.every(result => result === true);
+        console.log(`All conditions met for rule "${rule.name}": ${conditionsMet}`);
         
         if (conditionsMet) {
           console.log(`Workflow rule "${rule.name}" triggered for startup "${startup.values.name || 'Unknown'}"`);

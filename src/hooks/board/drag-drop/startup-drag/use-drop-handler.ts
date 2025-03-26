@@ -146,7 +146,14 @@ export const useDropHandler = ({
           };
           
           try {
-            // Safety check to ensure workflow rules don't reset the status to null
+            // Better log for debugging workflow triggers
+            console.log('Preparing to run workflow rules for status change:', {
+              startupId: startup.id,
+              previousStatusId: oldStatusId,
+              newStatusId: columnId
+            });
+            
+            // Include previous values for status change detection
             const previousValues = { statusId: oldStatusId };
             console.log('Running workflow with previous values:', previousValues);
             
