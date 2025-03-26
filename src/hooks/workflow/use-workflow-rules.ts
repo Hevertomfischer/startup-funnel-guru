@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { WorkflowRule, WorkflowAction, Status, Startup } from '@/types';
 import { useUpdateStartupMutation } from '../use-supabase-query';
 import { getWorkflowRules, saveWorkflowRules, debugWorkflowRules } from './workflow-utils';
-import { evaluateCondition, wouldSetNullStatus, debugWorkflowCondition } from './workflow-evaluator';
+import { evaluateCondition, wouldSetNullStatus, debugWorkflowCondition, getSafeStatusId } from './workflow-evaluator';
 import { useWorkflowTasks } from './use-workflow-tasks';
 
 export const useWorkflowRules = () => {
@@ -49,20 +49,28 @@ export const useWorkflowRules = () => {
         case 'updateField':
           if (action.config.fieldId && action.config.value !== undefined) {
             // CRITICAL FIX: Additional guard against null status
-            if (action.config.fieldId === 'statusId' && action.config.value === null) {
-              console.error('CRITICAL: Attempted to set null status_id via workflow, prevented');
-              toast({
-                title: "Erro no Workflow",
-                description: "Tentativa de definir status nulo bloqueada",
-                variant: "destructive"
-              });
+            if ((action.config.fieldId === 'statusId' || action.config.fieldId === 'status_id')) {
+              // Validar e sanitizar o status_id
+              const safeStatusId = getSafeStatusId(action.config.value);
+              
+              // Se o status for nulo após validação, bloquear a ação
+              if (safeStatusId === null) {
+                console.error('CRITICAL: Prevented setting null status_id via workflow');
+                toast({
+                  title: "Erro no Workflow",
+                  description: "Tentativa de definir status nulo bloqueada",
+                  variant: "destructive"
+                });
+                continue; // Pula esta ação e vai para a próxima
+              }
+              
+              // Se chegou aqui, o valor é seguro para usar
+              updates[action.config.fieldId] = safeStatusId;
+              statusChanged = true;
+              const newStatus = statuses.find(s => s.id === safeStatusId);
+              statusName = newStatus?.name || '';
             } else {
               updates[action.config.fieldId] = action.config.value;
-              if (action.config.fieldId === 'statusId') {
-                statusChanged = true;
-                const newStatus = statuses.find(s => s.id === action.config.value);
-                statusName = newStatus?.name || '';
-              }
             }
           }
           break;
@@ -110,6 +118,16 @@ export const useWorkflowRules = () => {
           });
         }
         
+        if (updates.status_id === null || updates.status_id === undefined) {
+          delete updates.status_id;
+          console.error('CRITICAL: Removed null status_id from updates before saving');
+          toast({
+            title: "Aviso de Workflow",
+            description: "Uma tentativa de definir status nulo foi evitada",
+            variant: "destructive"
+          });
+        }
+        
         // Only proceed with update if we still have fields to update
         if (Object.keys(updates).length > 0) {
           console.log('Applying workflow updates to startup:', updates);
@@ -121,7 +139,7 @@ export const useWorkflowRules = () => {
           if (statusChanged) {
             toast({
               title: "Status Updated by Workflow",
-              description: `Startup "${startup.values.name || 'Unknown'}" was moved to ${statusName}`,
+              description: `Startup "${startup.values?.name || 'Unknown'}" foi movido para ${statusName}`,
             });
           }
         }
@@ -186,7 +204,7 @@ export const useWorkflowRules = () => {
         console.log(`All conditions met for rule "${rule.name}": ${conditionsMet}`);
         
         if (conditionsMet) {
-          console.log(`Workflow rule "${rule.name}" triggered for startup "${startup.values.name || 'Unknown'}"`);
+          console.log(`Workflow rule "${rule.name}" triggered for startup "${startup.values?.name || 'Unknown'}"`);
           await executeActions(rule.actions, startup, statuses);
         }
       } catch (error) {
@@ -214,10 +232,11 @@ export const useWorkflowRules = () => {
         
         if (hasBadAction) {
           // Disable the rule and mark it for attention
+          console.error(`CRITICAL: Rule "${rule.name}" would set null status, disabling`);
           return {
             ...rule,
             active: false,
-            name: `⚠️ ${rule.name} (Error: setting null status)`
+            name: `⚠️ ${rule.name} (Erro: definindo status nulo)`
           };
         }
         

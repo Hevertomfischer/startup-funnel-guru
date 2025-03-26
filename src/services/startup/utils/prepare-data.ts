@@ -40,7 +40,7 @@ export function prepareStartupData(data: any): any {
   });
   
   // Convert camelCase fields to snake_case if present
-  if ('statusId' in data && data.statusId && !('status_id' in cleanData)) {
+  if ('statusId' in data && data.statusId !== undefined && !('status_id' in cleanData)) {
     cleanData.status_id = data.statusId;
   }
   
@@ -103,22 +103,23 @@ export function prepareStartupData(data: any): any {
   } 
   else {
     // For normal updates (non-status updates)
-    // Handle normal field validations and conversions
-    if (cleanData.status_id === undefined || cleanData.status_id === '') {
-      console.log('Status ID is empty or undefined in a normal update - setting to null');
-      cleanData.status_id = null;
+    // REFORÇADO: Verificações adicionais para status_id
+    if (cleanData.status_id === undefined || cleanData.status_id === '' || 
+        cleanData.status_id === 'null' || cleanData.status_id === 'undefined') {
+      console.error('CRITICAL: Detected empty or invalid status_id in update data. This will be prevented.');
+      throw new Error('Status ID não pode ser nulo ou vazio. Operação cancelada para proteção de dados.');
     } else if (cleanData.status_id && typeof cleanData.status_id === 'string') {
       cleanData.status_id = cleanData.status_id.trim();
       
       // ENHANCED ERROR DETECTION: Print slug-like status IDs before they cause errors
       if (cleanData.status_id.includes('-') && !uuidPattern.test(cleanData.status_id)) {
-        console.error(`Received slug-like status_id: ${cleanData.status_id} in normal update. Converting to null.`);
+        console.error(`Received slug-like status_id: ${cleanData.status_id} in normal update. Validating...`);
       }
       
       // CRITICAL FIX: Detect non-UUID values and handle appropriately
       if (!uuidPattern.test(cleanData.status_id)) {
-        console.warn(`Invalid UUID format for status_id in normal update: ${cleanData.status_id} - setting to null`);
-        cleanData.status_id = null;
+        console.error(`Invalid UUID format for status_id in normal update: ${cleanData.status_id} - operation canceled`);
+        throw new Error(`Formato de ID do status inválido: ${cleanData.status_id}. Operação cancelada.`);
       }
     } 
     

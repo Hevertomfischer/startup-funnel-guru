@@ -72,11 +72,25 @@ export const evaluateCondition = (
 export const wouldSetNullStatus = (
   actions: any[]
 ): boolean => {
-  return actions.some(action => 
-    action.type === 'updateField' && 
-    action.config?.fieldId === 'statusId' && 
-    (action.config?.value === null || action.config?.value === undefined)
-  );
+  // MELHORADO: Verificação mais abrangente para detectar tentativas de definir status nulo
+  return actions.some(action => {
+    // Verifica ações que definiriam statusId ou status_id para null ou undefined
+    if (action.type === 'updateField') {
+      // Verifica tanto 'statusId' quanto 'status_id'
+      const isStatusField = action.config?.fieldId === 'statusId' || 
+                           action.config?.fieldId === 'status_id';
+      
+      // Verifica se o valor é null, undefined, string vazia, 'null' ou 'undefined'
+      const isNullValue = action.config?.value === null || 
+                         action.config?.value === undefined ||
+                         action.config?.value === '' ||
+                         action.config?.value === 'null' ||
+                         action.config?.value === 'undefined';
+      
+      return isStatusField && isNullValue;
+    }
+    return false;
+  });
 };
 
 // Helper to debug workflow rules evaluation
@@ -97,4 +111,28 @@ export const debugWorkflowCondition = (
       wasChanged: startup.statusId !== previousValues?.statusId
     });
   }
+};
+
+// NOVA FUNÇÃO: Validar e corrigir valores de status
+export const getSafeStatusId = (statusId: any): string | null => {
+  // Se for um UUID válido, retorna como está
+  if (typeof statusId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(statusId)) {
+    return statusId;
+  }
+  
+  // Valores que definitivamente queremos tratar como nulos
+  if (
+    statusId === null || 
+    statusId === undefined || 
+    statusId === '' || 
+    statusId === 'null' || 
+    statusId === 'undefined'
+  ) {
+    console.error('CRITICAL: Attempted to use invalid status ID:', statusId);
+    return null;
+  }
+  
+  // Para outros casos, log e retorna como está (pode ser um slug ou outro formato)
+  console.warn('Questionable status ID format:', statusId);
+  return String(statusId);
 };
