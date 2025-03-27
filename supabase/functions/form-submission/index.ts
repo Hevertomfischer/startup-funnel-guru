@@ -29,25 +29,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get form data from request
-    const formData = await req.formData();
+    let submissionData;
     
-    const submissionData: Record<string, any> = {
-      name: formData.get('name'),
-      ceo_name: formData.get('ceo_name'),
-      ceo_email: formData.get('ceo_email'),
-      ceo_whatsapp: formData.get('ceo_whatsapp'),
-      founding_year: formData.get('founding_year'),
-      problem_solved: formData.get('problem_solved'),
-      problem_solution: formData.get('problem_solution'),
-      differentials: formData.get('differentials'),
-      mrr: formData.get('mrr'),
-      business_model: formData.get('business_model'),
-      sector: formData.get('sector'),
-      city: formData.get('city'),
-      state: formData.get('state'),
-      website: formData.get('website'),
-    };
+    // Check if request body is FormData or JSON
+    const contentType = req.headers.get('content-type') || '';
+    
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData
+      const formData = await req.formData();
+      submissionData = {};
+      
+      // Convert FormData to object
+      for (const [key, value] of formData.entries()) {
+        submissionData[key] = value;
+      }
+    } else {
+      // Handle JSON
+      submissionData = await req.json();
+    }
+    
+    console.log('Received submission data:', submissionData);
     
     // Validate required fields
     const requiredFields = ['name', 'ceo_name', 'ceo_email', 'ceo_whatsapp', 'founding_year', 
@@ -69,43 +70,6 @@ Deno.serve(async (req) => {
       submissionData.mrr = parseFloat(submissionData.mrr.toString());
       if (isNaN(submissionData.mrr)) {
         submissionData.mrr = null;
-      }
-    }
-    
-    // Get pitch deck file if provided
-    const pitchDeckFile = formData.get('pitch_deck') as File;
-    let pitchDeckUrl = '';
-    
-    if (pitchDeckFile && pitchDeckFile.size > 0) {
-      // Generate a unique filename
-      const fileExtension = pitchDeckFile.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExtension}`;
-      
-      console.log('Uploading pitch deck file:', pitchDeckFile.name, 'size:', pitchDeckFile.size);
-      
-      // Upload the file to Supabase Storage
-      const { data: storageData, error: storageError } = await supabase
-        .storage
-        .from('pitch_decks')
-        .upload(fileName, pitchDeckFile, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-      
-      if (storageError) {
-        console.error('Error uploading pitch deck:', storageError);
-      } else if (storageData) {
-        // Get the public URL
-        const { data: publicUrlData } = supabase
-          .storage
-          .from('pitch_decks')
-          .getPublicUrl(fileName);
-        
-        pitchDeckUrl = publicUrlData.publicUrl;
-        console.log('Pitch deck uploaded, URL:', pitchDeckUrl);
-        
-        // Add the URL to submission data
-        submissionData.pitch_deck_url = pitchDeckUrl;
       }
     }
     
@@ -161,13 +125,12 @@ Deno.serve(async (req) => {
           console.log('Created startup record with ID:', startupData);
           
           // If pitch deck was uploaded, create an attachment
-          if (pitchDeckUrl) {
+          if (submissionData.pitch_deck_url) {
             const attachmentData = {
               startup_id: startupData,
-              name: pitchDeckFile.name,
-              url: pitchDeckUrl,
-              type: pitchDeckFile.type,
-              size: pitchDeckFile.size,
+              name: `Pitch Deck`,
+              url: submissionData.pitch_deck_url,
+              type: 'application/pdf', // Assuming PDF, could be more specific if available
               is_pitch_deck: true
             };
             
