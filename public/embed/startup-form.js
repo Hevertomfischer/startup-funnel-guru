@@ -327,19 +327,20 @@
         // Submit form to Supabase edge function
         const response = await fetch(functionUrl, {
           method: 'POST',
-          body: formData
+          body: formData,
+          // No need for Content-Type header as it's automatically set with FormData
         });
         
         // Hide loading
         loadingElement.style.display = 'none';
         
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Ocorreu um erro ao enviar o formulário.');
-        }
+        const responseBody = await response.json();
+        console.log('Response status:', response.status);
+        console.log('Response body:', responseBody);
         
-        const result = await response.json();
-        console.log('Form submission result:', result);
+        if (!response.ok) {
+          throw new Error(responseBody.error || 'Ocorreu um erro ao enviar o formulário.');
+        }
         
         // Show success message
         successMessage.style.display = 'block';

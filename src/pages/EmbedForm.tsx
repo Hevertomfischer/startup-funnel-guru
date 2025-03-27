@@ -3,21 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Copy, Check, Info } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const EmbedForm = () => {
   const [copied, setCopied] = useState(false);
-  const [domain, setDomain] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
   
   const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || "https://qolgehnzmslkmotrrwwy.supabase.co";
   
   useEffect(() => {
+    // Create code with the current origin and Supabase URL
     const code = `<script 
   src="${window.location.origin}/embed/startup-form.js" 
   data-supabase-url="${supabaseUrl}"
@@ -83,11 +82,20 @@ const EmbedForm = () => {
               </TabsContent>
               
               <TabsContent value="preview">
-                <div className="border rounded-md p-4">
-                  <div dangerouslySetInnerHTML={{ __html: generatedCode }} />
+                <div className="border rounded-md p-4 overflow-hidden">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    O formulário será exibido como mostrado abaixo. Note que a versão de preview pode não funcionar 
+                    como esperado aqui, mas funcionará corretamente quando incorporado em seu site.
+                  </p>
                   <iframe 
-                    src={`data:text/html;charset=utf-8,<html><body>${encodeURIComponent(generatedCode)}<div id="form-container"></div></body></html>`}
-                    style={{width: '100%', height: '500px', border: 'none'}} 
+                    srcDoc={`
+                      <html>
+                        <body>
+                          <script src="${window.location.origin}/embed/startup-form.js" data-supabase-url="${supabaseUrl}"></script>
+                        </body>
+                      </html>
+                    `}
+                    style={{width: '100%', height: '600px', border: 'none'}} 
                     title="Formulário de cadastro"
                   />
                 </div>
