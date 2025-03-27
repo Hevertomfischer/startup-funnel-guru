@@ -7,7 +7,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Copy, Check, Info } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const EmbedForm = () => {
   const [copied, setCopied] = useState(false);
@@ -87,17 +86,12 @@ const EmbedForm = () => {
                     O formulário será exibido como mostrado abaixo. Note que a versão de preview pode não funcionar 
                     como esperado aqui, mas funcionará corretamente quando incorporado em seu site.
                   </p>
-                  <iframe 
-                    srcDoc={`
-                      <html>
-                        <body>
-                          <script src="${window.location.origin}/embed/startup-form.js" data-supabase-url="${supabaseUrl}"></script>
-                        </body>
-                      </html>
-                    `}
-                    style={{width: '100%', height: '600px', border: 'none'}} 
-                    title="Formulário de cadastro"
-                  />
+                  <div dangerouslySetInnerHTML={{
+                    __html: `
+                      <script src="${window.location.origin}/embed/startup-form.js" 
+                             data-supabase-url="${supabaseUrl}"></script>
+                    `
+                  }} className="min-h-[600px]" />
                 </div>
               </TabsContent>
             </Tabs>
