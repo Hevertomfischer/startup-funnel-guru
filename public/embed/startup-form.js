@@ -1,184 +1,192 @@
+
 (function() {
   // Create style element
-  const style = document.createElement('style');
-  style.textContent = `
-    .sfg-form-container {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 2rem;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .sfg-form-container * {
-      box-sizing: border-box;
-    }
-    
-    .sfg-form-header {
-      margin-bottom: 2rem;
-      text-align: center;
-    }
-    
-    .sfg-form-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #1e293b;
-      margin-bottom: 0.5rem;
-    }
-    
-    .sfg-form-description {
-      color: #64748b;
-      font-size: 0.875rem;
-    }
-    
-    .sfg-form-group {
-      margin-bottom: 1.5rem;
-    }
-    
-    .sfg-form-label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #1e293b;
-      margin-bottom: 0.5rem;
-    }
-    
-    .sfg-form-input,
-    .sfg-form-textarea,
-    .sfg-form-select {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      color: #1e293b;
-      background-color: #fff;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    
-    .sfg-form-input:focus,
-    .sfg-form-textarea:focus,
-    .sfg-form-select:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-    }
-    
-    .sfg-form-textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-    
-    .sfg-form-submit {
-      display: inline-block;
-      background-color: #2563eb;
-      color: white;
-      font-weight: 500;
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    
-    .sfg-form-submit:hover {
-      background-color: #1d4ed8;
-    }
-    
-    .sfg-form-error {
-      color: #dc2626;
-      font-size: 0.875rem;
-      margin-top: 0.5rem;
-    }
-    
-    .sfg-form-success {
-      background-color: #ecfdf5;
-      color: #0f766e;
-      padding: 1rem;
-      border-radius: 4px;
-      margin-bottom: 1rem;
-      font-size: 0.875rem;
-    }
-    
-    .sfg-form-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-    
-    @media (min-width: 640px) {
-      .sfg-form-grid {
-        grid-template-columns: repeat(2, 1fr);
+  function createStyleElement() {
+    const style = document.createElement('style');
+    style.textContent = `
+      .sfg-form-container {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
-    }
-    
-    .sfg-form-full {
-      grid-column: 1 / -1;
-    }
-    
-    .sfg-required {
-      color: #dc2626;
-      margin-left: 2px;
-    }
-    
-    .sfg-form-loading {
-      display: none;
-      text-align: center;
-      padding: 1rem 0;
-    }
-    
-    .sfg-form-loading-spinner {
-      display: inline-block;
-      width: 1.5rem;
-      height: 1.5rem;
-      border: 3px solid rgba(37, 99, 235, 0.2);
-      border-radius: 50%;
-      border-top-color: #2563eb;
-      animation: sfg-spin 1s linear infinite;
-      margin-right: 0.5rem;
-    }
-    
-    @keyframes sfg-spin {
-      to { transform: rotate(360deg); }
-    }
-  `;
-  
-  // Get script element - this is the current script
-  const scriptElement = document.currentScript;
-  
-  // Get the Supabase project URL from script data attributes
-  const supabaseUrl = scriptElement.getAttribute('data-supabase-url');
-  
-  if (!supabaseUrl) {
-    console.error('Error: data-supabase-url attribute is required');
-    return;
+      
+      .sfg-form-container * {
+        box-sizing: border-box;
+      }
+      
+      .sfg-form-header {
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+      
+      .sfg-form-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+      }
+      
+      .sfg-form-description {
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+      
+      .sfg-form-group {
+        margin-bottom: 1.5rem;
+      }
+      
+      .sfg-form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+      }
+      
+      .sfg-form-input,
+      .sfg-form-textarea,
+      .sfg-form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        color: #1e293b;
+        background-color: #fff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      
+      .sfg-form-input:focus,
+      .sfg-form-textarea:focus,
+      .sfg-form-select:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+      }
+      
+      .sfg-form-textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      
+      .sfg-form-submit {
+        display: inline-block;
+        background-color: #2563eb;
+        color: white;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      
+      .sfg-form-submit:hover {
+        background-color: #1d4ed8;
+      }
+      
+      .sfg-form-error {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+      }
+      
+      .sfg-form-success {
+        background-color: #ecfdf5;
+        color: #0f766e;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+      }
+      
+      .sfg-form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      @media (min-width: 640px) {
+        .sfg-form-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      
+      .sfg-form-full {
+        grid-column: 1 / -1;
+      }
+      
+      .sfg-required {
+        color: #dc2626;
+        margin-left: 2px;
+      }
+      
+      .sfg-form-loading {
+        display: none;
+        text-align: center;
+        padding: 1rem 0;
+      }
+      
+      .sfg-form-loading-spinner {
+        display: inline-block;
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 3px solid rgba(37, 99, 235, 0.2);
+        border-radius: 50%;
+        border-top-color: #2563eb;
+        animation: sfg-spin 1s linear infinite;
+        margin-right: 0.5rem;
+      }
+      
+      @keyframes sfg-spin {
+        to { transform: rotate(360deg); }
+      }
+    `;
+    return style;
   }
-  
-  // Load Supabase client library dynamically
-  const supabaseScript = document.createElement('script');
-  supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-  document.head.appendChild(supabaseScript);
-  
-  // Wait for Supabase library to load before proceeding
-  supabaseScript.onload = () => {
-    initializeForm();
-  };
-  
-  function initializeForm() {
-    // Initialize Supabase client
+
+  // Get Supabase URL from script element
+  function getSupabaseUrlFromScript() {
+    // Get script element - this is the current script
+    const scriptElement = document.currentScript;
+    
+    // Get the Supabase project URL from script data attributes
+    const supabaseUrl = scriptElement.getAttribute('data-supabase-url');
+    
+    if (!supabaseUrl) {
+      console.error('Error: data-supabase-url attribute is required');
+      return null;
+    }
+    
+    return { scriptElement, supabaseUrl };
+  }
+
+  // Load Supabase client library
+  function loadSupabaseScript(callback) {
+    const supabaseScript = document.createElement('script');
+    supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    document.head.appendChild(supabaseScript);
+    
+    // Wait for Supabase library to load before proceeding
+    supabaseScript.onload = callback;
+  }
+
+  // Initialize Supabase client
+  function initializeSupabaseClient(supabaseUrl) {
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvbGdlaG56bXNsa21vdHJyd3d5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzNzgyMDcsImV4cCI6MjA1Njk1NDIwN30.HXf0N-nP5JQf--84SlJydAFDAvmX1wEQs5DnYau3_8I';
     const supabase = window.supabaseClient || new supabase.createClient(supabaseUrl, SUPABASE_KEY);
     window.supabaseClient = supabase;
-    
-    // Create form container
-    const formContainer = document.createElement('div');
-    formContainer.className = 'sfg-form-container';
-    
-    // Create form content
-    formContainer.innerHTML = `
+    return supabase;
+  }
+
+  // Create form HTML content
+  function createFormHTML() {
+    return `
       <div class="sfg-form-header">
         <h2 class="sfg-form-title">Cadastro de Startup</h2>
         <p class="sfg-form-description">Preencha os dados abaixo para cadastrar sua startup</p>
@@ -299,130 +307,189 @@
         </div>
       </form>
     `;
+  }
+
+  // Handle file upload
+  async function handleFileUpload(supabase, file) {
+    if (!(file instanceof File) || file.size === 0) {
+      return '';
+    }
     
-    // Append style and form to document
-    document.head.appendChild(style);
+    try {
+      console.log('Handling pitch deck file:', file.name);
+      
+      // Create a unique filename
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+      
+      // Upload file to Supabase Storage
+      const { data: storageData, error: storageError } = await supabase
+        .storage
+        .from('pitch_decks')
+        .upload(fileName, file);
+      
+      if (storageError) {
+        console.error('Error uploading pitch deck:', storageError);
+        return '';
+      } else if (storageData) {
+        // Get the public URL
+        const { data: publicUrlData } = supabase
+          .storage
+          .from('pitch_decks')
+          .getPublicUrl(fileName);
+        
+        const pitchDeckUrl = publicUrlData.publicUrl;
+        console.log('Pitch deck uploaded, URL:', pitchDeckUrl);
+        
+        return pitchDeckUrl;
+      }
+    } catch (fileError) {
+      console.error('File upload error:', fileError);
+    }
+    
+    return '';
+  }
+
+  // Convert FormData to object
+  function formDataToObject(formData) {
+    const formDataObj = {};
+    for (let [key, value] of formData.entries()) {
+      // Skip file inputs, we'll handle them separately
+      if (!(value instanceof File) || value.size > 0) {
+        formDataObj[key] = value;
+      }
+    }
+    return formDataObj;
+  }
+
+  // Set up form submission handler
+  function setupFormSubmissionHandler(supabase, form) {
+    const successMessage = document.getElementById('sfg-form-success');
+    const errorMessage = document.getElementById('sfg-form-error');
+    const loadingElement = document.getElementById('sfg-form-loading');
+    const formContainer = form.closest('.sfg-form-container');
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Hide previous messages and show loading
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+      loadingElement.style.display = 'block';
+      
+      // Disable submit button
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+      }
+      
+      try {
+        const formData = new FormData(form);
+        
+        // Convert FormData to a plain object for supabase.functions.invoke
+        const formDataObj = formDataToObject(formData);
+        
+        // Log the form data for debugging
+        console.log('Form data being submitted:', formDataObj);
+        
+        // Handle file upload separately if a pitch deck is provided
+        const pitchDeckFile = formData.get('pitch_deck');
+        const pitchDeckUrl = await handleFileUpload(supabase, pitchDeckFile);
+        
+        // Add the URL to form data object if a file was uploaded
+        if (pitchDeckUrl) {
+          formDataObj.pitch_deck_url = pitchDeckUrl;
+        }
+        
+        // Submit form using Supabase Edge Function
+        console.log('Submitting form via Supabase Functions:', formDataObj);
+        
+        const { data, error } = await supabase.functions.invoke('form-submission', {
+          body: formDataObj
+        });
+        
+        // Hide loading
+        loadingElement.style.display = 'none';
+        
+        console.log('Response data:', data);
+        
+        if (error) {
+          throw new Error(error.message || 'Ocorreu um erro ao enviar o formulário.');
+        }
+        
+        // Show success message
+        successMessage.style.display = 'block';
+        
+        // Reset form
+        form.reset();
+        
+        // Scroll to top of form
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+        
+      } catch (error) {
+        console.error('Form submission error:', error);
+        
+        // Hide loading
+        loadingElement.style.display = 'none';
+        
+        // Show error message
+        errorMessage.textContent = error.message || 'Ocorreu um erro ao enviar o formulário.';
+        errorMessage.style.display = 'block';
+      } finally {
+        // Re-enable submit button
+        if (submitButton) {
+          submitButton.disabled = false;
+        }
+      }
+    });
+  }
+
+  // Create and append form to document
+  function createAndAppendForm(scriptElement) {
+    // Create form container
+    const formContainer = document.createElement('div');
+    formContainer.className = 'sfg-form-container';
+    
+    // Set inner HTML with form content
+    formContainer.innerHTML = createFormHTML();
     
     // Insert the form where the script is placed
     scriptElement.parentNode.insertBefore(formContainer, scriptElement);
     
-    // Add form submission logic
-    const form = document.getElementById('sfg-startup-form');
-    const successMessage = document.getElementById('sfg-form-success');
-    const errorMessage = document.getElementById('sfg-form-error');
-    const loadingElement = document.getElementById('sfg-form-loading');
+    return formContainer;
+  }
+
+  // Main initialization function
+  function initializeForm() {
+    const scriptInfo = getSupabaseUrlFromScript();
+    if (!scriptInfo) return;
     
+    const { scriptElement, supabaseUrl } = scriptInfo;
+    
+    // Initialize Supabase client
+    const supabase = initializeSupabaseClient(supabaseUrl);
+    
+    // Create and append style
+    const style = createStyleElement();
+    document.head.appendChild(style);
+    
+    // Create and append form
+    const formContainer = createAndAppendForm(scriptElement);
+    
+    // Set up form submission handler
+    const form = document.getElementById('sfg-startup-form');
     if (form) {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Hide previous messages and show loading
-        errorMessage.style.display = 'none';
-        successMessage.style.display = 'none';
-        loadingElement.style.display = 'block';
-        
-        // Disable submit button
-        const submitButton = form.querySelector('button[type="submit"]');
-        if (submitButton) {
-          submitButton.disabled = true;
-        }
-        
-        try {
-          const formData = new FormData(form);
-          
-          // Convert FormData to a plain object for supabase.functions.invoke
-          const formDataObj = {};
-          for (let [key, value] of formData.entries()) {
-            // Skip file inputs, we'll handle them separately
-            if (!(value instanceof File) || value.size > 0) {
-              formDataObj[key] = value;
-            }
-          }
-          
-          // Log the form data for debugging
-          console.log('Form data being submitted:', formDataObj);
-          
-          // Handle file upload separately if a pitch deck is provided
-          const pitchDeckFile = formData.get('pitch_deck');
-          let pitchDeckUrl = '';
-          
-          if (pitchDeckFile instanceof File && pitchDeckFile.size > 0) {
-            try {
-              console.log('Handling pitch deck file:', pitchDeckFile.name);
-              
-              // Create a unique filename
-              const fileExtension = pitchDeckFile.name.split('.').pop();
-              const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
-              
-              // Upload file to Supabase Storage
-              const { data: storageData, error: storageError } = await supabase
-                .storage
-                .from('pitch_decks')
-                .upload(fileName, pitchDeckFile);
-              
-              if (storageError) {
-                console.error('Error uploading pitch deck:', storageError);
-              } else if (storageData) {
-                // Get the public URL
-                const { data: publicUrlData } = supabase
-                  .storage
-                  .from('pitch_decks')
-                  .getPublicUrl(fileName);
-                
-                pitchDeckUrl = publicUrlData.publicUrl;
-                console.log('Pitch deck uploaded, URL:', pitchDeckUrl);
-                
-                // Add the URL to form data object
-                formDataObj.pitch_deck_url = pitchDeckUrl;
-              }
-            } catch (fileError) {
-              console.error('File upload error:', fileError);
-            }
-          }
-          
-          // Submit form using Supabase Edge Function
-          console.log('Submitting form via Supabase Functions:', formDataObj);
-          
-          const { data, error } = await supabase.functions.invoke('form-submission', {
-            body: formDataObj
-          });
-          
-          // Hide loading
-          loadingElement.style.display = 'none';
-          
-          console.log('Response data:', data);
-          
-          if (error) {
-            throw new Error(error.message || 'Ocorreu um erro ao enviar o formulário.');
-          }
-          
-          // Show success message
-          successMessage.style.display = 'block';
-          
-          // Reset form
-          form.reset();
-          
-          // Scroll to top of form
-          formContainer.scrollIntoView({ behavior: 'smooth' });
-          
-        } catch (error) {
-          console.error('Form submission error:', error);
-          
-          // Hide loading
-          loadingElement.style.display = 'none';
-          
-          // Show error message
-          errorMessage.textContent = error.message || 'Ocorreu um erro ao enviar o formulário.';
-          errorMessage.style.display = 'block';
-        } finally {
-          // Re-enable submit button
-          if (submitButton) {
-            submitButton.disabled = false;
-          }
-        }
-      });
+      setupFormSubmissionHandler(supabase, form);
     } else {
       console.error('Form element not found');
     }
+  }
+
+  // Start the process
+  const scriptInfo = getSupabaseUrlFromScript();
+  if (scriptInfo) {
+    loadSupabaseScript(() => {
+      initializeForm();
+    });
   }
 })();
