@@ -69,7 +69,8 @@
 
   // Initialize Supabase client
   function initializeSupabaseClient(supabaseUrl) {
-    const supabase = window.supabaseClient || new supabase.createClient(supabaseUrl, SUPABASE_KEY);
+    // FIX: Use the createClient function properly - it's a function not a constructor
+    const supabase = window.supabaseClient || window.supabase.createClient(supabaseUrl, SUPABASE_KEY);
     window.supabaseClient = supabase;
     return supabase;
   }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,10 +99,16 @@ const EmbedForm = () => {
           const supabaseScript = document.createElement('script');
           supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
           supabaseScript.onload = () => {
+            // Fix: Don't redeclare SUPABASE_KEY
             const initSupabase = document.createElement('script');
             initSupabase.textContent = `
-              const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvbGdlaG56bXNsa21vdHJyd3d5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzNzgyMDcsImV4cCI6MjA1Njk1NDIwN30.HXf0N-nP5JQf--84SlJydAFDAvmX1wEQs5DnYau3_8I';
-              window.supabaseClient = new supabase.createClient("${supabaseUrl}", SUPABASE_KEY);
+              // Initialize Supabase client correctly - no need to redeclare SUPABASE_KEY
+              if (!window.supabaseClient) {
+                window.supabaseClient = supabase.createClient(
+                  "${supabaseUrl}", 
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvbGdlaG56bXNsa21vdHJyd3d5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzNzgyMDcsImV4cCI6MjA1Njk1NDIwN30.HXf0N-nP5JQf--84SlJydAFDAvmX1wEQs5DnYau3_8I"
+                );
+              }
             `;
             previewContainerRef.current?.appendChild(initSupabase);
           };
