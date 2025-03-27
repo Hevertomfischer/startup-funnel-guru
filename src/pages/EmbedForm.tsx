@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,13 +30,94 @@ const EmbedForm = () => {
       // Clear previous content
       previewContainerRef.current.innerHTML = '';
       
-      // Manually inject the script
-      const script = document.createElement('script');
-      script.src = `${window.location.origin}/embed/startup-form.js`;
-      script.setAttribute('data-supabase-url', supabaseUrl);
+      // Load all necessary scripts for the form
+      const loadScripts = () => {
+        // First load config.js which is required by all other modules
+        const configScript = document.createElement('script');
+        configScript.src = `${window.location.origin}/embed/js/config.js`;
+        
+        configScript.onload = () => {
+          // Then load the remaining scripts in proper order
+          const scripts = [
+            '/embed/js/styles.js',
+            '/embed/js/form-content.js',
+            '/embed/js/form-submit.js',
+            '/embed/js/main.js'
+          ];
+          
+          // Helper function to load scripts sequentially
+          const loadScript = (index) => {
+            if (index >= scripts.length) {
+              // All scripts loaded, initialize the form
+              const initScript = document.createElement('script');
+              initScript.textContent = `
+                // Initialize form with Supabase URL from the environment
+                setTimeout(() => {
+                  if (window.StartupFormEmbed && window.supabase) {
+                    const scriptInfo = { 
+                      scriptElement: document.currentScript,
+                      supabaseUrl: "${supabaseUrl}"
+                    };
+                    
+                    // Create and append style
+                    const style = StartupFormEmbed.Styles.createStyleElement();
+                    document.head.appendChild(style);
+                    
+                    // Create and append form inside preview container
+                    const formContainer = document.createElement('div');
+                    formContainer.className = 'sfg-form-container';
+                    formContainer.innerHTML = StartupFormEmbed.FormContent.createFormHTML();
+                    document.getElementById('preview-container').appendChild(formContainer);
+                    
+                    // Setup form submission
+                    const form = document.getElementById('sfg-startup-form');
+                    if (form) {
+                      StartupFormEmbed.FormSubmit.setupFormSubmissionHandler(
+                        window.supabaseClient, 
+                        form
+                      );
+                    }
+                  } else {
+                    console.error('StartupFormEmbed or supabase not available');
+                  }
+                }, 500);
+              `;
+              previewContainerRef.current?.appendChild(initScript);
+            } else {
+              const script = document.createElement('script');
+              script.src = `${window.location.origin}${scripts[index]}`;
+              script.onload = () => loadScript(index + 1);
+              previewContainerRef.current?.appendChild(script);
+            }
+          };
+          
+          // Start loading scripts
+          loadScript(0);
+          
+          // Load Supabase client for the preview
+          const supabaseScript = document.createElement('script');
+          supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+          supabaseScript.onload = () => {
+            const initSupabase = document.createElement('script');
+            initSupabase.textContent = `
+              const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvbGdlaG56bXNsa21vdHJyd3d5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzNzgyMDcsImV4cCI6MjA1Njk1NDIwN30.HXf0N-nP5JQf--84SlJydAFDAvmX1wEQs5DnYau3_8I';
+              window.supabaseClient = new supabase.createClient("${supabaseUrl}", SUPABASE_KEY);
+            `;
+            previewContainerRef.current?.appendChild(initSupabase);
+          };
+          previewContainerRef.current?.appendChild(supabaseScript);
+        };
+        
+        previewContainerRef.current?.appendChild(configScript);
+      };
       
-      // Append script to the preview container
-      previewContainerRef.current.appendChild(script);
+      // Create a container for the preview with ID for script targeting
+      const container = document.createElement('div');
+      container.id = 'preview-container';
+      previewContainerRef.current.appendChild(container);
+      
+      // Load all necessary scripts
+      loadScripts();
     }
   };
   
