@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 const EmbedForm = () => {
   const [copied, setCopied] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
+  const previewContainerRef = useRef<HTMLDivElement>(null);
   
   const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || "https://qolgehnzmslkmotrrwwy.supabase.co";
   
@@ -23,6 +24,22 @@ const EmbedForm = () => {
     
     setGeneratedCode(code);
   }, [supabaseUrl]);
+
+  // Function to handle preview tab activation
+  const handlePreviewTabClick = () => {
+    if (previewContainerRef.current) {
+      // Clear previous content
+      previewContainerRef.current.innerHTML = '';
+      
+      // Manually inject the script
+      const script = document.createElement('script');
+      script.src = `${window.location.origin}/embed/startup-form.js`;
+      script.setAttribute('data-supabase-url', supabaseUrl);
+      
+      // Append script to the preview container
+      previewContainerRef.current.appendChild(script);
+    }
+  };
   
   const handleCopy = () => {
     navigator.clipboard.writeText(generatedCode);
@@ -59,7 +76,7 @@ const EmbedForm = () => {
             <Tabs defaultValue="code">
               <TabsList className="mb-4">
                 <TabsTrigger value="code">Código</TabsTrigger>
-                <TabsTrigger value="preview">Visualização</TabsTrigger>
+                <TabsTrigger value="preview" onClick={handlePreviewTabClick}>Visualização</TabsTrigger>
               </TabsList>
               
               <TabsContent value="code">
@@ -86,12 +103,10 @@ const EmbedForm = () => {
                     O formulário será exibido como mostrado abaixo. Note que a versão de preview pode não funcionar 
                     como esperado aqui, mas funcionará corretamente quando incorporado em seu site.
                   </p>
-                  <div dangerouslySetInnerHTML={{
-                    __html: `
-                      <script src="${window.location.origin}/embed/startup-form.js" 
-                             data-supabase-url="${supabaseUrl}"></script>
-                    `
-                  }} className="min-h-[600px]" />
+                  <div 
+                    ref={previewContainerRef} 
+                    className="min-h-[600px]"
+                  ></div>
                 </div>
               </TabsContent>
             </Tabs>

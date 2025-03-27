@@ -150,20 +150,54 @@
     return style;
   }
 
-  // Get Supabase URL from script element
+  // Get Supabase URL from script element with fallback
   function getSupabaseUrlFromScript() {
-    // Get script element - this is the current script
-    const scriptElement = document.currentScript;
-    
-    // Get the Supabase project URL from script data attributes
-    const supabaseUrl = scriptElement.getAttribute('data-supabase-url');
-    
-    if (!supabaseUrl) {
-      console.error('Error: data-supabase-url attribute is required');
-      return null;
+    try {
+      // Try to get the current script - this is more reliable
+      const scripts = document.querySelectorAll('script');
+      let scriptElement = null;
+      
+      // First try to find by data attribute
+      for (let i = 0; i < scripts.length; i++) {
+        if (scripts[i].hasAttribute('data-supabase-url')) {
+          scriptElement = scripts[i];
+          break;
+        }
+      }
+      
+      // If not found by data attribute, try to find by src
+      if (!scriptElement) {
+        for (let i = 0; i < scripts.length; i++) {
+          if (scripts[i].src && scripts[i].src.includes('startup-form.js')) {
+            scriptElement = scripts[i];
+            break;
+          }
+        }
+      }
+      
+      // If script is still not found, use document.currentScript as last resort
+      if (!scriptElement) {
+        scriptElement = document.currentScript;
+      }
+      
+      // Get the Supabase project URL from data attributes or use a default
+      let supabaseUrl = scriptElement && scriptElement.getAttribute('data-supabase-url');
+      
+      // If no URL found anywhere, use a default
+      if (!supabaseUrl) {
+        console.warn('Warning: data-supabase-url attribute not found, using default Supabase URL');
+        supabaseUrl = 'https://qolgehnzmslkmotrrwwy.supabase.co';
+      }
+      
+      return { scriptElement, supabaseUrl };
+    } catch (error) {
+      console.error('Error getting Supabase URL:', error);
+      // Return a default value to prevent the script from failing
+      return { 
+        scriptElement: document.currentScript || document.scripts[document.scripts.length - 1], 
+        supabaseUrl: 'https://qolgehnzmslkmotrrwwy.supabase.co' 
+      };
     }
-    
-    return { scriptElement, supabaseUrl };
   }
 
   // Load Supabase client library
@@ -454,42 +488,50 @@
     formContainer.innerHTML = createFormHTML();
     
     // Insert the form where the script is placed
-    scriptElement.parentNode.insertBefore(formContainer, scriptElement);
+    if (scriptElement && scriptElement.parentNode) {
+      scriptElement.parentNode.insertBefore(formContainer, scriptElement);
+    } else {
+      // Fallback: Append to body if script element is not properly found
+      document.body.appendChild(formContainer);
+      console.warn("Script element parent not found, appending form to body instead");
+    }
     
     return formContainer;
   }
 
   // Main initialization function
   function initializeForm() {
-    const scriptInfo = getSupabaseUrlFromScript();
-    if (!scriptInfo) return;
-    
-    const { scriptElement, supabaseUrl } = scriptInfo;
-    
-    // Initialize Supabase client
-    const supabase = initializeSupabaseClient(supabaseUrl);
-    
-    // Create and append style
-    const style = createStyleElement();
-    document.head.appendChild(style);
-    
-    // Create and append form
-    const formContainer = createAndAppendForm(scriptElement);
-    
-    // Set up form submission handler
-    const form = document.getElementById('sfg-startup-form');
-    if (form) {
-      setupFormSubmissionHandler(supabase, form);
-    } else {
-      console.error('Form element not found');
+    try {
+      const scriptInfo = getSupabaseUrlFromScript();
+      const { scriptElement, supabaseUrl } = scriptInfo;
+      
+      console.log("Initializing form with Supabase URL:", supabaseUrl);
+      
+      // Initialize Supabase client
+      const supabase = initializeSupabaseClient(supabaseUrl);
+      
+      // Create and append style
+      const style = createStyleElement();
+      document.head.appendChild(style);
+      
+      // Create and append form
+      const formContainer = createAndAppendForm(scriptElement);
+      
+      // Set up form submission handler
+      const form = document.getElementById('sfg-startup-form');
+      if (form) {
+        setupFormSubmissionHandler(supabase, form);
+      } else {
+        console.error('Form element not found');
+      }
+    } catch (error) {
+      console.error("Error initializing form:", error);
     }
   }
 
   // Start the process
-  const scriptInfo = getSupabaseUrlFromScript();
-  if (scriptInfo) {
-    loadSupabaseScript(() => {
-      initializeForm();
-    });
-  }
+  loadSupabaseScript(() => {
+    // Add a small delay to ensure DOM is ready
+    setTimeout(initializeForm, 100);
+  });
 })();
