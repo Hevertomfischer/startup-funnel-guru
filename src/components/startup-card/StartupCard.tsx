@@ -124,6 +124,8 @@ const StartupCard: React.FC<StartupCardProps> = ({
           </div>
           <CardMenu onDelete={onDelete ? handleDelete : undefined} />
         </div>
+        
+        {/* Badges Section */}
         <div className="mt-2">
           <CardBadges 
             openTasksCount={openTasksCount}

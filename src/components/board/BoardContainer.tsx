@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import BoardColumn from '@/components/board/BoardColumn';
 import { Column, Status } from '@/types';
 import { USERS } from '@/data/mockData';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface BoardContainerProps {
   columns: Column[];
@@ -27,7 +28,7 @@ interface BoardContainerProps {
   onColumnDragOver: (e: React.DragEvent) => void;
   onColumnDrop: (e: React.DragEvent, columnId: string) => void;
   onCreateTask: (startup: any) => void;
-  searchTerm?: string; // Add the searchTerm prop with optional type
+  searchTerm?: string;
 }
 
 const BoardContainer: React.FC<BoardContainerProps> = ({
@@ -51,7 +52,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
   onColumnDragOver,
   onColumnDrop,
   onCreateTask,
-  searchTerm = '' // Add the searchTerm prop with default empty string
+  searchTerm = ''
 }) => {
   // Log para depuração
   console.log('BoardContainer props:', { 
@@ -60,7 +61,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
     columnQueriesKeys: Object.keys(columnQueries),
     columnIds: columns.map(c => c.id),
     statusIds: statuses.map(s => s.id),
-    searchTerm // Log the searchTerm to debug
+    searchTerm
   });
 
   const scrollContainer = (direction: 'left' | 'right') => {
@@ -163,7 +164,7 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
                   users={USERS}
                   onEditColumn={status ? () => onEditColumn(status) : undefined}
                   onCreateTask={onCreateTask}
-                  searchTerm={searchTerm} // Pass the searchTerm prop to the BoardColumn component
+                  searchTerm={searchTerm}
                 />
               </div>
             );
@@ -173,11 +174,12 @@ const BoardContainer: React.FC<BoardContainerProps> = ({
             </div>
           )}
           
-          <div className="h-full min-w-[280px] flex items-start pt-12">
+          {/* Make the "Add Column" button always visible and positioned on the right side */}
+          <div className="h-full min-w-[280px] flex-shrink-0">
             <Button 
               variant="outline" 
               onClick={addNewColumn} 
-              className="w-full border-dashed"
+              className="w-full border-dashed mt-12"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add Column
