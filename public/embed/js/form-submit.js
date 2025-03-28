@@ -9,7 +9,11 @@
     for (let [key, value] of formData.entries()) {
       // Skip file inputs, we'll handle them separately
       if (!(value instanceof File) || value.size > 0) {
-        formDataObj[key] = value;
+        // Skip adding the pitch_deck field to the data object
+        // as the backend only expects pitch_deck_url
+        if (key !== 'pitch_deck') {
+          formDataObj[key] = value;
+        }
       }
     }
     return formDataObj;

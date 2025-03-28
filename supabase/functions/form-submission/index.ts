@@ -92,6 +92,12 @@ Deno.serve(async (req) => {
     
     console.log('Inserting submission with data:', submissionData);
     
+    // Make sure to exclude any fields that don't exist in the form_submissions table
+    // Remove the pitch_deck field if it exists - we only want to store pitch_deck_url
+    if (submissionData.pitch_deck) {
+      delete submissionData.pitch_deck;
+    }
+    
     // Insert into form_submissions table
     const { data, error } = await supabase
       .from('form_submissions')
