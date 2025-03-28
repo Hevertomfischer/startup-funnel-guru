@@ -68,15 +68,11 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
       
       {showPitchDeckBadge && (
         <Badge 
-          className="bg-amber-500/80 text-white cursor-pointer flex items-center" 
+          className="bg-amber-500/80 text-white cursor-pointer" 
           title="View Pitch Deck"
           onClick={onPitchDeckClick}
         >
-          <FileText className="h-3 w-3 mr-1" />
-          <span className="mr-1">Deck</span>
-          <span className="h-3.5 w-3.5 inline-flex items-center justify-center bg-amber-500 text-white rounded-sm">
-            <FileText className="h-2 w-2" />
-          </span>
+          <FileText className="h-3 w-3" />
         </Badge>
       )}
       
