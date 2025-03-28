@@ -60,6 +60,21 @@
     return '';
   }
 
+  // Focus on first field with error
+  function focusFirstErrorField(missingField) {
+    if (!missingField) return;
+    
+    // Try to find the field in the form
+    const field = document.querySelector(`[name="${missingField}"]`);
+    if (field) {
+      // Set focus to the field
+      field.focus();
+      console.log(`Set focus to field: ${missingField}`);
+    } else {
+      console.log(`Could not find field: ${missingField}`);
+    }
+  }
+
   // Set up form submission handler
   function setupFormSubmissionHandler(supabase, form) {
     const successMessage = document.getElementById('sfg-form-success');
@@ -129,6 +144,13 @@
         
         // Hide loading
         loadingElement.style.display = 'none';
+        
+        // Check if error message contains information about missing field
+        const missingFieldMatch = error.message && error.message.match(/Missing required field: (\w+)/i);
+        if (missingFieldMatch && missingFieldMatch[1]) {
+          const missingField = missingFieldMatch[1];
+          focusFirstErrorField(missingField);
+        }
         
         // Show error message
         errorMessage.textContent = error.message || 'Ocorreu um erro ao enviar o formulário.';

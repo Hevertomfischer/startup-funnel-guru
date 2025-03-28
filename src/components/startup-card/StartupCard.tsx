@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Startup } from '@/types/startup';
 import { Status } from '@/types/status';
@@ -110,27 +111,29 @@ const StartupCard: React.FC<StartupCardProps> = ({
         style={{ backgroundColor: status?.color || '#e2e8f0' }}
       />
       <CardHeader className={compact ? 'p-3' : 'p-4'}>
-        <div className="flex justify-between items-start gap-2">
-          <CardTitle className={`${compact ? 'text-base' : 'text-lg'} line-clamp-1`}>
-            {startup.values.Startup || 'Unnamed Startup'}
-          </CardTitle>
-          <div className="flex items-center gap-1">
-            <CardBadges 
-              openTasksCount={openTasksCount}
-              hasPitchDeck={hasPitchDeck}
-              startup={startup}
-              priorityColors={priorityColors}
-              onTaskIconClick={handleTaskIconClick}
-              onPitchDeckClick={handlePitchDeckClick}
-            />
-            <CardMenu onDelete={onDelete ? handleDelete : undefined} />
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-1">
+            <CardTitle className={`${compact ? 'text-base' : 'text-lg'} line-clamp-1`}>
+              {startup.values.Startup || 'Unnamed Startup'}
+            </CardTitle>
+            {!compact && (
+              <CardDescription className="line-clamp-2">
+                {startup.values['Problema que Resolve'] || 'No problem description'}
+              </CardDescription>
+            )}
           </div>
+          <CardMenu onDelete={onDelete ? handleDelete : undefined} />
         </div>
-        {!compact && (
-          <CardDescription className="line-clamp-2 mt-1">
-            {startup.values['Problema que Resolve'] || 'No problem description'}
-          </CardDescription>
-        )}
+        <div className="mt-2">
+          <CardBadges 
+            openTasksCount={openTasksCount}
+            hasPitchDeck={hasPitchDeck}
+            startup={startup}
+            priorityColors={priorityColors}
+            onTaskIconClick={handleTaskIconClick}
+            onPitchDeckClick={handlePitchDeckClick}
+          />
+        </div>
       </CardHeader>
       <CardContent className={compact ? 'p-3 pt-0' : 'px-4 pb-2'}>
         {!compact && (

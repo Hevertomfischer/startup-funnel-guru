@@ -45,43 +45,45 @@ export const CardBadges: React.FC<CardBadgesProps> = ({
   });
   
   return (
-    <div className="flex items-center gap-1">
-      {openTasksCount > 0 ? (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-1">
+        {openTasksCount > 0 ? (
+          <Badge 
+            className="bg-primary text-primary-foreground cursor-pointer" 
+            title="Open tasks - Click to add new task"
+            onClick={onTaskIconClick}
+          >
+            <ListTodo className="h-3 w-3 mr-1" />
+            {openTasksCount}
+          </Badge>
+        ) : (
+          <Badge 
+            className="bg-primary/80 text-primary-foreground cursor-pointer" 
+            title="Add new task"
+            onClick={onTaskIconClick}
+          >
+            <ListTodo className="h-3 w-3 mr-1" />
+            0
+          </Badge>
+        )}
+        
+        {showPitchDeckBadge && (
+          <Badge 
+            className="bg-amber-500/80 text-white cursor-pointer" 
+            title="View Pitch Deck"
+            onClick={onPitchDeckClick}
+          >
+            <FileText className="h-3 w-3" />
+          </Badge>
+        )}
+        
         <Badge 
-          className="bg-primary text-primary-foreground cursor-pointer" 
-          title="Open tasks - Click to add new task"
-          onClick={onTaskIconClick}
+          variant="outline" 
+          className={`${priorityColors[startup.priority]} text-xs`}
         >
-          <ListTodo className="h-3 w-3 mr-1" />
-          {openTasksCount}
+          {startup.priority.charAt(0).toUpperCase() + startup.priority.slice(1)}
         </Badge>
-      ) : (
-        <Badge 
-          className="bg-primary/80 text-primary-foreground cursor-pointer" 
-          title="Add new task"
-          onClick={onTaskIconClick}
-        >
-          <ListTodo className="h-3 w-3 mr-1" />
-          0
-        </Badge>
-      )}
-      
-      {showPitchDeckBadge && (
-        <Badge 
-          className="bg-amber-500/80 text-white cursor-pointer" 
-          title="View Pitch Deck"
-          onClick={onPitchDeckClick}
-        >
-          <FileText className="h-3 w-3" />
-        </Badge>
-      )}
-      
-      <Badge 
-        variant="outline" 
-        className={`${priorityColors[startup.priority]} text-xs`}
-      >
-        {startup.priority.charAt(0).toUpperCase() + startup.priority.slice(1)}
-      </Badge>
+      </div>
     </div>
   );
 };
