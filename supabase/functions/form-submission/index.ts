@@ -16,10 +16,10 @@ Deno.serve(async (req) => {
   try {
     // Get environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     
-    // Initialize Supabase client
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Initialize Supabase client with SERVICE ROLE key to bypass RLS
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
     
     // Only allow POST requests
     if (req.method !== 'POST') {
